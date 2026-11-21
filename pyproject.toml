@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zk-bilinear-opt"
+version = "0.1.0"
+description = "Exact finite-field bilinear rank certifier, non-native limb-carry Pareto optimizer, and deterministic Rust/Go/R1CS code generator for ZK extension towers."
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT OR Apache-2.0"}
+authors = [
+    {name = "Impius-Lab", email = "2aghous94@gmail.com"}
+]
+keywords = ["cryptography", "zero-knowledge", "stark", "snark", "bilinear-complexity", "plonky3", "stwo", "gnark"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security :: Cryptography",
+]
+dependencies = []
+
+[project.scripts]
+zk-bilinear = "zk_bilinear.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["zk_bilinear*"]

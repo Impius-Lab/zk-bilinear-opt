@@ -1,0 +1,11 @@
+[package]
+name = "zk-bilinear-opt-rs"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Zero-overflow no_std bilinear extension-field multiplication kernels for stwo (QM31) and Plonky3 (BabyBear, KoalaBear, Goldilocks)."
+authors = ["Impius-Lab <2aghous94@gmail.com>"]
+
+[lib]
+name = "zk_bilinear_opt_rs"
+path = "src/lib.rs"

@@ -1,0 +1,145 @@
+{
+  "certificate": {
+    "actual_limb_slack_bits": 2,
+    "alder_strassen_lower_bound": 3,
+    "basis_pairs_checked": 4,
+    "irreducibility_verified": true,
+    "is_alder_strassen_optimal": true,
+    "isomorphism_verified": true,
+    "mul_reduction_vs_baseline_pct": 0.0,
+    "passed": true,
+    "peak_native_bits": 128,
+    "rank": 3
+  },
+  "costs": {
+    "emulated_limbs": null,
+    "native_air_degree2_muls": 3,
+    "native_plonk_mul_gates": 3,
+    "native_plonk_width4_total_gates": 7,
+    "native_r1cs_constraints": 3
+  },
+  "description": "Alder-Strassen optimal 3-mul Karatsuba {0,1,inf}",
+  "family": "Vandermonde",
+  "matrices": {
+    "D": 1,
+    "U": [
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "V": [
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "W_z": [
+      [
+        1,
+        7,
+        0
+      ],
+      [
+        -1,
+        -1,
+        1
+      ]
+    ],
+    "inv_D_mod_p": "1"
+  },
+  "r1cs": {
+    "bilinear_gates": [
+      {
+        "A": {
+          "1": 1
+        },
+        "B": {
+          "3": 1
+        },
+        "C": {
+          "5": 1
+        }
+      },
+      {
+        "A": {
+          "2": 1
+        },
+        "B": {
+          "4": 1
+        },
+        "C": {
+          "6": 1
+        }
+      },
+      {
+        "A": {
+          "1": 1,
+          "2": 1
+        },
+        "B": {
+          "3": 1,
+          "4": 1
+        },
+        "C": {
+          "7": 1
+        }
+      }
+    ],
+    "output_linear_forms": [
+      {
+        "D_denominator": 1,
+        "W_z_terms": {
+          "5": 1,
+          "6": 7
+        }
+      },
+      {
+        "D_denominator": 1,
+        "W_z_terms": {
+          "5": -1,
+          "6": -1,
+          "7": 1
+        }
+      }
+    ]
+  },
+  "schedule_name": "Goldilocks2_Rank3",
+  "schema": "zk-bilinear-opt/certificate/v1",
+  "sha256": "cf9fd4d4b02fa1d90fab4f0b36c39c99bba832dbf17d26a652fec1cec1f5e445",
+  "target": {
+    "baseline_muls": 3,
+    "baseline_name": "Karatsuba-2",
+    "basis_labels": [
+      "1",
+      "X"
+    ],
+    "degree": 2,
+    "ecosystem": "Plonky2 / Plonky3",
+    "name": "Goldilocks2",
+    "prime_bits": 64,
+    "prime_dec": "18446744069414584321",
+    "prime_name": "Goldilocks",
+    "simple_poly_coeffs": [
+      -7,
+      0,
+      1
+    ]
+  }
+}
