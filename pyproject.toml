@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "MIT OR Apache-2.0"}
 authors = [
-    {name = "Impius-Lab", email = "2aghous94@gmail.com"}
+    {name = "Houssem Aguentil (Impius-Lab)", email = "2aghous94@gmail.com"}
 ]
 keywords = ["cryptography", "zero-knowledge", "stark", "snark", "bilinear-complexity", "plonky3", "stwo", "gnark"]
 classifiers = [
@@ -24,6 +24,10 @@ classifiers = [
     "Topic :: Security :: Cryptography",
 ]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/Impius-Lab/zk-bilinear-opt"
+Repository = "https://github.com/Impius-Lab/zk-bilinear-opt"
 
 [project.scripts]
 zk-bilinear = "zk_bilinear.cli:main"

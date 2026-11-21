@@ -1,6 +1,6 @@
 # Algebraic ZK Prover & Verifier Gate Compression
 
-**Impius-Lab Cryptographic Engineering Practice** (`Impius-Lab <2aghous94@gmail.com>`)  
+**Houssem Aguentil — Impius-Lab Cryptographic Engineering Practice** (`2aghous94@gmail.com` · `https://github.com/Impius-Lab/zk-bilinear-opt`)  
 *Basis-Certified Bilinear Rank Reduction & Non-Native Limb-Carry Optimization for zkVMs, Rollups, and Bridges*
 
 ---
@@ -57,4 +57,4 @@ Unlike heuristic compiler passes, every kernel we deliver ships with a **4-layer
 
 ---
 
-**Next Step**: Send your target repo commit (or curve/extension parameters) to `Impius-Lab <2aghous94@gmail.com>` for a **complimentary 48-hour exact Pareto gate-count simulation**.
+**Next Step**: Send your target repo commit (or curve/extension parameters) to **Houssem Aguentil (`Impius-Lab <2aghous94@gmail.com>`)** for a **complimentary 48-hour exact Pareto gate-count simulation**.

@@ -1,6 +1,8 @@
 # ZK Ecosystem Public-Goods Grant Application: `zk-bilinear-opt`
 
 **Target Grant Programs**: *Ethereum Foundation Ecosystem Support Program (ESP)* · *Starknet Foundation* · *Succinct (`SP1` / `Plonky3` Ecosystem)* · *Polygon Labs*  
+**Applicant**: Houssem Aguentil (`Aguentil H.`) — Impius-Lab (`2aghous94@gmail.com`)  
+**Repository**: `https://github.com/Impius-Lab/zk-bilinear-opt`  
 **Project Name**: `zk-bilinear-opt` — Certified Optimal Extension-Field & Non-Native Pairing Gadgets for STARK and SNARK Verifiers  
 **License**: Dual-licensed `MIT OR Apache-2.0` (100% permissive public good)  
 **Requested Grant Size**: \$60,000 (3 Milestones over 16 Weeks)

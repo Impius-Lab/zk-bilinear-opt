@@ -1,7 +1,8 @@
 # Grant Proposal: Verified Multi-Agent Algebraic Discovery — From Tensor Complexity Barriers to Optimal Cryptographic Circuits
 
 **Target Programs**: *Renaissance Philanthropy — AI for Math Fund* / *DARPA Exponentiating Mathematics (`expMath`)*  
-**Applicant**: Impius-Lab (`Impius-Lab <2aghous94@gmail.com>`)  
+**Principal Investigator / Applicant**: Houssem Aguentil (`Aguentil H.`) — Impius-Lab (`2aghous94@gmail.com`)  
+**Repositories**: `https://github.com/Impius-Lab/zk-bilinear-opt` · `https://github.com/Impius-Lab/omega-2`  
 **Requested Funding**: \$180,000 (12 Months, 3 Milestones; adaptable to \$75k–\$250k grant tracks)  
 **Open-Source License**: `MIT OR Apache-2.0` (Code & Certificates) / `CC BY 4.0` (Preprints & Datasets)
 
@@ -28,9 +29,9 @@ Unlike speculative proposals, our core discovery loop has already produced **thr
 2. **Paper 2 — Sub-Quantum Geometric Rank & Universal Grassmannian Collapse (`notes/94`, `127`, `129`)**:
    - Constructed the first quantum-uniform tensor family strictly breaching the Christandl–Vrana–Zuiddam (`[CVZ18]`) quantum-functional envelope via Kopparty–Moshkovitz–Zuiddam geometric rank (`[KMZ20]`): on the $4\times 4\times 4$ quaternion/CW-defect core $CD_2$, $\underline{Q}(CD_2^{\otimes N}) \le \operatorname{GR}(CD_2^{\otimes N}) \le 4^N - 2^{N-1} < 4^N = F^{\mathrm{bal}}(CD_2^{\otimes N})$ for all $N \ge 1$, pinning $\operatorname{GR}(CD_2^{\otimes 2}) = 14 < 16$ via partial-transpose determinantal strata.
    - Proved the **Universal Grassmannian Collapse Theorem**: $\operatorname{GR}_{k,r}(T) + r \ge \operatorname{GR}(T)$ across all $(k, r)$.
-3. **Paper 3 — Fast Multiplication in Taft Hopf Algebras & Wreath Group Barriers (`notes/49`, `54`, `130`)**:
-   - Established an explicit Fourier-quiver isomorphism reducing multiplication in the $n^2$-dimensional non-semisimple, non-cocommutative Taft Hopf algebra $\mathrm{Taft}_n$ to $O(n^\omega)$ (`R(T_{\mathrm{Taft}_n}) \le 2 R(\langle n,n,n\rangle)` vs the Alder–Strassen `[AS81]` $2n^2 - n$ lower bound) and pinned the exact Sweedler border-rank gap $\underline{R}_{\mathbb{Q}}(T_{\mathrm{Taft}_2}) = 5 < 6 = R(T_{\mathrm{Taft}_2})$.
-   - Proved the **Bounded-Index Normal-Abelian Wreath Barrier** combining quotient simultaneous-TPP matching (`[Saw17]`) and abelian fiber slice-rank decay (`[BCC+17a]`) to rule out $\omega = 2$ via $(\mathbb{Z}_n \wr S_m)^r$ at fixed $m$.
+3. **Paper 3 — Fast Multiplication in Taft Hopf Algebras, Non-Solvable Projective Wreath Constructions & Fiber-Untwisting Barriers (`notes/49`, `54`, `130`, `133`, `134`)**:
+   - Established an explicit Fourier-quiver isomorphism reducing multiplication in the $n^2$-dimensional non-semisimple, non-cocommutative Taft Hopf algebra $\mathrm{Taft}_n$ to $O(n^{\omega+o(1)})$ ($R(T_{\mathrm{Taft}_n}) \le 2 R(\langle n,n,n\rangle)$ vs the Alder–Strassen `[AS81]` $2n^2 - n$ lower bound), pinned the exact Sweedler border-rank gap $\underline{R}_{\mathbb{Q}}(T_{\mathrm{Taft}_2}) = 5 < 6 = R(T_{\mathrm{Taft}_2})$, and proved symbolically that $R_{\mathbb{F}}(T_{\mathrm{Taft}_3}) \ge 16 > 15$ across all characteristics $\neq 3$ (including $\mathbb{F}_4$).
+   - Proved a dramatic fixed-base separation in non-solvable projective wreaths: at tiny fixed base $n = 10$, a single orbit-folded triple in $\mathbb{Z}_{10} \wr_{\mathbb{P}^1(\mathbb{F}_{23})} \mathrm{PSL}(2, 23)$ achieves $\omega_{\mathrm{CKSU}} \le 2.798264 < \log_2 7$ (and $\le 2.771368$ in simple $\mathbb{Z}_{10} \wr \mathrm{PSL}(2, 32)$, converging to $\log_8(4000/27) \approx 2.40363226$ where $\mathbb{Z}_{10} \wr S_{24}$ is empty), while the **Universal Diagonal-Sheet Fiber-Untwisting & Regular-Orbit Cancellation Barrier** proves $\liminf_{q+n_q\to\infty} \omega_{\mathrm{CKSU}}^{\mathrm{ZS/fold}} \ge \omega_{\mathrm{ab}}^{\mathrm{STPP}}$.
 
 ### Track B — Immediate Industrial Spin-Off (`zk-bilinear-opt`)
 - **51 Basis-Certified Finite-Field Schedules (`2,654` algebraic basis-pair proofs + `102,000` differential fuzz checks)**:
@@ -64,4 +65,4 @@ Our discovery-and-verification stack enforces four machine-checked guardrails th
 
 Every deliverable is deterministically reproducible in `< 60 seconds` on commodity hardware with zero proprietary dependencies:
 - `zk-bilinear-opt`: `.venv\Scripts\python.exe -m unittest discover -s tests -v` (`5.8s`, `51` schedules, `102,000` fuzz checks, `4/4` mutation classes RED) and `go test -v ./...` (`1.2s`, PASS).
-- `omega-2`: `94` deterministic certificate scripts + AST vacuous-assertion & unlistened-audit scanner.
+- `omega-2`: `96` deterministic certificate scripts + AST vacuous-assertion & unlistened-audit scanner.

@@ -110,6 +110,8 @@ zk-bilinear-opt/
 
 ---
 
-## 5. License
+## 5. Author & License
+
+**Author**: Houssem Aguentil (`Aguentil H.`) — Impius-Lab (`2aghous94@gmail.com`) · [https://github.com/Impius-Lab/zk-bilinear-opt](https://github.com/Impius-Lab/zk-bilinear-opt)
 
 Dual-licensed under either of **[MIT License](./LICENSE-MIT)** or **[Apache License, Version 2.0](./LICENSE-APACHE)** at your option.
