@@ -58,9 +58,9 @@ Reference `#![no_std]` implementation + generic `SymbolicFieldExpr` evaluator is
 ### Technical Summary for Maintainers
 In `std/algebra/emulated/fields_bn254` ($4\times 64$-bit limbs) and `fields_bls12381` ($6\times 64$-bit limbs), `E6.Mul` and `E12.Mul` currently perform tower Karatsuba (`18` and `54` emulated `Fp` multiplications, or witnessed polynomial hints with degree-$5$/$11$ evaluations).
 
-A naive attempt to use `23`-mul degree-12 Vandermonde over `Fp` (`[-11..10, inf]`) **backfires** in `gnark` because $|-11|^{11} \approx 2^{38.1}$ creates `77`-bit product slacks — exceeding `gnark`'s `60`-bit 2-limb carry-packing limit (`128 + 64 + 60 = 252 < 254` bits) on 18 operands and forcing multi-limb `113`-bit reconstruction quotients.
+A naive attempt to use `23`-mul degree-12 Vandermonde over `Fp` (`[-11..10, inf]`) **backfires** in `gnark` because $|-11|^{11} \approx 2^{38.1}$ creates `77`-bit product slacks — exceeding `gnark`'s `56`-bit 2-limb malicious-witness non-wrap limit (`128 + 64 + 4 + 56 = 252 < 254` bits) on 22 operands and forcing multi-limb `113`-bit reconstruction quotients.
 
-Using our unimodular simple-extension isomorphisms ($v^6 - 18v^3 + 82 = 0$ / $w^{12} - 18w^6 + 82 = 0$ for `BN254`; $v^6 - 2v^3 + 2 = 0$ / $w^{12} - 2w^6 + 2 = 0$ for `BLS12-381`) paired with **Cyclotomic Chinese Remainder Theorem (`CRT-30`)** and **`Toom-6 x Karatsuba-2` (`Tower-33`)**, we stay **100% inside the 60-bit 2-limb carry-packing budget (`0` pre-mul `Reduce()` calls!)** and single-word output quotients:
+Using our unimodular simple-extension isomorphisms ($v^6 - 18v^3 + 82 = 0$ / $w^{12} - 18w^6 + 82 = 0$ for `BN254`; $v^6 - 2v^3 + 2 = 0$ / $w^{12} - 2w^6 + 2 = 0$ for `BLS12-381`) paired with **Cyclotomic Chinese Remainder Theorem (`CRT-30`)** and **`Toom-6 x Karatsuba-2` (`Tower-33`)**, we stay **100% inside the 56-bit 2-limb carry-packing budget (`0` pre-mul `Reduce()` calls!)** and single-word output quotients:
 
 - **`BN254` ($4\times 64$-bit)**:
   - `E6.Mul`: `Tower-18` (`15,150` R1CS / `2,660` PlonK16) $\to$ **`Rank-11`** (**`11,582` R1CS `-23.55%`** / **`2,037` PlonK16 `-23.42%`**).

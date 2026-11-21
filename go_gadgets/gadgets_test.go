@@ -65,9 +65,25 @@ func verifyGadgetComplete(
 			assertSliceEq(t, name+" basis", dut(ei, ej), ref(ei, ej))
 		}
 	}
-	// 2. Adversarial maximal input (p-1, ..., p-1)
+	// 2. Adversarial maximal input (p-1, ..., p-1), zero, and alternating (p-1, 0, ...)
 	mv := maxVec(d, p)
+	zv := make([]*big.Int, d)
+	altA := make([]*big.Int, d)
+	altB := make([]*big.Int, d)
+	pm1 := new(big.Int).Sub(p, big.NewInt(1))
+	for i := 0; i < d; i++ {
+		zv[i] = big.NewInt(0)
+		if i%2 == 0 {
+			altA[i] = new(big.Int).Set(pm1)
+			altB[i] = big.NewInt(0)
+		} else {
+			altA[i] = big.NewInt(0)
+			altB[i] = new(big.Int).Set(pm1)
+		}
+	}
+	assertSliceEq(t, name+" zero", dut(zv, mv), ref(zv, mv))
 	assertSliceEq(t, name+" max(p-1)", dut(mv, mv), ref(mv, mv))
+	assertSliceEq(t, name+" alternating", dut(altA, altB), ref(altA, altB))
 
 	// 3. Deterministic randomized fuzzing
 	rng := rand.New(rand.NewSource(20261121))

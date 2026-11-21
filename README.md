@@ -59,10 +59,10 @@ Stacked quadratic/cubic towers hide simple-extension structure. We prove explici
 - **`BN254` ($\xi = 9 + u$)**: $u = v^3 - 9 = w^6 - 9 \implies \mathbf{v^6 - 18v^3 + 82 = 0}$ (`Fp6`) and $\mathbf{w^{12} - 18w^6 + 82 = 0}$ (`Fp12`).
 - **`BLS12-381` ($\xi = 1 + u$)**: $u = v^3 - 1 = w^6 - 1 \implies \mathbf{v^6 - 2v^3 + 2 = 0}$ (`Fp6`) and $\mathbf{w^{12} - 2w^6 + 2 = 0}$ (`Fp12`).
 
-### 2.4 The `60`-Bit Non-Native Limb-Carry Phase Transition (`CRT-30` vs `Rank-23`)
-In `gnark`-style non-native arithmetic over a 254-bit SNARK scalar field, packing two adjacent 64-bit limb equations (`128 + 64 = 192` bits) leaves **`60` bits** (`192 + 60 = 252 < 254`) for $L \cdot \|U_\ell\|_1 \cdot \|V_\ell\|_1$:
-- Naive `Rank-23` Vandermonde (`{-11..10, inf}`) hits $|-11|^{11} \approx 2^{38.1}$ (`77`-bit slack $> 60$b), triggering **18 mandatory pre-multiplication `Reduce()` gadgets** and `113`-bit 2-limb output quotients (`33,750` R1CS on `BN254`).
-- Our **Cyclotomic/Quadratic CRT schedule `CRT-30`** (`9` small linear nodes `{-4..3, inf}` + `7` small/cyclotomic quadratic moduli $\Phi_4, \Phi_3, \Phi_6, \dots$) caps slack at **`45` bits (`<= 60`b, `0` pre-reductions!)** and $D$ at **`45.2` bits** (single-word output quotients!), slashing net Groth16 R1CS to **`31,497` (`-29.41%`)** on `BN254` and **`46,078` (`-32.27%`)** on `BLS12-381`.
+### 2.4 The `56`-Bit Non-Native Limb-Carry Phase Transition (`CRT-30` vs `Rank-23`)
+In `gnark`-style non-native arithmetic over a 254-bit SNARK scalar field, packing two adjacent 64-bit limb equations (`128 + 64 = 192` bits, plus `4` bits for signed carry + co-addition) leaves **`56` bits** (`192 + 4 + 56 = 252 < 254`) for $L \cdot \|U_\ell\|_1 \cdot \|V_\ell\|_1$:
+- Naive `Rank-23` Vandermonde (`{-11..10, inf}`) hits $|-11|^{11} \approx 2^{38.1}$ (`77`-bit slack $> 56$b), triggering **22 mandatory pre-multiplication `Reduce()` gadgets** and `113`-bit 2-limb output quotients (`34,444` R1CS on `BN254`).
+- Our **Cyclotomic/Quadratic CRT schedule `CRT-30`** (`9` small linear nodes `{-4..3, inf}` + `7` small/cyclotomic quadratic moduli $\Phi_4, \Phi_3, \Phi_6, \dots$) caps slack at **`45` bits (`<= 56`b, `0` pre-reductions!)** and $D$ at **`45.2` bits** (single-word output quotients!), slashing net Groth16 R1CS to **`31,497` (`-29.41%`)** on `BN254` and **`46,078` (`-32.27%`)** on `BLS12-381`.
 
 ---
 

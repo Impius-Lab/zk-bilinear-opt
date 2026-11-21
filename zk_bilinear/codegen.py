@@ -135,10 +135,13 @@ def emit_r1cs_json(schedule: BilinearSchedule) -> str:
 
 
 def _format_signed_dot_expr(row: Sequence[int], var_name: str, cast_ty: str) -> str:
+    nz = [(idx, coef) for idx, coef in enumerate(row) if coef != 0]
+    if not nz:
+        return "0"
+    if len(nz) == 1 and nz[0][1] == 1:
+        return f"{var_name}[{nz[0][0]}] as {cast_ty}"
     terms: List[str] = []
-    for idx, coef in enumerate(row):
-        if coef == 0:
-            continue
+    for idx, coef in nz:
         v = f"({var_name}[{idx}] as {cast_ty})"
         if coef == 1:
             terms.append(f"+ {v}" if terms else v)
@@ -150,7 +153,7 @@ def _format_signed_dot_expr(row: Sequence[int], var_name: str, cast_ty: str) -> 
         else:
             part = f"{abs(coef)} * {v}"
             terms.append(f"- {part}" if terms else f"-{part}")
-    return " ".join(terms) if terms else "0"
+    return " ".join(terms)
 
 
 def emit_rust_function(schedule: BilinearSchedule, fn_name: str) -> str:

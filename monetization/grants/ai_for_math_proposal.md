@@ -13,7 +13,7 @@ Modern AI-assisted mathematics faces a structural credibility bottleneck: large 
 
 This proposal scales our verified discovery engine across two tightly coupled tracks:
 1. **Pure Algebraic Complexity (`omega-2` Preprint Trilogy)**: Resolving open tensor rank, border rank, free subrank, geometric rank, and group/Hopf-algebraic matrix multiplication questions via exact rational/cyclotomic/Gröbner/Kantorovich certificates.
-2. **Applied Cryptographic Circuit Synthesis (`zk-bilinear-opt`)**: Translating Winograd / Alder–Strassen (`[AS81]`) bilinear complexity theory and Cyclotomic Chinese Remainder Theorem decompositions directly into production Zero-Knowledge (STARK/SNARK) extension-field gadgets — delivering **22.22% to 57.41% native bilinear constraint reductions** and **23.55% to 32.28% net non-native limb-carry R1CS/PlonK reductions** across StarkWare `stwo`, `Plonky3`/`SP1`, and `Consensys/gnark`.
+2. **Applied Cryptographic Circuit Synthesis (`zk-bilinear-opt`)**: Translating Winograd / Alder–Strassen (`[AS81]`) bilinear complexity theory and Cyclotomic Chinese Remainder Theorem decompositions directly into production Zero-Knowledge (STARK/SNARK) extension-field gadgets — delivering **22.22% to 57.41% native bilinear constraint reductions** and **23.55% to 32.27% net non-native limb-carry R1CS/PlonK reductions** across StarkWare `stwo`, `Plonky3`/`SP1`, and `Consensys/gnark`.
 
 ---
 
@@ -36,7 +36,7 @@ Unlike speculative proposals, our core discovery loop has already produced **thr
 - **51 Basis-Certified Finite-Field Schedules (`2,654` algebraic basis-pair proofs + `102,000` differential fuzz checks)**:
   - **Circle STARK `QM31` (`stwo`)**: Unimodular isomorphism $\mathrm{QM31} \cong \mathbb{M}_{31}[u]/(u^4 - 4u^2 + 5)$ cutting bilinear rank `9 -> 7` (`-22.22%`, `< 2^63` zero `u64` overflow).
   - **`Plonky3` / `SP1`**: `BabyBear^4` & `KoalaBear^4` (`9 -> 7`, `-22.22%`), `BabyBear^5` & `Goldilocks^5` (`15 -> 9`, `-40.00%`), `KoalaBear^8` (`27 -> 15`, `-44.44%`).
-  - **Emulated Pairing Towers (`BN254` & `BLS12-381`)**: Unimodular simple-extension isomorphisms + exact limb-carry Pareto solver cutting net `gnark`-style Groth16 R1CS constraints by **`-23.55%` to `-32.28%`** after counting every quotient and 2-limb carry range-check bit.
+  - **Emulated Pairing Towers (`BN254` & `BLS12-381`)**: Unimodular simple-extension isomorphisms + exact limb-carry Pareto solver cutting net `gnark`-style Groth16 R1CS constraints by **`-23.55%` to `-32.27%`** after counting every quotient and 2-limb carry range-check bit.
 
 ---
 

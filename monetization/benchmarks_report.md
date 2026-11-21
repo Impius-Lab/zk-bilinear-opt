@@ -21,8 +21,8 @@
 ## 2. Non-Native Emulated Pairing Towers (`Consensys/gnark` $4\times 64$-bit `BN254` & $6\times 64$-bit `BLS12-381`)
 
 In non-native emulated field circuits over a 254-bit SNARK scalar field (such as `gnark`'s `std/algebra/emulated`),
-two adjacent 64-bit limb equations are packed per carry constraint (`128 + 64 = 192` bits), leaving a **60-bit overflow ceiling**
-(`192 + 60 = 252 < 254` bits) for $L \cdot \|U_\ell\|_1 \cdot \|V_\ell\|_1$ before mandatory pre-multiplication `Reduce()` calls are triggered,
+two adjacent 64-bit limb equations are packed per carry constraint (`128 + 64 = 192` bits, plus `4` bits for signed carry + co-addition), leaving a **56-bit overflow ceiling**
+(`192 + 4 + 56 = 252 < 254` bits) for $L \cdot \|U_\ell\|_1 \cdot \|V_\ell\|_1$ before mandatory pre-multiplication `Reduce()` calls are triggered,
 and a **64-bit ceiling** on $\|W_{\mathbb{Z},k}\|_1 + D$ before output modular-reduction quotients split into multi-limb witnesses.
 
 ### 2.1 `BN254` $\mathbb{F}_{p^6}$ ($4\times 64$-bit Limbs, $\xi = 9 + u$, Simple Iso $v^6 - 18v^3 + 82 = 0$)
@@ -43,8 +43,8 @@ and a **64-bit ceiling** on $\|W_{\mathbb{Z},k}\|_1 + D$ before output modular-r
 | `BN254_Fp12_Toom45` | Tower-Hybrid | **45** | -16.67% | `10b` | `2.6b` | `0` | 38,570 | **39,130** (-12.30%) | **7,274** (-10.95%) | YES |
 | `BN254_Fp12_Tower33` | Tower-Hybrid | **33** | -38.89% | `26b` | `18.5b` | `0` | 31,852 | **32,278** (-27.66%) | **6,229** (-23.74%) | YES |
 | `BN254_Fp12_CRT30` | Cyclotomic-CRT | **30** | -44.44% | `45b` | `45.2b` | `0` | 31,102 | **31,497** (-29.41%) | **6,171** (-24.45%) | YES |
-| `BN254_Fp12_CRT27` | Cyclotomic-CRT | **27** | -50.00% | `63b` | `71.2b` | `2` | 31,355 | **31,731** (-28.88%) | **6,843** (-16.22%) | YES |
-| `BN254_Fp12_Rank23` | Vandermonde | **23** | -57.41% | `77b` | `65.5b` | `18` | 33,382 | **33,750** (-24.36%) | **6,770** (-17.12%) | YES |
+| `BN254_Fp12_CRT27` | Cyclotomic-CRT | **27** | -50.00% | `63b` | `71.2b` | `6` | 32,039 | **32,425** (-27.33%) | **6,933** (-15.12%) | YES |
+| `BN254_Fp12_Rank23` | Vandermonde | **23** | -57.41% | `77b` | `65.5b` | `22` | 34,066 | **34,444** (-22.80%) | **6,860** (-16.01%) | YES |
 
 ### 2.3 `BLS12-381` $\mathbb{F}_{p^6}$ ($6\times 64$-bit Limbs, $\xi = 1 + u$, Simple Iso $v^6 - 2v^3 + 2 = 0$)
 
@@ -64,13 +64,13 @@ and a **64-bit ceiling** on $\|W_{\mathbb{Z},k}\|_1 + D$ before output modular-r
 | `BLS12_381_Fp12_Toom45` | Tower-Hybrid | **45** | -16.67% | `10b` | `2.6b` | `0` | 58,241 | **59,083** (-13.15%) | **12,769** (-12.46%) | YES |
 | `BLS12_381_Fp12_Tower33` | Tower-Hybrid | **33** | -38.89% | `26b` | `18.5b` | `0` | 47,669 | **48,305** (-29.00%) | **10,739** (-26.37%) | YES |
 | `BLS12_381_Fp12_CRT30` | Cyclotomic-CRT | **30** | -44.44% | `45b` | `47.5b` | `0` | 45,492 | **46,078** (-32.27%) | **10,235** (-29.83%) | YES |
-| `BLS12_381_Fp12_CRT27` | Cyclotomic-CRT | **27** | -50.00% | `63b` | `71.2b` | `2` | 45,522 | **46,073** (-32.28%) | **11,034** (-24.35%) | YES |
-| `BLS12_381_Fp12_Rank23` | Vandermonde | **23** | -57.41% | `77b` | `65.5b` | `18` | 49,092 | **49,627** (-27.05%) | **10,958** (-24.87%) | YES |
+| `BLS12_381_Fp12_CRT27` | Cyclotomic-CRT | **27** | -50.00% | `63b` | `71.2b` | `6` | 46,618 | **47,183** (-30.65%) | **11,176** (-23.38%) | YES |
+| `BLS12_381_Fp12_Rank23` | Vandermonde | **23** | -57.41% | `77b` | `65.5b` | `22` | 50,188 | **50,737** (-25.42%) | **11,100** (-23.90%) | YES |
 
 ## 3. Key Architectural Takeaway: Why Naive `23`-Mul Vandermonde Loses to `CRT-30` & `Tower-33` in Non-Native Limbs
 
 1. **Native $\mathbb{F}_p$ Circuits (e.g., BW6-761 / Pasta 2-chains / Native R1CS)**: Scalar multiplications by $D^{-1} W_{\mathbb{Z}} \bmod p$ fold into linear combinations for **zero** multiplicative gates, so `Rank-23` Vandermonde achieves the exact Winograd / Alder–Strassen global minimum of **23 R1CS constraints** (`-57.41%` vs `54`).
-2. **Emulated $L\times 64$-bit Non-Native Circuits (`gnark` Groth16 / PlonK)**: `Vandermonde-Rank23` evaluates at nodes up to $\alpha = -11$, where $|-11|^{11} \approx 2^{38.1}$ pushes $\|U_\ell\|_1 \|V_\ell\|_1$ to **`77` bits** (`> 60`-bit 2-limb packing limit), triggering **18 mandatory pre-multiplication `Reduce()` gadgets**, while $D = \operatorname{lcm}(\dots) \approx 2^{65.5}$ and $\|W_{\mathbb{Z}}\|_1 \approx 2^{113}$ force 2-limb output reduction quotients.
+2. **Emulated $L\times 64$-bit Non-Native Circuits (`gnark` Groth16 / PlonK)**: `Vandermonde-Rank23` evaluates at nodes up to $\alpha = -11$, where $|-11|^{11} \approx 2^{38.1}$ pushes $\|U_\ell\|_1 \|V_\ell\|_1$ to **`77` bits** (`> 56`-bit 2-limb malicious-witness non-wrap limit), triggering **22 mandatory pre-multiplication `Reduce()` gadgets**, while $D = \operatorname{lcm}(\dots) \approx 2^{65.5}$ and $\|W_{\mathbb{Z}}\|_1 \approx 2^{113}$ force 2-limb output reduction quotients.
 3. **The Certified Non-Native Sweet Spots**:
    - **On $\mathbb{F}_{p^6}$**: `Rank-11` (`{-5..4, inf}`) stays strictly inside the 2-limb packing envelope (`0` pre-reductions, `18.5`-bit $D$), achieving **both** optimal native rank (`18 -> 11`, `-38.89%`) **and** the global minimum net Groth16 R1CS (`-23.55%` on BN254, `-26.36%` on BLS12-381) and PlonK16 (`-23.42%` / `-27.26%`) constraint counts!
    - **On $\mathbb{F}_{p^{12}}$**: `CRT-30` (`9` small linear nodes `{-4..3, inf}` + `7` cyclotomic/small quadratic moduli, `0` pre-reductions, single-word output quotients) and `Tower-33` (`Toom-6` over $\mathbb{F}_{p^2}$ $\times$ `Karatsuba-2`, `18.5`-bit $D$, `0` pre-reductions) eliminate 100% of pre-multiplication reductions and beat `Tower-54` by **`-29.41%` (BN254) and `-32.27%` (BLS12-381) net Groth16 R1CS constraints AFTER counting every carry & range-check bit**, cleanly outperforming `Vandermonde-23`!

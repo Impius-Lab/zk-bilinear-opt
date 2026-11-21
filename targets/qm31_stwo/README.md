@@ -29,11 +29,11 @@ By Winograd (1977) / Alder–Strassen (1981), any degree-$4$ field extension ove
 
 ### Exact `i64` / `u64` Accumulator Bound
 For canonical inputs $a_k, b_k \in [0, 2^{31} - 2]$:
-1. **Evaluation (`U * a`, `V * b`)**: $\max_\ell \|U_\ell\|_1 (p - 1) \le 40 \cdot (2^{31} - 2) < 2^{36.4} \ll 2^{63} - 1$.
+1. **Evaluation (`U * a`, `V * b`)**: $\max_\ell \|U_\ell\|_1 (p - 1) = 32 \cdot (2^{31} - 2) < 2^{36} \ll 2^{63} - 1$.
 2. **Pointwise Products (`m_l`)**: $(p - 1)^2 = (2^{31} - 2)^2 < 2^{62} < 2^{63} - 1$.
-3. **Integer Interpolation (`W_z * m`)**: $\max_k \|W_{\mathbb{Z}, k}\|_1 (p - 1) < 2800 \cdot (2^{31} - 2) < 2^{42.5} \ll 2^{63} - 1$.
+3. **Integer Interpolation (`W_z * m`)**: $\max_k \|W_{\mathbb{Z}, k}\|_1 (p - 1) = 1210 \cdot (2^{31} - 2) < 2^{41.3} \ll 2^{63} - 1$.
 4. **Denominator Scaling (`* 120^{-1} mod p`)**: $(p - 1) \cdot \mathrm{INV\_120} \le (p - 1)^2 < 2^{62} < 2^{63} - 1$.
 
 ## 3. Artifacts in This Directory
-- [`qm31_rank7_cert.json`](./qm31_rank7_cert.json): Deterministic R1CS + algebraic certificate (`SHA-256: 1d9d3c602a89...`).
+- [`qm31_rank7_cert.json`](./qm31_rank7_cert.json): Deterministic R1CS + algebraic certificate (`schedule_sha256: 1d9d3c602a89...`).
 - [`qm31_stwo.rs`](./qm31_stwo.rs): Zero-overflow `#![no_std]` Rust `mul_qm31_rank7` and `mul_qm31_karatsuba9` kernels.

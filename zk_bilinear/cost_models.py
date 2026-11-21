@@ -8,9 +8,10 @@ Models every cost component honestly from the integer-rational bilinear represen
      hardware accumulator bit-width (u64 for 31-bit primes, u128 for Goldilocks).
   4. Non-Native Emulated Limbs (gnark std/algebra/emulated style over a 254-bit SNARK
      scalar field, e.g. 4x64-bit for BN254 and 6x64-bit for BLS12-381):
-     - Enforces gnark's 2-limb carry-packing overflow budget:
-         128 (limb*limb) + 64 (2-limb pack) + ceil(log2(L * ||U_l||_1 * ||V_l||_1)) <= 252
-       (=> <= 60 bits of product overflow before mandatory pre-multiplication Reduce()!).
+     - Enforces gnark's 2-limb carry-packing malicious-witness non-wrap budget:
+         128 (limb*limb) + 64 (2-limb pack) + 4 (signed carry + co-addition margin)
+         + ceil(log2(L * ||U_l||_1 * ||V_l||_1)) <= 252 < log2(r_BN254) ≈ 253.60
+       (=> <= 56 bits of product overflow before mandatory pre-multiplication Reduce()!).
      - Counts Toom-limb (2L - 1) and schoolbook (L^2) bilinear limb multiplications,
        quotient witness range-check bits, 2-limb-packed carry range-check bits, and
        output modular reduction W_z * m - D * c = q_W * p range-check bits for BOTH
@@ -146,9 +147,12 @@ def compute_emulated_limb_cost(
     d = schedule.degree
     D = schedule.D
 
-    # In gnark, 2 adjacent limb equations are packed (128 + 64 = 192 base bits), leaving
-    # snark_scalar_limit_bits - 192 (= 60 bits for 252-bit BN254 scalar cap) for L * ||U||_1 * ||V||_1.
-    two_limb_pack_cap = snark_scalar_limit_bits - 2 * limb_bits - limb_bits
+    # In gnark, 2 adjacent limb equations are packed (128 + 64 = 192 base bits), and the
+    # outgoing carry c_g * 2^128 has range-check span 2^(c_bits + 128) where
+    # c_bits <= limb_bits + conv_slack + 3; reserving 4 bits for signed carry + L_{2g+1}
+    # co-addition leaves snark_scalar_limit_bits - 196 (= 56 bits for 252-bit BN254 scalar cap)
+    # so even a malicious prover's worst-case witness span stays strictly < 2^252 < r_BN254.
+    two_limb_pack_cap = snark_scalar_limit_bits - 2 * limb_bits - limb_bits - 4
     n_limb_pairs = math.ceil(num_limbs / 2)
     chunks_per_limb = limb_bits // 16
 
@@ -353,7 +357,7 @@ def verify_emulated_witness_bounds(
     L = cost.num_limbs
     w_bits = cost.limb_bits
     base = 1 << w_bits
-    two_limb_pack_cap = snark_scalar_limit_bits - 3 * w_bits
+    two_limb_pack_cap = snark_scalar_limit_bits - 3 * w_bits - 4
     half_cap = (two_limb_pack_cap - math.ceil(math.log2(L))) // 2
 
     def to_limbs(val: int, n_l: int) -> List[int]:
@@ -450,6 +454,45 @@ def verify_emulated_witness_bounds(
                     f"Mul 2-limb signed carry overflow at l={l}: {(2 * abs(carry)).bit_length()}b > allocated {cost.max_mul_carry_bits}b"
                 )
         assert carry == 0
+
+        # Malicious-prover SNARK scalar non-wrap soundness check on row l:
+        # Even if an adversarial prover picks extremal range-checked limbs and carries,
+        # the packed 2-limb residual span MUST remain strictly < 2^snark_scalar_limit_bits.
+        eff_u_l1 = 1 if (conv_slack > two_limb_pack_cap and math.ceil(math.log2(max(1, u_l1))) > half_cap and u_l1 > 1) else u_l1
+        eff_v_l1 = 1 if (conv_slack > two_limb_pack_cap and math.ceil(math.log2(max(1, v_l1))) > half_cap and v_l1 > 1) else v_l1
+        eff_uv_row = eff_u_l1 * eff_v_l1
+        uv_sl_row = 0 if eff_uv_row == 1 else math.ceil(math.log2(eff_uv_row))
+        q_b_row = p.bit_length() + uv_sl_row
+        q_l_row = math.ceil(q_b_row / w_bits)
+        c_b_row = max(
+            cost.max_mul_carry_bits if l == 0 else 0,
+            w_bits + math.ceil(math.log2(L * eff_uv_row + q_l_row + 1)) + 2,
+        )
+        max_limb_val = base - 1
+        q_top_b = q_b_row - w_bits * (q_l_row - 1)
+        q_sp_row = [max_limb_val] * (q_l_row - 1) + [(1 << max(1, q_top_b)) - 1]
+        tot_p_row = max(2 * L - 1, L + q_l_row - 1)
+        n_eq_row = math.ceil(tot_p_row / 2)
+        for g_eq in range(n_eq_row):
+            i0, i1 = 2 * g_eq, 2 * g_eq + 1
+            np0 = sum(1 for k_i in range(L) if 0 <= i0 - k_i < L)
+            np1 = sum(1 for k_i in range(L) if 0 <= i1 - k_i < L) if i1 < tot_p_row else 0
+            sp_l = (np0 + (np1 * base)) * eff_uv_row * (max_limb_val * max_limb_val)
+            sp_r0 = (max_limb_val if i0 < L else 0) + sum(
+                q_sp_row[iq] * p_limbs[i0 - iq] for iq in range(q_l_row) if 0 <= i0 - iq < L
+            )
+            sp_r1 = (
+                (max_limb_val if i1 < L else 0)
+                + sum(q_sp_row[iq] * p_limbs[i1 - iq] for iq in range(q_l_row) if 0 <= i1 - iq < L)
+            ) if i1 < tot_p_row else 0
+            sp_cin = ((1 << c_b_row) - 1) if g_eq > 0 else 0
+            sp_cout = (((1 << c_b_row) - 1) * (base * base if i1 < tot_p_row else base)) if g_eq < n_eq_row - 1 else 0
+            mal_span = sp_l + sp_r0 + sp_r1 * base + sp_cin + sp_cout
+            if mal_span >= (1 << snark_scalar_limit_bits):
+                raise OverflowError(
+                    f"Malicious-prover SNARK scalar wrap risk at l={l}, eq={g_eq}: "
+                    f"span {mal_span.bit_length()}b > {snark_scalar_limit_bits}b limit"
+                )
 
     inv_d = pow(schedule.D, p - 2, p)
     for k in range(d):

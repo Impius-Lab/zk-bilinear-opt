@@ -11701,15 +11701,15 @@
       },
       "costs": {
         "emulated_limbs": {
-          "groth16_r1cs_schoolbook_total": 31974,
-          "groth16_r1cs_total": 31731,
+          "groth16_r1cs_schoolbook_total": 32668,
+          "groth16_r1cs_total": 32425,
           "limb_muls_schoolbook": 432,
           "limb_muls_toom": 189,
           "limbs": "4x64",
-          "plonk_lookup16_gates": 2038,
-          "plonk_total_gates": 6843,
-          "pre_mul_reductions": 2,
-          "total_range_check_bits": 31355
+          "plonk_lookup16_gates": 2084,
+          "plonk_total_gates": 6933,
+          "pre_mul_reductions": 6,
+          "total_range_check_bits": 32039
         },
         "native_air_degree2_muls": 27,
         "native_plonk_mul_gates": 27,
@@ -14024,15 +14024,15 @@
       },
       "costs": {
         "emulated_limbs": {
-          "groth16_r1cs_schoolbook_total": 33957,
-          "groth16_r1cs_total": 33750,
+          "groth16_r1cs_schoolbook_total": 34651,
+          "groth16_r1cs_total": 34444,
           "limb_muls_schoolbook": 368,
           "limb_muls_toom": 161,
           "limbs": "4x64",
-          "plonk_lookup16_gates": 2186,
-          "plonk_total_gates": 6770,
-          "pre_mul_reductions": 18,
-          "total_range_check_bits": 33382
+          "plonk_lookup16_gates": 2232,
+          "plonk_total_gates": 6860,
+          "pre_mul_reductions": 22,
+          "total_range_check_bits": 34066
         },
         "native_air_degree2_muls": 23,
         "native_plonk_mul_gates": 23,

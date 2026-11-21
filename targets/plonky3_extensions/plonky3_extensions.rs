@@ -23,8 +23,8 @@ pub fn mul_babybear4_rank7(a: &[u32; 4], b: &[u32; 4]) -> [u32; 4] {
         m[1] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[0] as i64);
-        let v_acc: i64 = (b[0] as i64);
+        let u_acc: i64 = a[0] as i64;
+        let v_acc: i64 = b[0] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[2] = ((u_mod * v_mod) % P_U) as u32;
@@ -51,8 +51,8 @@ pub fn mul_babybear4_rank7(a: &[u32; 4], b: &[u32; 4]) -> [u32; 4] {
         m[5] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[3] as i64);
-        let v_acc: i64 = (b[3] as i64);
+        let u_acc: i64 = a[3] as i64;
+        let v_acc: i64 = b[3] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[6] = ((u_mod * v_mod) % P_U) as u32;
@@ -118,8 +118,8 @@ pub fn mul_babybear5_rank9(a: &[u32; 5], b: &[u32; 5]) -> [u32; 5] {
         m[3] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[0] as i64);
-        let v_acc: i64 = (b[0] as i64);
+        let u_acc: i64 = a[0] as i64;
+        let v_acc: i64 = b[0] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[4] = ((u_mod * v_mod) % P_U) as u32;
@@ -146,8 +146,8 @@ pub fn mul_babybear5_rank9(a: &[u32; 5], b: &[u32; 5]) -> [u32; 5] {
         m[7] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[4] as i64);
-        let v_acc: i64 = (b[4] as i64);
+        let u_acc: i64 = a[4] as i64;
+        let v_acc: i64 = b[4] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[8] = ((u_mod * v_mod) % P_U) as u32;
@@ -204,8 +204,8 @@ pub fn mul_koalabear4_rank7(a: &[u32; 4], b: &[u32; 4]) -> [u32; 4] {
         m[1] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[0] as i64);
-        let v_acc: i64 = (b[0] as i64);
+        let u_acc: i64 = a[0] as i64;
+        let v_acc: i64 = b[0] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[2] = ((u_mod * v_mod) % P_U) as u32;
@@ -232,8 +232,8 @@ pub fn mul_koalabear4_rank7(a: &[u32; 4], b: &[u32; 4]) -> [u32; 4] {
         m[5] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[3] as i64);
-        let v_acc: i64 = (b[3] as i64);
+        let u_acc: i64 = a[3] as i64;
+        let v_acc: i64 = b[3] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[6] = ((u_mod * v_mod) % P_U) as u32;
@@ -320,8 +320,8 @@ pub fn mul_koalabear8_rank15(a: &[u32; 8], b: &[u32; 8]) -> [u32; 8] {
         m[6] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[0] as i64);
-        let v_acc: i64 = (b[0] as i64);
+        let u_acc: i64 = a[0] as i64;
+        let v_acc: i64 = b[0] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[7] = ((u_mod * v_mod) % P_U) as u32;
@@ -369,8 +369,8 @@ pub fn mul_koalabear8_rank15(a: &[u32; 8], b: &[u32; 8]) -> [u32; 8] {
         m[13] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[7] as i64);
-        let v_acc: i64 = (b[7] as i64);
+        let u_acc: i64 = a[7] as i64;
+        let v_acc: i64 = b[7] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[14] = ((u_mod * v_mod) % P_U) as u32;
@@ -483,15 +483,15 @@ pub fn mul_goldilocks2_rank3(a: &[u64; 2], b: &[u64; 2]) -> [u64; 2] {
     const P_U: u128 = 18446744069414584321;
     let mut m = [0u64; 3];
     {
-        let u_acc: i128 = (a[0] as i128);
-        let v_acc: i128 = (b[0] as i128);
+        let u_acc: i128 = a[0] as i128;
+        let v_acc: i128 = b[0] as i128;
         let u_mod: u128 = u_acc.rem_euclid(P_S) as u128;
         let v_mod: u128 = v_acc.rem_euclid(P_S) as u128;
         m[0] = ((u_mod * v_mod) % P_U) as u64;
     }
     {
-        let u_acc: i128 = (a[1] as i128);
-        let v_acc: i128 = (b[1] as i128);
+        let u_acc: i128 = a[1] as i128;
+        let v_acc: i128 = b[1] as i128;
         let u_mod: u128 = u_acc.rem_euclid(P_S) as u128;
         let v_mod: u128 = v_acc.rem_euclid(P_S) as u128;
         m[1] = ((u_mod * v_mod) % P_U) as u64;
@@ -540,8 +540,8 @@ pub fn mul_goldilocks4_rank7(a: &[u64; 4], b: &[u64; 4]) -> [u64; 4] {
         m[1] = ((u_mod * v_mod) % P_U) as u64;
     }
     {
-        let u_acc: i128 = (a[0] as i128);
-        let v_acc: i128 = (b[0] as i128);
+        let u_acc: i128 = a[0] as i128;
+        let v_acc: i128 = b[0] as i128;
         let u_mod: u128 = u_acc.rem_euclid(P_S) as u128;
         let v_mod: u128 = v_acc.rem_euclid(P_S) as u128;
         m[2] = ((u_mod * v_mod) % P_U) as u64;
@@ -568,8 +568,8 @@ pub fn mul_goldilocks4_rank7(a: &[u64; 4], b: &[u64; 4]) -> [u64; 4] {
         m[5] = ((u_mod * v_mod) % P_U) as u64;
     }
     {
-        let u_acc: i128 = (a[3] as i128);
-        let v_acc: i128 = (b[3] as i128);
+        let u_acc: i128 = a[3] as i128;
+        let v_acc: i128 = b[3] as i128;
         let u_mod: u128 = u_acc.rem_euclid(P_S) as u128;
         let v_mod: u128 = v_acc.rem_euclid(P_S) as u128;
         m[6] = ((u_mod * v_mod) % P_U) as u64;
@@ -635,8 +635,8 @@ pub fn mul_goldilocks5_rank9(a: &[u64; 5], b: &[u64; 5]) -> [u64; 5] {
         m[3] = ((u_mod * v_mod) % P_U) as u64;
     }
     {
-        let u_acc: i128 = (a[0] as i128);
-        let v_acc: i128 = (b[0] as i128);
+        let u_acc: i128 = a[0] as i128;
+        let v_acc: i128 = b[0] as i128;
         let u_mod: u128 = u_acc.rem_euclid(P_S) as u128;
         let v_mod: u128 = v_acc.rem_euclid(P_S) as u128;
         m[4] = ((u_mod * v_mod) % P_U) as u64;
@@ -663,8 +663,8 @@ pub fn mul_goldilocks5_rank9(a: &[u64; 5], b: &[u64; 5]) -> [u64; 5] {
         m[7] = ((u_mod * v_mod) % P_U) as u64;
     }
     {
-        let u_acc: i128 = (a[4] as i128);
-        let v_acc: i128 = (b[4] as i128);
+        let u_acc: i128 = a[4] as i128;
+        let v_acc: i128 = b[4] as i128;
         let u_mod: u128 = u_acc.rem_euclid(P_S) as u128;
         let v_mod: u128 = v_acc.rem_euclid(P_S) as u128;
         m[8] = ((u_mod * v_mod) % P_U) as u64;

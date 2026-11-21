@@ -51,8 +51,8 @@ pub fn mul_qm31_rank7(a: &[u32; 4], b: &[u32; 4]) -> [u32; 4] {
         m[5] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[3] as i64);
-        let v_acc: i64 = (b[3] as i64);
+        let u_acc: i64 = a[3] as i64;
+        let v_acc: i64 = b[3] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[6] = ((u_mod * v_mod) % P_U) as u32;
@@ -90,15 +90,15 @@ pub fn mul_qm31_karatsuba9(a: &[u32; 4], b: &[u32; 4]) -> [u32; 4] {
     const P_U: u64 = 2147483647;
     let mut m = [0u32; 9];
     {
-        let u_acc: i64 = (a[0] as i64);
-        let v_acc: i64 = (b[0] as i64);
+        let u_acc: i64 = a[0] as i64;
+        let v_acc: i64 = b[0] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[0] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[1] as i64);
-        let v_acc: i64 = (b[1] as i64);
+        let u_acc: i64 = a[1] as i64;
+        let v_acc: i64 = b[1] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[1] = ((u_mod * v_mod) % P_U) as u32;
@@ -111,15 +111,15 @@ pub fn mul_qm31_karatsuba9(a: &[u32; 4], b: &[u32; 4]) -> [u32; 4] {
         m[2] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[2] as i64);
-        let v_acc: i64 = (b[2] as i64);
+        let u_acc: i64 = a[2] as i64;
+        let v_acc: i64 = b[2] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[3] = ((u_mod * v_mod) % P_U) as u32;
     }
     {
-        let u_acc: i64 = (a[3] as i64);
-        let v_acc: i64 = (b[3] as i64);
+        let u_acc: i64 = a[3] as i64;
+        let v_acc: i64 = b[3] as i64;
         let u_mod: u64 = u_acc.rem_euclid(P_S) as u64;
         let v_mod: u64 = v_acc.rem_euclid(P_S) as u64;
         m[4] = ((u_mod * v_mod) % P_U) as u32;

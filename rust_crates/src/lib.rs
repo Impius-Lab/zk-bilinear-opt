@@ -137,4 +137,72 @@ mod tests {
             ref_binomial_u32(&kb8_max, &kb8_max, 3, KOALABEAR_P as u64)
         );
     }
+
+    fn ref_binomial_u64<const D: usize>(a: &[u64; D], b: &[u64; D], w: u128, p: u128) -> [u64; D] {
+        let mut prod = [0u128; 2 * D];
+        for i in 0..D {
+            for j in 0..D {
+                let term = ((a[i] as u128) * (b[j] as u128)) % p;
+                prod[i + j] = (prod[i + j] + term) % p;
+            }
+        }
+        let mut out = [0u64; D];
+        for i in 0..D {
+            let folded = (prod[i] + ((prod[i + D] * w) % p)) % p;
+            out[i] = folded as u64;
+        }
+        out
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    struct M31Expr(u32);
+
+    impl SymbolicFieldExpr for M31Expr {
+        fn zero() -> Self {
+            Self(0)
+        }
+        fn add_assign(&mut self, rhs: Self) {
+            self.0 = (((self.0 as u64) + (rhs.0 as u64)) % (M31_P as u64)) as u32;
+        }
+        fn sub_assign(&mut self, rhs: Self) {
+            self.0 = (((self.0 as i64) - (rhs.0 as i64)).rem_euclid(M31_P as i64)) as u32;
+        }
+        fn scale_signed(&self, coeff: i64) -> Self {
+            let v = ((self.0 as i64) * coeff).rem_euclid(M31_P as i64);
+            Self(v as u32)
+        }
+        fn mul_expr(&self, rhs: &Self) -> Self {
+            Self((((self.0 as u64) * (rhs.0 as u64)) % (M31_P as u64)) as u32)
+        }
+    }
+
+    #[test]
+    fn test_cm31_goldilocks_and_eval_bilinear_direct() {
+        let cm_max = [M31_P - 1; 2];
+        let cm_got = mul_cm31_rank3(&cm_max, &cm_max);
+        assert_eq!(cm_got, [0, 2]);
+
+        let u_cm: [[i64; 2]; 3] = [[1, 0], [0, 1], [1, 1]];
+        let v_cm: [[i64; 2]; 3] = [[1, 0], [0, 1], [1, 1]];
+        let wz_cm: [[i64; 3]; 2] = [[1, -1, 0], [-1, -1, 1]];
+        let expr_a = [M31Expr(cm_max[0]), M31Expr(cm_max[1])];
+        let expr_out = eval_bilinear_direct(&expr_a, &expr_a, &u_cm, &v_cm, &wz_cm);
+        assert_eq!([expr_out[0].0, expr_out[1].0], cm_got);
+
+        let gl2_max = [GOLDILOCKS_P - 1; 2];
+        assert_eq!(
+            mul_goldilocks2_rank3(&gl2_max, &gl2_max),
+            ref_binomial_u64(&gl2_max, &gl2_max, 7, GOLDILOCKS_P as u128)
+        );
+        let gl4_max = [GOLDILOCKS_P - 1; 4];
+        assert_eq!(
+            mul_goldilocks4_rank7(&gl4_max, &gl4_max),
+            ref_binomial_u64(&gl4_max, &gl4_max, 7, GOLDILOCKS_P as u128)
+        );
+        let gl5_max = [GOLDILOCKS_P - 1; 5];
+        assert_eq!(
+            mul_goldilocks5_rank9(&gl5_max, &gl5_max),
+            ref_binomial_u64(&gl5_max, &gl5_max, 3, GOLDILOCKS_P as u128)
+        );
+    }
 }

@@ -127,6 +127,11 @@ class TestAdversarialMutations(unittest.TestCase):
         self.assertFalse(rep_i128.passed)
         self.assertFalse(rep_i128.accumulator_bound_ok)
 
+        # E. Malicious-prover 2-limb packed carry wraparound (c_bits=126 => 126+128=254b > 252b cap) -> MUST raise OverflowError!
+        over_alloc_c_cost = replace(true_cost, max_mul_carry_bits=126)
+        with self.assertRaises(OverflowError):
+            verify_emulated_witness_bounds(sched_bn6, adv_a, adv_b, over_alloc_c_cost, p)
+
 
 if __name__ == "__main__":
     unittest.main()
