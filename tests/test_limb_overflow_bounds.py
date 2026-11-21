@@ -121,10 +121,10 @@ class TestLimbOverflowAndParetoBounds(unittest.TestCase):
             self.assertEqual(c30.pre_mul_reductions, 0)
             self.assertGreater(c23.pre_mul_reductions, 10)
 
-            # Tower-33 and CRT-30 beat Tower-54 substantially
+            # Tower-33 and CRT-30 beat Tower-54 substantially (even after counting all L*(U,V) linear gates)
             self.assertLess(c33.groth16_r1cs_total, int(0.75 * c54.groth16_r1cs_total))
             self.assertLess(c30.groth16_r1cs_total, int(0.72 * c54.groth16_r1cs_total))
-            self.assertLess(c30.plonk_total_gates, int(0.72 * c54.plonk_total_gates))
+            self.assertLess(c30.plonk_total_gates, int(0.76 * c54.plonk_total_gates))
 
             # And BOTH Tower-33 and CRT-30 beat naive Vandermonde-23 in Groth16 & PlonK16!
             self.assertLess(c33.groth16_r1cs_total, c23.groth16_r1cs_total)
@@ -135,6 +135,13 @@ class TestLimbOverflowAndParetoBounds(unittest.TestCase):
             for s12, cost12 in by_name.values():
                 max_v12 = [p12 - 1] * 12
                 verify_emulated_witness_bounds(s12, max_v12, max_v12, cost12, p12)
+                # Also stress maximal 64-bit lower limbs (0xFFFF_FFFF_FFFF_FFFF) + sign-aligned rows
+                top_p12 = p12 >> (64 * (limbs - 1))
+                x_limb_max = ((top_p12 - 1) << (64 * (limbs - 1))) + ((1 << (64 * (limbs - 1))) - 1)
+                verify_emulated_witness_bounds(s12, [x_limb_max] * 12, [x_limb_max] * 12, cost12, p12)
+                adv12_a = [x_limb_max if s12.U[0][i] > 0 else 0 for i in range(12)]
+                adv12_b = [x_limb_max if s12.V[0][j] < 0 else 0 for j in range(12)]
+                verify_emulated_witness_bounds(s12, adv12_a, adv12_b, cost12, p12)
 
 
 if __name__ == "__main__":

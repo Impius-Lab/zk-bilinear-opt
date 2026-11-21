@@ -21,7 +21,7 @@
           "limb_muls_toom": 198,
           "limbs": "6x64",
           "plonk_lookup16_gates": 1500,
-          "plonk_total_gates": 2009,
+          "plonk_total_gates": 4791,
           "pre_mul_reductions": 0,
           "total_range_check_bits": 22863
         },
@@ -829,7 +829,7 @@
           "limb_muls_toom": 165,
           "limbs": "6x64",
           "plonk_lookup16_gates": 1317,
-          "plonk_total_gates": 1774,
+          "plonk_total_gates": 4173,
           "pre_mul_reductions": 0,
           "total_range_check_bits": 20125
         },
@@ -1568,7 +1568,7 @@
           "limb_muls_toom": 143,
           "limbs": "6x64",
           "plonk_lookup16_gates": 1213,
-          "plonk_total_gates": 1638,
+          "plonk_total_gates": 3871,
           "pre_mul_reductions": 0,
           "total_range_check_bits": 18393
         },
@@ -2271,7 +2271,7 @@
           "limb_muls_toom": 132,
           "limbs": "6x64",
           "plonk_lookup16_gates": 1159,
-          "plonk_total_gates": 1559,
+          "plonk_total_gates": 3706,
           "pre_mul_reductions": 0,
           "total_range_check_bits": 17754
         },
@@ -2949,7 +2949,7 @@
           "limb_muls_toom": 121,
           "limbs": "6x64",
           "plonk_lookup16_gates": 1106,
-          "plonk_total_gates": 1477,
+          "plonk_total_gates": 3485,
           "pre_mul_reductions": 0,
           "total_range_check_bits": 16861
         },

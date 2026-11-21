@@ -339,9 +339,32 @@ def verify_schedule_certificate(
     if spec.native_accumulator_bits is not None:
         word_bits = spec.native_accumulator_bits
         hard_cap = 63 if word_bits == 64 else 128
+        signed_limit = (1 << 63) if word_bits == 64 else (1 << 127)
+        max_u_abs = max(
+            max(sum(x for x in row if x > 0), sum(-x for x in row if x < 0)) * (p - 1)
+            for row in schedule.U
+        )
+        max_v_abs = max(
+            max(sum(x for x in row if x > 0), sum(-x for x in row if x < 0)) * (p - 1)
+            for row in schedule.V
+        )
+        use_direct_wz = schedule.max_wz_l1 * (p - 1) < (signed_limit >> 1)
+        max_w_abs = (
+            max(
+                max(sum(x for x in row if x > 0), sum(-x for x in row if x < 0)) * (p - 1)
+                for row in schedule.W_z
+            )
+            if use_direct_wz
+            else 0
+        )
         peak_bits = theoretical_peak_native_bits(schedule, p, word_bits)
         decl = schedule.declared_acc_bound_bits if schedule.declared_acc_bound_bits is not None else hard_cap
-        if peak_bits > decl or peak_bits > hard_cap:
+        if max(max_u_abs, max_v_abs, max_w_abs) >= signed_limit:
+            acc_ok = False
+            errors.append(
+                f"Signed i{word_bits} accumulator overflow: max signed magnitude >= 2^{word_bits - 1}"
+            )
+        elif peak_bits > decl or peak_bits > hard_cap:
             acc_ok = False
             errors.append(
                 f"Native accumulator bound violated: peak {peak_bits}b > min(declared={decl}b, cap={hard_cap}b)"

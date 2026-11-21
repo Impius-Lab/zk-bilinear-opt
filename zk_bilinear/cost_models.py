@@ -73,6 +73,22 @@ class FullScheduleCost:
     emulated: Optional[EmulatedLimbCost]
 
 
+def _w4_sum_gates(n_terms: int) -> int:
+    """Width-4 PlonK linear gates to sum `n_terms` wires into 1 output wire:
+    <= 1 term -> 0 gates; k >= 2 terms -> ceil((k - 1) / 2) gates (each gate sums 3 -> 1).
+    """
+    return 0 if n_terms <= 1 else math.ceil((n_terms - 1) / 2)
+
+
+def _w4_zero_eq_gates(n_terms: int) -> int:
+    """Width-4 PlonK linear gates to assert a linear combination of `n_terms` wires equals 0:
+    <= 4 wires -> 1 gate; k > 4 wires -> ceil((k - 2) / 2) gates.
+    """
+    if n_terms <= 1:
+        return 0
+    return 1 if n_terms <= 4 else math.ceil((n_terms - 2) / 2)
+
+
 def _count_dedup_width4_gates(matrix: Sequence[Sequence[int]]) -> int:
     """Count width-4 PlonK linear gates needed to form unique non-trivial rows."""
     seen = set()
@@ -133,6 +149,8 @@ def compute_emulated_limb_cost(
     # In gnark, 2 adjacent limb equations are packed (128 + 64 = 192 base bits), leaving
     # snark_scalar_limit_bits - 192 (= 60 bits for 252-bit BN254 scalar cap) for L * ||U||_1 * ||V||_1.
     two_limb_pack_cap = snark_scalar_limit_bits - 2 * limb_bits - limb_bits
+    n_limb_pairs = math.ceil(num_limbs / 2)
+    chunks_per_limb = limb_bits // 16
 
     pre_mul_reds = 0
     limb_muls_toom = 0
@@ -142,7 +160,10 @@ def compute_emulated_limb_cost(
     out_red_bits = 0
     carry_lin_eqs = 0
     plonk_lookups = 0
-    plonk_arith = 0
+    # Count deduplicated width-4 linear addition gates forming U*a and V*b across all L limbs:
+    plonk_arith = num_limbs * (
+        _count_dedup_width4_gates(schedule.U) + _count_dedup_width4_gates(schedule.V)
+    )
 
     max_mul_q_bits = 0
     max_mul_c_bits = 0
@@ -157,39 +178,32 @@ def compute_emulated_limb_cost(
         eff_u = u_l1
         eff_v = v_l1
         if conv_slack > two_limb_pack_cap:
-            # Reduce whichever side(s) exceed half the budget
+            # Reduce whichever side(s) exceed half the budget (gnark symmetric overflow guard)
             half_cap = (two_limb_pack_cap - math.ceil(math.log2(num_limbs))) // 2
-            if math.ceil(math.log2(max(1, u_l1))) > half_cap and u_l1 > 1:
-                pre_mul_reds += 1
-                q_in_b = math.ceil(math.log2(u_l1 + 1))
-                c_in_b = q_in_b + 2
-                n_in_c = max(1, math.ceil((num_limbs - 1) / 2))
-                red_b = num_limbs * limb_bits + q_in_b + n_in_c * c_in_b
-                quot_and_wit_bits += num_limbs * limb_bits + q_in_b
-                carry_bits += n_in_c * c_in_b
-                carry_lin_eqs += n_in_c + 1
-                plonk_lookups += (
-                    num_limbs * (limb_bits // 16)
-                    + math.ceil(q_in_b / 16)
-                    + n_in_c * math.ceil(c_in_b / 16)
-                )
-                plonk_arith += num_limbs + sum(1 for x in schedule.U[l] if x != 0)
-                eff_u = 1
-            if math.ceil(math.log2(max(1, v_l1))) > half_cap and v_l1 > 1:
-                pre_mul_reds += 1
-                q_in_b = math.ceil(math.log2(v_l1 + 1))
-                c_in_b = q_in_b + 2
-                n_in_c = max(1, math.ceil((num_limbs - 1) / 2))
-                quot_and_wit_bits += num_limbs * limb_bits + q_in_b
-                carry_bits += n_in_c * c_in_b
-                carry_lin_eqs += n_in_c + 1
-                plonk_lookups += (
-                    num_limbs * (limb_bits // 16)
-                    + math.ceil(q_in_b / 16)
-                    + n_in_c * math.ceil(c_in_b / 16)
-                )
-                plonk_arith += num_limbs + sum(1 for y in schedule.V[l] if y != 0)
-                eff_v = 1
+            for side_l1, tag in ((u_l1, "u"), (v_l1, "v")):
+                if math.ceil(math.log2(max(1, side_l1))) > half_cap and side_l1 > 1:
+                    pre_mul_reds += 1
+                    q_in_b = math.ceil(math.log2(side_l1 + 1))
+                    c_in_b = q_in_b + 2
+                    n_in_c = max(1, math.ceil((num_limbs - 1) / 2))
+                    quot_and_wit_bits += num_limbs * limb_bits + q_in_b
+                    carry_bits += n_in_c * c_in_b
+                    carry_lin_eqs += n_in_c + 1
+                    q_in_chk = math.ceil(q_in_b / 16)
+                    c_in_chk = math.ceil(c_in_b / 16)
+                    plonk_lookups += (
+                        num_limbs * chunks_per_limb + q_in_chk + n_in_c * c_in_chk
+                    )
+                    plonk_arith += (
+                        num_limbs * _w4_sum_gates(chunks_per_limb)
+                        + _w4_sum_gates(q_in_chk)
+                        + n_in_c * _w4_sum_gates(c_in_chk)
+                        + n_limb_pairs * _w4_zero_eq_gates(7)
+                    )
+                    if tag == "u":
+                        eff_u = 1
+                    else:
+                        eff_v = 1
 
         eff_uv = eff_u * eff_v
         uv_slack = 0 if eff_uv == 1 else math.ceil(math.log2(eff_uv))
@@ -207,6 +221,7 @@ def compute_emulated_limb_cost(
         # Number of 2-limb packed carry words across (num_limbs + q_limbs) limb positions
         total_positions = max(2 * num_limbs - 1, num_limbs + q_limbs - 1)
         n_packed_carries = math.ceil((total_positions - 1) / 2)
+        n_mul_eqs = math.ceil(total_positions / 2)
         # Each 2-limb packed carry absorbs sum of <= L products of 2^(2*64) * eff_uv plus q*p
         c_bits = limb_bits + math.ceil(math.log2(num_limbs * eff_uv + q_limbs + 1)) + 2
         max_mul_c_bits = max(max_mul_c_bits, c_bits)
@@ -214,12 +229,31 @@ def compute_emulated_limb_cost(
         quot_and_wit_bits += m_bits + q_bits
         carry_bits += n_packed_carries * c_bits
         carry_lin_eqs += n_packed_carries + 1
+        q_chk_tot = math.ceil(q_bits / 16)
+        c_chk = math.ceil(c_bits / 16)
+        top_q_chk = q_chk_tot - chunks_per_limb * (q_limbs - 1)
         plonk_lookups += (
-            num_limbs * (limb_bits // 16)
-            + math.ceil(q_bits / 16)
-            + n_packed_carries * math.ceil(c_bits / 16)
+            num_limbs * chunks_per_limb + q_chk_tot + n_packed_carries * c_chk
         )
-        plonk_arith += (2 * num_limbs - 1) + num_limbs + n_packed_carries
+        # Reassembly from 16-bit chunks + Toom-(2L-1) evaluations + (2L-1) muls + packed carry equations:
+        plonk_arith += (
+            num_limbs * _w4_sum_gates(chunks_per_limb)
+            + (q_limbs - 1) * _w4_sum_gates(chunks_per_limb)
+            + _w4_sum_gates(top_q_chk)
+            + n_packed_carries * _w4_sum_gates(c_chk)
+            + 2 * (2 * num_limbs - 3) * _w4_sum_gates(num_limbs)
+            + (2 * num_limbs - 1)
+            + n_mul_eqs * _w4_zero_eq_gates((2 * num_limbs - 1) + 2 + q_limbs + 2)
+        )
+
+    # Pre-pack 2-limb pairs M_l^(t) = m_{l,2t} + 2^64 m_{l,2t+1} once when single-word output quotients exist
+    has_single_word_out = any(
+        not (D == 1 and sum(abs(x) for x in schedule.W_z[k]) == 1 and all(x >= 0 for x in schedule.W_z[k]))
+        and math.ceil(max(1, math.ceil(math.log2(sum(abs(x) for x in schedule.W_z[k]) + D + 1))) / limb_bits) == 1
+        for k in range(d)
+    )
+    if has_single_word_out:
+        plonk_arith += r * n_limb_pairs * _w4_sum_gates(2)
 
     # Output reconstructions: W_z[k] * m - D * c_k = q_W_k * p (k = 0 .. d-1)
     for k in range(d):
@@ -240,6 +274,7 @@ def compute_emulated_limb_cost(
         const_chunks = math.ceil(max(1, qw_bits) / limb_bits)
         total_w_pos = num_limbs + qw_limbs - 1
         n_w_carries = max(1, math.ceil((total_w_pos - 1) / 2))
+        n_w_eqs = math.ceil(total_w_pos / 2)
         if qw_limbs == 1:
             cw_bits = qw_bits + 3
         else:
@@ -248,13 +283,26 @@ def compute_emulated_limb_cost(
 
         out_red_bits += c_out_b + qw_bits + n_w_carries * cw_bits
         carry_lin_eqs += n_w_carries + const_chunks
+        qw_chk = math.ceil(qw_bits / 16)
+        cw_chk = math.ceil(cw_bits / 16)
+        top_qw_chk = qw_chk - chunks_per_limb * (qw_limbs - 1)
         plonk_lookups += (
-            num_limbs * (limb_bits // 16)
-            + math.ceil(qw_bits / 16)
-            + n_w_carries * math.ceil(cw_bits / 16)
+            num_limbs * chunks_per_limb + qw_chk + n_w_carries * cw_chk
         )
         nz_w = sum(1 for x in schedule.W_z[k] if x != 0)
-        plonk_arith += nz_w * const_chunks + num_limbs + n_w_carries
+        w_lin_gates = (
+            n_limb_pairs * _w4_sum_gates(nz_w)
+            if qw_limbs == 1
+            else num_limbs * const_chunks * _w4_sum_gates(nz_w)
+        )
+        plonk_arith += (
+            w_lin_gates
+            + num_limbs * _w4_sum_gates(chunks_per_limb)
+            + (qw_limbs - 1) * _w4_sum_gates(chunks_per_limb)
+            + _w4_sum_gates(top_qw_chk)
+            + n_w_carries * _w4_sum_gates(cw_chk)
+            + n_w_eqs * _w4_zero_eq_gates(const_chunks + 2 + qw_limbs + 2)
+        )
 
     total_range_bits = quot_and_wit_bits + carry_bits + out_red_bits
     groth16_toom = limb_muls_toom + total_range_bits + carry_lin_eqs
@@ -380,18 +428,26 @@ def verify_emulated_witness_bounds(
             val0 = coeffs[pos] + carry
             if pos + 1 < tot_pos:
                 combined = val0 + coeffs[pos + 1] * base
+                if abs(combined).bit_length() > snark_scalar_limit_bits:
+                    raise OverflowError(
+                        f"Mul packed equation exceeds {snark_scalar_limit_bits}b SNARK scalar cap at l={l}"
+                    )
                 assert combined % (base * base) == 0
                 carry = combined // (base * base)
                 pos += 2
             else:
+                if abs(val0).bit_length() > snark_scalar_limit_bits:
+                    raise OverflowError(
+                        f"Mul top equation exceeds {snark_scalar_limit_bits}b SNARK scalar cap at l={l}"
+                    )
                 assert val0 % base == 0
                 carry = val0 // base
                 pos += 1
             cb = 0 if carry == 0 else abs(carry).bit_length()
             obs_max_mul_c_bits = max(obs_max_mul_c_bits, cb)
-            if cb > cost.max_mul_carry_bits:
+            if cb > cost.max_mul_carry_bits or (2 * abs(carry)).bit_length() > cost.max_mul_carry_bits:
                 raise OverflowError(
-                    f"Mul 2-limb carry overflow at l={l}: {cb}b > allocated {cost.max_mul_carry_bits}b"
+                    f"Mul 2-limb signed carry overflow at l={l}: {(2 * abs(carry)).bit_length()}b > allocated {cost.max_mul_carry_bits}b"
                 )
         assert carry == 0
 
@@ -434,18 +490,26 @@ def verify_emulated_witness_bounds(
             v0 = w_coeffs[pos] + carry_w
             if pos + 1 < tot_w:
                 comb = v0 + w_coeffs[pos + 1] * base
+                if abs(comb).bit_length() > snark_scalar_limit_bits:
+                    raise OverflowError(
+                        f"Output packed equation exceeds {snark_scalar_limit_bits}b SNARK scalar cap at k={k}"
+                    )
                 assert comb % (base * base) == 0
                 carry_w = comb // (base * base)
                 pos += 2
             else:
+                if abs(v0).bit_length() > snark_scalar_limit_bits:
+                    raise OverflowError(
+                        f"Output top equation exceeds {snark_scalar_limit_bits}b SNARK scalar cap at k={k}"
+                    )
                 assert v0 % base == 0
                 carry_w = v0 // base
                 pos += 1
             cwb = 0 if carry_w == 0 else abs(carry_w).bit_length()
             obs_max_out_c_bits = max(obs_max_out_c_bits, cwb)
-            if cwb > cost.max_out_carry_bits:
+            if cwb > cost.max_out_carry_bits or (2 * abs(carry_w)).bit_length() > cost.max_out_carry_bits:
                 raise OverflowError(
-                    f"Output carry overflow at k={k}: {cwb}b > allocated {cost.max_out_carry_bits}b"
+                    f"Output signed carry overflow at k={k}: {(2 * abs(carry_w)).bit_length()}b > allocated {cost.max_out_carry_bits}b"
                 )
         assert carry_w == 0
 

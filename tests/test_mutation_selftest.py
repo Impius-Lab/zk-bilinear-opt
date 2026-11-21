@@ -111,9 +111,21 @@ class TestAdversarialMutations(unittest.TestCase):
             verify_emulated_witness_bounds(sched_bn6, adv_a, adv_b, corrupted_q_cost, p)
 
         # Under-allocate max_out_carry_bits below observed output carry bits -> MUST raise OverflowError!
-        corrupted_c_cost = replace(true_cost, max_out_carry_bits=obs["obs_max_out_c_bits"] - 1)
+        corrupted_c_cost = replace(true_cost, max_out_carry_bits=obs["obs_max_out_carry_bits" if "obs_max_out_carry_bits" in obs else "obs_max_out_c_bits"] - 1)
         with self.assertRaises(OverflowError):
             verify_emulated_witness_bounds(sched_bn6, adv_a, adv_b, corrupted_c_cost, p)
+
+        # D. Signed i128 overflow (>= 2^127 while < 2^128) on 128-bit Goldilocks target -> MUST reject RED!
+        sched_g2 = get_optimal_native_schedule("Goldilocks2")
+        huge_u = ((1 << 63, -(1 << 63)), sched_g2.U[1], sched_g2.U[2])
+        mut_i128 = replace(
+            sched_g2,
+            U=huge_u,
+            declared_max_limb_slack_bits=128,
+        )
+        rep_i128 = verify_schedule_certificate(mut_i128)
+        self.assertFalse(rep_i128.passed)
+        self.assertFalse(rep_i128.accumulator_bound_ok)
 
 
 if __name__ == "__main__":

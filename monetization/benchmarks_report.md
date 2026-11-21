@@ -29,48 +29,48 @@ and a **64-bit ceiling** on $\|W_{\mathbb{Z},k}\|_1 + D$ before output modular-r
 
 | Schedule | Family | Native $\mathbb{F}_p$ Muls ($r$) | Mul Savings | $\log_2(UV)$ Slack | $\log_2(D)$ | Pre-Mul `Reduce()` | Total Range-Check Bits | Net Groth16 R1CS (vs Baseline) | Net PlonK16 Gates (vs Baseline) | Pareto? |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `BN254_Fp6_Tower18` | Karatsuba-Baseline | **18** | -0.00% | `4b` | `0.0b` | `0` | 14,931 | **15,150** (-0.00%) | **1,333** (-0.00%) | YES |
-| `BN254_Fp6_Toom15` | Tower-Hybrid | **15** | -16.67% | `8b` | `2.6b` | `0` | 13,318 | **13,510** (-10.83%) | **1,204** (-9.68%) | YES |
-| `BN254_Fp6_CRT13` | Cyclotomic-CRT | **13** | -27.78% | `18b` | `14.6b` | `0` | 12,710 | **12,883** (-14.96%) | **1,131** (-15.15%) | YES |
-| `BN254_Fp6_CRT12` | Cyclotomic-CRT | **12** | -33.33% | `22b` | `19.7b` | `0` | 12,102 | **12,263** (-19.06%) | **1,075** (-19.35%) | YES |
-| `BN254_Fp6_Rank11` | Vandermonde | **11** | -38.89% | `25b` | `18.5b` | `0` | 11,433 | **11,582** (-23.55%) | **1,013** (-24.01%) | YES |
+| `BN254_Fp6_Tower18` | Karatsuba-Baseline | **18** | -0.00% | `4b` | `0.0b` | `0` | 14,931 | **15,150** (-0.00%) | **2,660** (-0.00%) | YES |
+| `BN254_Fp6_Toom15` | Tower-Hybrid | **15** | -16.67% | `8b` | `2.6b` | `0` | 13,318 | **13,510** (-10.83%) | **2,356** (-11.43%) | YES |
+| `BN254_Fp6_CRT13` | Cyclotomic-CRT | **13** | -27.78% | `18b` | `14.6b` | `0` | 12,710 | **12,883** (-14.96%) | **2,284** (-14.14%) | YES |
+| `BN254_Fp6_CRT12` | Cyclotomic-CRT | **12** | -33.33% | `22b` | `19.7b` | `0` | 12,102 | **12,263** (-19.06%) | **2,169** (-18.46%) | YES |
+| `BN254_Fp6_Rank11` | Vandermonde | **11** | -38.89% | `25b` | `18.5b` | `0` | 11,433 | **11,582** (-23.55%) | **2,037** (-23.42%) | YES |
 
 ### 2.2 `BN254` $\mathbb{F}_{p^{12}}$ ($4\times 64$-bit Limbs, $\xi = 9 + u$, Simple Iso $w^{12} - 18w^6 + 82 = 0$)
 
 | Schedule | Family | Native $\mathbb{F}_p$ Muls ($r$) | Mul Savings | $\log_2(UV)$ Slack | $\log_2(D)$ | Pre-Mul `Reduce()` | Total Range-Check Bits | Net Groth16 R1CS (vs Baseline) | Net PlonK16 Gates (vs Baseline) | Pareto? |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `BN254_Fp12_Tower54` | Karatsuba-Baseline | **54** | -0.00% | `6b` | `0.0b` | `0` | 43,971 | **44,619** (-0.00%) | **4,044** (-0.00%) | YES |
-| `BN254_Fp12_Toom45` | Tower-Hybrid | **45** | -16.67% | `10b` | `2.6b` | `0` | 38,570 | **39,130** (-12.30%) | **3,632** (-10.19%) | YES |
-| `BN254_Fp12_Tower33` | Tower-Hybrid | **33** | -38.89% | `26b` | `18.5b` | `0` | 31,852 | **32,278** (-27.66%) | **2,996** (-25.91%) | YES |
-| `BN254_Fp12_CRT30` | Cyclotomic-CRT | **30** | -44.44% | `45b` | `45.2b` | `0` | 31,102 | **31,497** (-29.41%) | **2,882** (-28.73%) | YES |
-| `BN254_Fp12_CRT27` | Cyclotomic-CRT | **27** | -50.00% | `63b` | `71.2b` | `2` | 31,355 | **31,731** (-28.88%) | **3,157** (-21.93%) | YES |
-| `BN254_Fp12_Rank23` | Vandermonde | **23** | -57.41% | `77b` | `65.5b` | `18` | 33,382 | **33,750** (-24.36%) | **3,421** (-15.41%) | YES |
+| `BN254_Fp12_Tower54` | Karatsuba-Baseline | **54** | -0.00% | `6b` | `0.0b` | `0` | 43,971 | **44,619** (-0.00%) | **8,168** (-0.00%) | YES |
+| `BN254_Fp12_Toom45` | Tower-Hybrid | **45** | -16.67% | `10b` | `2.6b` | `0` | 38,570 | **39,130** (-12.30%) | **7,274** (-10.95%) | YES |
+| `BN254_Fp12_Tower33` | Tower-Hybrid | **33** | -38.89% | `26b` | `18.5b` | `0` | 31,852 | **32,278** (-27.66%) | **6,229** (-23.74%) | YES |
+| `BN254_Fp12_CRT30` | Cyclotomic-CRT | **30** | -44.44% | `45b` | `45.2b` | `0` | 31,102 | **31,497** (-29.41%) | **6,171** (-24.45%) | YES |
+| `BN254_Fp12_CRT27` | Cyclotomic-CRT | **27** | -50.00% | `63b` | `71.2b` | `2` | 31,355 | **31,731** (-28.88%) | **6,843** (-16.22%) | YES |
+| `BN254_Fp12_Rank23` | Vandermonde | **23** | -57.41% | `77b` | `65.5b` | `18` | 33,382 | **33,750** (-24.36%) | **6,770** (-17.12%) | YES |
 
 ### 2.3 `BLS12-381` $\mathbb{F}_{p^6}$ ($6\times 64$-bit Limbs, $\xi = 1 + u$, Simple Iso $v^6 - 2v^3 + 2 = 0$)
 
 | Schedule | Family | Native $\mathbb{F}_p$ Muls ($r$) | Mul Savings | $\log_2(UV)$ Slack | $\log_2(D)$ | Pre-Mul `Reduce()` | Total Range-Check Bits | Net Groth16 R1CS (vs Baseline) | Net PlonK16 Gates (vs Baseline) | Pareto? |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `BLS12_381_Fp6_Tower18` | Karatsuba-Baseline | **18** | -0.00% | `4b` | `0.0b` | `0` | 22,863 | **23,196** (-0.00%) | **2,009** (-0.00%) | YES |
-| `BLS12_381_Fp6_Toom15` | Tower-Hybrid | **15** | -16.67% | `8b` | `2.6b` | `0` | 20,125 | **20,413** (-12.00%) | **1,774** (-11.70%) | YES |
-| `BLS12_381_Fp6_CRT13` | Cyclotomic-CRT | **13** | -27.78% | `18b` | `14.6b` | `0` | 18,393 | **18,647** (-19.61%) | **1,638** (-18.47%) | YES |
-| `BLS12_381_Fp6_CRT12` | Cyclotomic-CRT | **12** | -33.33% | `21b` | `19.7b` | `0` | 17,754 | **17,992** (-22.43%) | **1,559** (-22.40%) | YES |
-| `BLS12_381_Fp6_Rank11` | Vandermonde | **11** | -38.89% | `24b` | `18.5b` | `0` | 16,861 | **17,081** (-26.36%) | **1,477** (-26.48%) | YES |
+| `BLS12_381_Fp6_Tower18` | Karatsuba-Baseline | **18** | -0.00% | `4b` | `0.0b` | `0` | 22,863 | **23,196** (-0.00%) | **4,791** (-0.00%) | YES |
+| `BLS12_381_Fp6_Toom15` | Tower-Hybrid | **15** | -16.67% | `8b` | `2.6b` | `0` | 20,125 | **20,413** (-12.00%) | **4,173** (-12.90%) | YES |
+| `BLS12_381_Fp6_CRT13` | Cyclotomic-CRT | **13** | -27.78% | `18b` | `14.6b` | `0` | 18,393 | **18,647** (-19.61%) | **3,871** (-19.20%) | YES |
+| `BLS12_381_Fp6_CRT12` | Cyclotomic-CRT | **12** | -33.33% | `21b` | `19.7b` | `0` | 17,754 | **17,992** (-22.43%) | **3,706** (-22.65%) | YES |
+| `BLS12_381_Fp6_Rank11` | Vandermonde | **11** | -38.89% | `24b` | `18.5b` | `0` | 16,861 | **17,081** (-26.36%) | **3,485** (-27.26%) | YES |
 
 ### 2.4 `BLS12-381` $\mathbb{F}_{p^{12}}$ ($6\times 64$-bit Limbs, $\xi = 1 + u$, Simple Iso $w^{12} - 2w^6 + 2 = 0$)
 
 | Schedule | Family | Native $\mathbb{F}_p$ Muls ($r$) | Mul Savings | $\log_2(UV)$ Slack | $\log_2(D)$ | Pre-Mul `Reduce()` | Total Range-Check Bits | Net Groth16 R1CS (vs Baseline) | Net PlonK16 Gates (vs Baseline) | Pareto? |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `BLS12_381_Fp12_Tower54` | Karatsuba-Baseline | **54** | -0.00% | `6b` | `0.0b` | `0` | 67,048 | **68,032** (-0.00%) | **5,976** (-0.00%) | YES |
-| `BLS12_381_Fp12_Toom45` | Tower-Hybrid | **45** | -16.67% | `10b` | `2.6b` | `0` | 58,241 | **59,083** (-13.15%) | **5,238** (-12.35%) | YES |
-| `BLS12_381_Fp12_Tower33` | Tower-Hybrid | **33** | -38.89% | `26b` | `18.5b` | `0` | 47,669 | **48,305** (-29.00%) | **4,321** (-27.69%) | YES |
-| `BLS12_381_Fp12_CRT30` | Cyclotomic-CRT | **30** | -44.44% | `45b` | `47.5b` | `0` | 45,492 | **46,078** (-32.27%) | **4,105** (-31.31%) | YES |
-| `BLS12_381_Fp12_CRT27` | Cyclotomic-CRT | **27** | -50.00% | `63b` | `71.2b` | `2` | 45,522 | **46,073** (-32.28%) | **4,337** (-27.43%) | YES |
-| `BLS12_381_Fp12_Rank23` | Vandermonde | **23** | -57.41% | `77b` | `65.5b` | `18` | 49,092 | **49,627** (-27.05%) | **4,707** (-21.23%) | YES |
+| `BLS12_381_Fp12_Tower54` | Karatsuba-Baseline | **54** | -0.00% | `6b` | `0.0b` | `0` | 67,048 | **68,032** (-0.00%) | **14,586** (-0.00%) | YES |
+| `BLS12_381_Fp12_Toom45` | Tower-Hybrid | **45** | -16.67% | `10b` | `2.6b` | `0` | 58,241 | **59,083** (-13.15%) | **12,769** (-12.46%) | YES |
+| `BLS12_381_Fp12_Tower33` | Tower-Hybrid | **33** | -38.89% | `26b` | `18.5b` | `0` | 47,669 | **48,305** (-29.00%) | **10,739** (-26.37%) | YES |
+| `BLS12_381_Fp12_CRT30` | Cyclotomic-CRT | **30** | -44.44% | `45b` | `47.5b` | `0` | 45,492 | **46,078** (-32.27%) | **10,235** (-29.83%) | YES |
+| `BLS12_381_Fp12_CRT27` | Cyclotomic-CRT | **27** | -50.00% | `63b` | `71.2b` | `2` | 45,522 | **46,073** (-32.28%) | **11,034** (-24.35%) | YES |
+| `BLS12_381_Fp12_Rank23` | Vandermonde | **23** | -57.41% | `77b` | `65.5b` | `18` | 49,092 | **49,627** (-27.05%) | **10,958** (-24.87%) | YES |
 
 ## 3. Key Architectural Takeaway: Why Naive `23`-Mul Vandermonde Loses to `CRT-30` & `Tower-33` in Non-Native Limbs
 
 1. **Native $\mathbb{F}_p$ Circuits (e.g., BW6-761 / Pasta 2-chains / Native R1CS)**: Scalar multiplications by $D^{-1} W_{\mathbb{Z}} \bmod p$ fold into linear combinations for **zero** multiplicative gates, so `Rank-23` Vandermonde achieves the exact Winograd / Alder–Strassen global minimum of **23 R1CS constraints** (`-57.41%` vs `54`).
 2. **Emulated $L\times 64$-bit Non-Native Circuits (`gnark` Groth16 / PlonK)**: `Vandermonde-Rank23` evaluates at nodes up to $\alpha = -11$, where $|-11|^{11} \approx 2^{38.1}$ pushes $\|U_\ell\|_1 \|V_\ell\|_1$ to **`77` bits** (`> 60`-bit 2-limb packing limit), triggering **18 mandatory pre-multiplication `Reduce()` gadgets**, while $D = \operatorname{lcm}(\dots) \approx 2^{65.5}$ and $\|W_{\mathbb{Z}}\|_1 \approx 2^{113}$ force 2-limb output reduction quotients.
 3. **The Certified Non-Native Sweet Spots**:
-   - **On $\mathbb{F}_{p^6}$**: `Rank-11` (`{-5..4, inf}`) stays strictly inside the 2-limb packing envelope (`0` pre-reductions, `18.5`-bit $D$), achieving **both** optimal native rank (`18 -> 11`, `-38.89%`) **and** the global minimum net Groth16 R1CS (`-23.55%` on BN254, `-26.36%` on BLS12-381) and PlonK16 (`-24.01%` / `-26.48%`) constraint counts!
+   - **On $\mathbb{F}_{p^6}$**: `Rank-11` (`{-5..4, inf}`) stays strictly inside the 2-limb packing envelope (`0` pre-reductions, `18.5`-bit $D$), achieving **both** optimal native rank (`18 -> 11`, `-38.89%`) **and** the global minimum net Groth16 R1CS (`-23.55%` on BN254, `-26.36%` on BLS12-381) and PlonK16 (`-23.42%` / `-27.26%`) constraint counts!
    - **On $\mathbb{F}_{p^{12}}$**: `CRT-30` (`9` small linear nodes `{-4..3, inf}` + `7` cyclotomic/small quadratic moduli, `0` pre-reductions, single-word output quotients) and `Tower-33` (`Toom-6` over $\mathbb{F}_{p^2}$ $\times$ `Karatsuba-2`, `18.5`-bit $D$, `0` pre-reductions) eliminate 100% of pre-multiplication reductions and beat `Tower-54` by **`-29.41%` (BN254) and `-32.27%` (BLS12-381) net Groth16 R1CS constraints AFTER counting every carry & range-check bit**, cleanly outperforming `Vandermonde-23`!

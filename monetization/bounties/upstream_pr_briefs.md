@@ -63,10 +63,10 @@ A naive attempt to use `23`-mul degree-12 Vandermonde over `Fp` (`[-11..10, inf]
 Using our unimodular simple-extension isomorphisms ($v^6 - 18v^3 + 82 = 0$ / $w^{12} - 18w^6 + 82 = 0$ for `BN254`; $v^6 - 2v^3 + 2 = 0$ / $w^{12} - 2w^6 + 2 = 0$ for `BLS12-381`) paired with **Cyclotomic Chinese Remainder Theorem (`CRT-30`)** and **`Toom-6 x Karatsuba-2` (`Tower-33`)**, we stay **100% inside the 60-bit 2-limb carry-packing budget (`0` pre-mul `Reduce()` calls!)** and single-word output quotients:
 
 - **`BN254` ($4\times 64$-bit)**:
-  - `E6.Mul`: `Tower-18` (`15,150` R1CS / `1,333` PlonK16) $\to$ **`Rank-11`** (**`11,582` R1CS `-23.55%`** / **`1,013` PlonK16 `-24.01%`**).
-  - `E12.Mul`: `Tower-54` (`44,619` R1CS / `4,044` PlonK16) $\to$ **`CRT-30`** (**`31,497` R1CS `-29.41%`** / **`2,882` PlonK16 `-28.73%`**) or **`Tower-33`** (**`32,278` R1CS `-27.66%`**).
+  - `E6.Mul`: `Tower-18` (`15,150` R1CS / `2,660` PlonK16) $\to$ **`Rank-11`** (**`11,582` R1CS `-23.55%`** / **`2,037` PlonK16 `-23.42%`**).
+  - `E12.Mul`: `Tower-54` (`44,619` R1CS / `8,168` PlonK16) $\to$ **`CRT-30`** (**`31,497` R1CS `-29.41%`** / **`6,171` PlonK16 `-24.45%`**) or **`Tower-33`** (**`32,278` R1CS `-27.66%`** / **`6,229` PlonK16 `-23.74%`**).
 - **`BLS12-381` ($6\times 64$-bit)**:
-  - `E6.Mul`: `Tower-18` (`23,196` R1CS / `2,009` PlonK16) $\to$ **`Rank-11`** (**`17,081` R1CS `-26.36%`** / **`1,477` PlonK16 `-26.48%`**).
-  - `E12.Mul`: `Tower-54` (`68,032` R1CS / `5,976` PlonK16) $\to$ **`CRT-30`** (**`46,078` R1CS `-32.27%`** / **`4,105` PlonK16 `-31.31%`**).
+  - `E6.Mul`: `Tower-18` (`23,196` R1CS / `4,791` PlonK16) $\to$ **`Rank-11`** (**`17,081` R1CS `-26.36%`** / **`3,485` PlonK16 `-27.26%`**).
+  - `E12.Mul`: `Tower-54` (`68,032` R1CS / `14,586` PlonK16) $\to$ **`CRT-30`** (**`46,078` R1CS `-32.27%`** / **`10,235` PlonK16 `-29.83%`**).
 
 Native Go reference gadgets passing `go test -v ./...` (`d^2` basis proofs + maximal `(p-1)` checks + randomized fuzzing) are included in `go_gadgets/`.

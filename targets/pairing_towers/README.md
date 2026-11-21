@@ -19,24 +19,24 @@ When emulating $\mathbb{F}_p$ over a 254-bit SNARK scalar field (`gnark` 2-limb 
 ### `BN254` ($4 \times 64$-bit Limbs)
 | Target & Schedule | $\mathbb{F}_p$ Muls ($r$) | Pre-Mul `Reduce()` | Range-Check Bits | Net Groth16 R1CS | Net PlonK16 Gates | Verdict |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| `BN254_Fp6_Tower18` | `18` | `0` | 14,931 | 15,150 | 1,333 | Baseline |
-| **`BN254_Fp6_Rank11`** | **`11` (-38.89%)** | **`0`** | **11,433** | **11,582 (-23.55%)** | **1,013 (-24.01%)** | **Global Winner (Native & Emulated)** |
-| `BN254_Fp12_Tower54` | `54` | `0` | 43,971 | 44,619 | 4,044 | Baseline (`3x6x3`) |
-| **`BN254_Fp12_Tower33`** | **`33` (-38.89%)** | **`0`** | **31,852** | **32,278 (-27.66%)** | **2,996 (-25.91%)** | **Cleanest Tower Hybrid (`18.5b` $D$)** |
-| **`BN254_Fp12_CRT30`** | **`30` (-44.44%)** | **`0`** | **31,102** | **31,497 (-29.41%)** | **2,882 (-28.73%)** | **Global Emulated R1CS & PlonK Winner** |
-| `BN254_Fp12_CRT27` | `27` (-50.00%) | `2` | 31,355 | 31,731 (-28.88%) | 3,157 (-21.93%) | Crosses 60b carry-pack cap on 2 nodes |
-| `BN254_Fp12_Rank23` | **`23` (-57.41%)** | `18` | 33,382 | 33,750 (-24.36%) | 3,421 (-15.41%) | **Native $\mathbb{F}_p$ Winner**; carry-heavy in limbs |
+| `BN254_Fp6_Tower18` | `18` | `0` | 14,931 | 15,150 | 2,660 | Baseline |
+| **`BN254_Fp6_Rank11`** | **`11` (-38.89%)** | **`0`** | **11,433** | **11,582 (-23.55%)** | **2,037 (-23.42%)** | **Global Winner (Native & Emulated)** |
+| `BN254_Fp12_Tower54` | `54` | `0` | 43,971 | 44,619 | 8,168 | Baseline (`3x6x3`) |
+| **`BN254_Fp12_Tower33`** | **`33` (-38.89%)** | **`0`** | **31,852** | **32,278 (-27.66%)** | **6,229 (-23.74%)** | **Cleanest Tower Hybrid (`18.5b` $D$)** |
+| **`BN254_Fp12_CRT30`** | **`30` (-44.44%)** | **`0`** | **31,102** | **31,497 (-29.41%)** | **6,171 (-24.45%)** | **Global Emulated R1CS & PlonK Winner** |
+| `BN254_Fp12_CRT27` | `27` (-50.00%) | `2` | 31,355 | 31,731 (-28.88%) | 6,843 (-16.22%) | Crosses 60b carry-pack cap on 2 nodes |
+| `BN254_Fp12_Rank23` | **`23` (-57.41%)** | `18` | 33,382 | 33,750 (-24.36%) | 6,770 (-17.12%) | **Native $\mathbb{F}_p$ Winner**; carry-heavy in limbs |
 
 ### `BLS12-381` ($6 \times 64$-bit Limbs)
 | Target & Schedule | $\mathbb{F}_p$ Muls ($r$) | Pre-Mul `Reduce()` | Range-Check Bits | Net Groth16 R1CS | Net PlonK16 Gates | Verdict |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| `BLS12_381_Fp6_Tower18` | `18` | `0` | 22,863 | 23,196 | 2,009 | Baseline |
-| **`BLS12_381_Fp6_Rank11`** | **`11` (-38.89%)** | **`0`** | **16,861** | **17,081 (-26.36%)** | **1,477 (-26.48%)** | **Global Winner (Native & Emulated)** |
-| `BLS12_381_Fp12_Tower54` | `54` | `0` | 67,048 | 68,032 | 5,976 | Baseline (`3x6x3`) |
-| **`BLS12_381_Fp12_Tower33`** | **`33` (-38.89%)** | **`0`** | **47,669** | **48,305 (-29.00%)** | **4,321 (-27.69%)** | **Cleanest Tower Hybrid (`18.5b` $D$)** |
-| **`BLS12_381_Fp12_CRT30`** | **`30` (-44.44%)** | **`0`** | **45,492** | **46,078 (-32.27%)** | **4,105 (-31.31%)** | **Global PlonK16 & 0-Reduce Winner** |
-| `BLS12_381_Fp12_CRT27` | `27` (-50.00%) | `2` | 45,522 | **46,073 (-32.28%)** | 4,337 (-27.43%) | Co-optimal Groth16 R1CS (`-32.28%`) |
-| `BLS12_381_Fp12_Rank23` | **`23` (-57.41%)** | `18` | 49,092 | 49,627 (-27.05%) | 4,707 (-21.23%) | **Native $\mathbb{F}_p$ Winner**; carry-heavy in limbs |
+| `BLS12_381_Fp6_Tower18` | `18` | `0` | 22,863 | 23,196 | 4,791 | Baseline |
+| **`BLS12_381_Fp6_Rank11`** | **`11` (-38.89%)** | **`0`** | **16,861** | **17,081 (-26.36%)** | **3,485 (-27.26%)** | **Global Winner (Native & Emulated)** |
+| `BLS12_381_Fp12_Tower54` | `54` | `0` | 67,048 | 68,032 | 14,586 | Baseline (`3x6x3`) |
+| **`BLS12_381_Fp12_Tower33`** | **`33` (-38.89%)** | **`0`** | **47,669** | **48,305 (-29.00%)** | **10,739 (-26.37%)** | **Cleanest Tower Hybrid (`18.5b` $D$)** |
+| **`BLS12_381_Fp12_CRT30`** | **`30` (-44.44%)** | **`0`** | **45,492** | **46,078 (-32.27%)** | **10,235 (-29.83%)** | **Global PlonK16 & 0-Reduce Winner** |
+| `BLS12_381_Fp12_CRT27` | `27` (-50.00%) | `2` | 45,522 | **46,073 (-32.28%)** | 11,034 (-24.35%) | Co-optimal Groth16 R1CS (`-32.28%`) |
+| `BLS12_381_Fp12_Rank23` | **`23` (-57.41%)** | `18` | 49,092 | 49,627 (-27.05%) | 10,958 (-24.87%) | **Native $\mathbb{F}_p$ Winner**; carry-heavy in limbs |
 
 ## 3. Artifacts in This Directory
 - [`bn254_fp6_pareto.json`](./bn254_fp6_pareto.json) & [`bn254_fp12_pareto.json`](./bn254_fp12_pareto.json)
