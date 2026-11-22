@@ -41,7 +41,7 @@
 ### Elevator Pitch (`<= 300 words`)
 Every private transaction and block proof on the Aleo Network relies on **Varuna** batch-R1CS proofs and **KZG10** polynomial commitments over **`BLS12-377`** (`snarkvm-fields` and `snarkvm-curves`). Meanwhile, privacy-preserving `Leo` and `snarkvm-circuit` applications (cross-chain ETH/`USDCx` bridges, `zPass` selective-disclosure identity credentials, and recursive proof verifiers) execute inside Aleo's 253-bit `Field<E>` (`Fr_BLS12_377`) R1CS constraint system, which currently lacks native extension-tower and non-native prime-field CRT gadgets.
 
-We have **already implemented and benchmarked** a bit-exact `BLS12-377` tower & pairing optimization branch on [`ProvableHQ/snarkVM`](https://github.com/ProvableHQ/snarkVM) (`Impius-Lab/snarkVM` branch `perf/bls12-377-tower-opt`), cutting full `Bls12_377::pairing` latency by **`-26.96%` (`881.49 us -> 643.82 us`, `1.37x` speedup)**, `final_exponentiation` by **`-32.91%` (`508.02 us -> 340.83 us`, `1.49x`)**, `miller_loop` by **`-23.11%` (`274.88 us -> 211.36 us`, `1.30x`)**, and `Fq12` multiplication by **`-24.84%` (`2.8855 us -> 2.1688 us`, `1.33x`)** across all 86 `snarkvm-curves` unit tests with `#![forbid(unsafe_code)]`.
+We have **already implemented, benchmarked, and opened a live upstream Pull Request** on [`aleo-labs-protocol/snarkVM#3908`](https://github.com/aleo-labs-protocol/snarkVM/pull/3908) (`Impius-Lab/snarkVM` branch `perf/bls12-377-tower-opt`), cutting full `Bls12_377::pairing` latency by **`-26.96%` (`881.49 us -> 643.82 us`, `1.37x` speedup)**, `final_exponentiation` by **`-32.91%` (`508.02 us -> 340.83 us`, `1.49x`)**, `miller_loop` by **`-23.11%` (`274.88 us -> 211.36 us`, `1.30x`)**, and `Fq12` multiplication by **`-24.84%` (`2.8855 us -> 2.1688 us`, `1.33x`)** across all 87 `snarkvm-curves` unit tests with `#![forbid(unsafe_code)]`.
 
 This **USD 30,000**, 8-week Blueprint Grant delivers three concrete open-source pillars for Aleo:
 1. **Upstream `ProvableHQ/snarkVM` `BLS12-377` Host Acceleration**: Production PRs accelerating `Fq2`, `Fq6`, `Fq12`, Miller-loop `mul_by_034`, Karabina compressed `cyclotomic_exp`, and multi-pair KZG10 batch verification (`product_of_pairings`) for Varuna validators and provers.
@@ -75,8 +75,8 @@ In `snarkvm-circuit` (`circuit/types/field/src/mul.rs:49-59`), multiplying an R1
 
 ## 3. Completed Proof-of-Execution: Measured `snarkVM` `BLS12-377` Benchmarks & Live Upstream PRs
 
-### 3.1 Completed `ProvableHQ/snarkVM` Prototype (`Impius-Lab/snarkVM` @ `perf/bls12-377-tower-opt`)
-Before submitting this proposal, we built, algebraically certified, and benchmarked the core host-side `BLS12-377` optimization directly on `ProvableHQ/snarkVM` (`#![forbid(unsafe_code)]` preserved in `snarkvm-fields`, `0` external dependencies added, `86/86` `snarkvm-curves` unit tests passing including adversarial `[0, 1, q - 1]` 768-bit carry corners and degenerate $`z_2 = z_3 = 0`$ cyclotomic boundary tests):
+### 3.1 Live Open Upstream PR on `snarkVM` ([`aleo-labs-protocol/snarkVM#3908`](https://github.com/aleo-labs-protocol/snarkVM/pull/3908))
+Before submitting this proposal, we built, algebraically certified, benchmarked, and opened [`aleo-labs-protocol/snarkVM#3908`](https://github.com/aleo-labs-protocol/snarkVM/pull/3908) directly on `snarkVM` (`#![forbid(unsafe_code)]` preserved in `snarkvm-fields`, `0` external dependencies added, `87/87` `snarkvm-curves` unit tests passing including adversarial `[0, 1, q - 1]` 768-bit carry corners and degenerate $`z_2 = z_3 = 0`$ cyclotomic boundary tests):
 
 1. **Compile-Time Certified 768-Bit Lazy Montgomery Reduction (`Fp384`, `Fq2`, `Fq6`, `Fq12`, `mul_by_034`, `mul_by_014`)**:
    - Because $`q < 2^{377}`$ and $`R = 2^{384}`$, `Fp384::modulus_sq_mul(k)` (`const`-asserted against `k <= u64::MAX / (MODULUS[5] + 1) - 1 = 151`) shifts unreduced 768-bit (`[u64; 12]`) Karatsuba combinations strictly into $`(0, 136 q^2] \subset (0, q \cdot R)`$ using LLVM-lowered `overflowing_add`/`overflowing_sub` (`ADC`/`SBB`) chains:
@@ -168,8 +168,10 @@ In [`Impius-Lab/zk-bilinear-opt`](https://github.com/Impius-Lab/zk-bilinear-opt)
 
 ## 6. Verification Links & Artifacts
 
+- **Live Upstream `snarkVM` PR (`aleo-labs-protocol/snarkVM#3908` — `-26.96%` `BLS12-377` Pairing)**: [`https://github.com/aleo-labs-protocol/snarkVM/pull/3908`](https://github.com/aleo-labs-protocol/snarkVM/pull/3908)
 - **`snarkVM` `BLS12-377` Optimization Fork (`perf/bls12-377-tower-opt`)**: [`https://github.com/Impius-Lab/snarkVM/tree/perf/bls12-377-tower-opt`](https://github.com/Impius-Lab/snarkVM/tree/perf/bls12-377-tower-opt)
 - **`zk-bilinear-opt` Main Repository & Certified `BLS12-377` Schedules**: [`https://github.com/Impius-Lab/zk-bilinear-opt`](https://github.com/Impius-Lab/zk-bilinear-opt) (`targets/pairing_towers/bls12_377_fp{2,6,12}_*.json` & `lean4_certs/`)
+- **Live Interactive Prover & Verifier Benchmark Dashboard**: [`https://impius-lab-zk.weight-space-engineering.workers.dev`](https://impius-lab-zk.weight-space-engineering.workers.dev)
 - **Live Upstream PR 1 (`Consensys/gnark#1950` — Native `BLS12-377` `-32.84%` `PairingCheck`)**: [`https://github.com/Consensys/gnark/pull/1950`](https://github.com/Consensys/gnark/pull/1950)
 - **Live Upstream PR 2 (`Consensys/gnark#1951` — Emulated Pairing `-478,847` PlonK Gates & CRT Soundness Fix)**: [`https://github.com/Consensys/gnark/pull/1951`](https://github.com/Consensys/gnark/pull/1951)
 - **Live Upstream PR 3 (`Plonky3/Plonky3#2600` — `4.26x` `QM31` & `-56.25%..-76.56%` `p3-air` `ExtensionAlgebra`)**: [`https://github.com/Plonky3/Plonky3/pull/2600`](https://github.com/Plonky3/Plonky3/pull/2600)

@@ -6,11 +6,12 @@
   <title>Impius-Lab Cryptographic Engineering — Certified ZK Gate Compression &amp; Prover Soundness</title>
   <meta name="description" content="Basis-certified bilinear extension-tower kernels, non-native CRT limb-carry soundness auditing, and zero-sorry Lean 4 formal proofs for StarkWare Stwo, Cairo, Plonky3/SP1, Consensys gnark, Halo2/Zcash (#590), and BitVM2." />
   <meta property="og:title" content="Impius-Lab Cryptographic Engineering — Certified ZK Gate Compression &amp; CRT Soundness" />
-  <meta property="og:description" content="Cut ZK prover &amp; verifier gates by 14%–59% across StarkWare Stwo, Cairo, Plonky3/SP1, Consensys gnark, Halo2/Zcash, and BitVM2 — backed by 5 live upstream PRs and 33 zero-sorry Lean 4 proofs." />
+  <meta property="og:description" content="Cut ZK prover &amp; verifier gates by 14%–59% across StarkWare Stwo, Cairo, Plonky3/SP1, Consensys gnark, Aleo snarkVM, Halo2/Zcash, and BitVM2 — backed by 6 live upstream PRs and 33 zero-sorry Lean 4 proofs." />
+  <meta property="og:url" content="https://impius-lab-zk.weight-space-engineering.workers.dev" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Impius-Lab Cryptographic Engineering — Certified ZK Gate Compression" />
-  <meta name="twitter:description" content="5 Live Open Upstream PRs · Zcash ZCG #590 · Scarb Cairo (-26.25%/-43.29% steps) · BitVM2 (-22.22% OP_M31_MUL) · 33 Zero-Sorry Lean 4 Proofs (5.63s)." />
+  <meta name="twitter:description" content="6 Live Open Upstream PRs · Aleo snarkVM#3908 (-26.96% pairing) · Zcash ZCG #590 · Scarb Cairo (-26.25%/-43.29% steps) · 33 Zero-Sorry Lean 4 Proofs (5.63s)." />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d121d' stroke='%2338bdf8' stroke-width='3'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='monospace' font-size='34' font-weight='bold' fill='%2338bdf8'%3E%E2%8A%97%3C/text%3E%3C/svg%3E" />
   <style>
     :root {
@@ -980,7 +981,7 @@
       <div class="container">
         <div class="eyebrow">
           <span class="eyebrow-dot"></span>
-          <span>5 LIVE UPSTREAM PRS · ZCASH ZCG #590 · 33 ZERO-SORRY LEAN 4 PROOFS (5.63S) · ACCEPTED SECURITY RESEARCHER (GNARK &amp; AZTEC)</span>
+          <span>6 LIVE UPSTREAM PRS (STWO, PLONKY3, GNARK, SNARKVM) · ZCASH ZCG #590 · 33 ZERO-SORRY LEAN 4 PROOFS (5.63S) · ACCEPTED SECURITY RESEARCHER (GNARK &amp; AZTEC)</span>
         </div>
         <h1>
           Cut Your ZK Prover &amp; Verifier Gates by <span class="grad">14%–59%</span> Without Trading Away CRT Soundness.
@@ -1045,12 +1046,12 @@
       </div>
     </section>
 
-    <!-- 5 Live Upstream PRs + 4 Verified Multi-Backend Modules -->
+    <!-- 6 Live Upstream PRs + 4 Verified Multi-Backend Modules -->
     <section id="upstream-prs">
       <div class="container">
         <div class="section-header">
           <div class="section-tag">Production Compiler, Verifier &amp; Formal Proof Track Record</div>
-          <h2 class="section-title">Five Live Open Upstream PRs + Multi-Target Verifier Suite</h2>
+          <h2 class="section-title">Six Live Open Upstream PRs + Multi-Target Verifier Suite</h2>
           <p class="section-desc">
             Every claim is backed by reproducible compiler constraint counts, Criterion CPU &amp; Scarb Cairo VM benchmarks, zero-dependency Core Lean 4 proofs, and adversarial soundness tests running inside the target codebases.
           </p>
@@ -1121,7 +1122,7 @@
             <a href="https://github.com/Consensys/gnark/pull/1950" target="_blank" rel="noopener noreferrer">Inspect PR #1950 circuit stats →</a>
           </article>
 
-          <article class="pr-card span-two">
+          <article class="pr-card">
             <div>
               <div class="pr-top">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -1134,10 +1135,26 @@
               </div>
               <h3>Non-Native Emulated <span class="code-pill">BN254</span>, <span class="code-pill">BLS12-381</span> &amp; <span class="code-pill">BW6-761</span> Shared Deferred Evaluators + Exact <span class="code-pill">quoBits</span></h3>
               <p style="margin-top: 8px;">
-                Replaces 12 separate <span class="code-pill">mvCheck</span> limb commitments (<span class="code-pill">1,152 → 96</span> committed limbs on <span class="code-pill">BN254</span>, <span class="code-pill">1,728 → 144</span> on <span class="code-pill">BLS12-381</span>) with <span class="code-pill">MulPolyModTrinomial12</span> and exact <span class="code-pill">*big.Int</span> quotient range packing (<span class="code-pill">packLimbsWithWidth(quoBits)</span>). Slashes <span class="code-pill">sw_bn254.Pair</span> R1CS <span class="code-pill">836,825 → 715,060</span> (<span class="code-pill">-14.55%</span>; fixed-<span class="code-pill">G2</span> <span class="code-pill">-15.17%</span>; PlonK <span class="code-pill">-427,820</span> gates) and <span class="code-pill">sw_bls12381.Pair</span> PlonK <span class="code-pill">4,881,141 → 4,402,294</span> (<span class="code-pill">-9.81%</span>, <span class="code-pill">-478,847</span> gates) while closing a malicious-prover excess-quotient-bit modulo-<span class="code-pill">q</span> wrap-around vulnerability on small native fields (<span class="code-pill">2t &gt;= F - 1</span>, e.g. <span class="code-pill">t = 22</span> over 31-bit BabyBear).
+                Replaces 12 separate <span class="code-pill">mvCheck</span> limb commitments (<span class="code-pill">1,152 → 96</span> on <span class="code-pill">BN254</span>, <span class="code-pill">1,728 → 144</span> on <span class="code-pill">BLS12-381</span>) with <span class="code-pill">MulPolyModTrinomial12</span> and exact <span class="code-pill">*big.Int</span> quotient range packing. Slashes <span class="code-pill">sw_bn254.Pair</span> R1CS <span class="code-pill">836,825 → 715,060</span> (<span class="code-pill">-14.55%</span>; PlonK <span class="code-pill">-427,820</span> gates) and <span class="code-pill">sw_bls12381.Pair</span> PlonK (<span class="code-pill">-478,847</span> gates) while closing a BabyBear (<span class="code-pill">2t &gt;= F - 1</span>) CRT wrap-around vulnerability.
               </p>
             </div>
             <a href="https://github.com/Consensys/gnark/pull/1951" target="_blank" rel="noopener noreferrer">Inspect PR #1951 benchmarks &amp; soundness proof →</a>
+          </article>
+
+          <article class="pr-card">
+            <div>
+              <div class="pr-top">
+                <a class="pr-badge" href="https://github.com/aleo-labs-protocol/snarkVM/pull/3908" target="_blank" rel="noopener noreferrer">
+                  aleo-labs-protocol/snarkVM#3908 ↗
+                </a>
+                <span class="pr-stat">-26.96% Full Pairing · -32.91% FinalExp</span>
+              </div>
+              <h3>Aleo <span class="code-pill">BLS12-377</span> 768-Bit Lazy Reduction &amp; Karabina <span class="code-pill">cyclotomic_exp</span></h3>
+              <p style="margin-top: 8px;">
+                Compile-time-certified 768-bit (<span class="code-pill">136 q^2 &lt; q * R</span>) lazy Montgomery towers (<span class="code-pill">#![forbid(unsafe_code)]</span>) + Karabina compressed cyclotomic squaring with stack batch decompression (<span class="code-pill">1</span> <span class="code-pill">Fp2::inverse()</span>) cut <span class="code-pill">pairing_full</span> <span class="code-pill">881.49 → 643.82 µs</span> (<span class="code-pill">-26.96%</span>, <span class="code-pill">1.37x</span>) and <span class="code-pill">final_exponentiation</span> <span class="code-pill">508.02 → 340.83 µs</span> (<span class="code-pill">-32.91%</span>, <span class="code-pill">1.49x</span>).
+              </p>
+            </div>
+            <a href="https://github.com/aleo-labs-protocol/snarkVM/pull/3908" target="_blank" rel="noopener noreferrer">Inspect PR #3908 Criterion benchmarks →</a>
           </article>
         </div>
 
