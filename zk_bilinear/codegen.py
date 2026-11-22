@@ -7,9 +7,10 @@ import json
 from typing import Any, Dict, List, Sequence
 
 from .cost_models import evaluate_full_cost
-from .fields import EXTENSION_SPECS
+from .fields import BLS12_377_PRIME, EXTENSION_SPECS
 from .tensor_cert import (
     BilinearSchedule,
+    certify_over_Z,
     compute_w_fp,
     verify_schedule_certificate,
 )
@@ -289,3 +290,145 @@ def emit_go_big_gadget(schedule: BilinearSchedule, fn_name: str) -> str:
         lines.append(f"\treturn evalBilinearBigWz(a, b, p, invD, {d}, {r}, uMat, vMat, wzStr)")
     lines.append("}")
     return "\n".join(lines) + "\n"
+
+
+def _fp377_mont_literal(val: int, p: int = BLS12_377_PRIME) -> str:
+    mont = ((val % p) << 384) % p
+    limbs = [(mont >> (64 * i)) & ((1 << 64) - 1) for i in range(6)]
+    return "Fp377{" + ", ".join(f"0x{x:016x}" for x in limbs) + "}"
+
+
+def _emit_fp377_signed_row_lines(
+    row: Sequence[int], src_var: str, dst_var: str, p: int = BLS12_377_PRIME
+) -> List[str]:
+    nz = [(idx, int(c)) for idx, c in enumerate(row) if c != 0]
+    if not nz:
+        return [f"\t\tvar {dst_var} Fp377"]
+    out: List[str] = []
+    for k_pos, (idx, coef) in enumerate(nz):
+        elem = f"{src_var}[{idx}]"
+        if k_pos == 0:
+            if coef == 1:
+                out.append(f"\t\t{dst_var} := {elem}")
+            elif coef == -1:
+                out.append(f"\t\t{dst_var} := fp377Neg({elem})")
+            elif coef == 2:
+                out.append(f"\t\t{dst_var} := fp377Add({elem}, {elem})")
+            elif coef == -2:
+                out.append(f"\t\t{dst_var} := fp377Neg(fp377Add({elem}, {elem}))")
+            elif coef == -5:
+                out.append(f"\t\t{dst_var} := fp377MulByNeg5({elem})")
+            elif coef > 0:
+                out.append(
+                    f"\t\t{dst_var} := fp377ScaleConst({elem}, {_fp377_mont_literal(coef, p)})"
+                )
+            else:
+                out.append(
+                    f"\t\t{dst_var} := fp377Neg(fp377ScaleConst({elem}, {_fp377_mont_literal(-coef, p)}))"
+                )
+        else:
+            if coef == 1:
+                out.append(f"\t\t{dst_var} = fp377Add({dst_var}, {elem})")
+            elif coef == -1:
+                out.append(f"\t\t{dst_var} = fp377Sub({dst_var}, {elem})")
+            elif coef == 2:
+                out.append(f"\t\t{dst_var} = fp377Add({dst_var}, fp377Add({elem}, {elem}))")
+            elif coef == -2:
+                out.append(f"\t\t{dst_var} = fp377Sub({dst_var}, fp377Add({elem}, {elem}))")
+            elif coef == -5:
+                out.append(f"\t\t{dst_var} = fp377Add({dst_var}, fp377MulByNeg5({elem}))")
+            elif coef > 0:
+                out.append(
+                    f"\t\t{dst_var} = fp377Add({dst_var}, fp377ScaleConst({elem}, {_fp377_mont_literal(coef, p)}))"
+                )
+            else:
+                out.append(
+                    f"\t\t{dst_var} = fp377Sub({dst_var}, fp377ScaleConst({elem}, {_fp377_mont_literal(-coef, p)}))"
+                )
+    return out
+
+
+def _emit_fp377_mod_row_lines(
+    row_fp: Sequence[int], src_var: str, dst_var: str, p: int = BLS12_377_PRIME
+) -> List[str]:
+    nz = [(idx, int(c) % p) for idx, c in enumerate(row_fp) if (int(c) % p) != 0]
+    if not nz:
+        return [f"\t\tvar {dst_var} Fp377"]
+    out: List[str] = []
+    for k_pos, (idx, c_mod) in enumerate(nz):
+        elem = f"{src_var}[{idx}]"
+        if k_pos == 0:
+            if c_mod == 1:
+                out.append(f"\t\t{dst_var} := {elem}")
+            elif c_mod == p - 1:
+                out.append(f"\t\t{dst_var} := fp377Neg({elem})")
+            elif c_mod == p - 5:
+                out.append(f"\t\t{dst_var} := fp377MulByNeg5({elem})")
+            else:
+                out.append(
+                    f"\t\t{dst_var} := fp377ScaleConst({elem}, {_fp377_mont_literal(c_mod, p)})"
+                )
+        else:
+            if c_mod == 1:
+                out.append(f"\t\t{dst_var} = fp377Add({dst_var}, {elem})")
+            elif c_mod == p - 1:
+                out.append(f"\t\t{dst_var} = fp377Sub({dst_var}, {elem})")
+            elif c_mod == p - 5:
+                out.append(f"\t\t{dst_var} = fp377Add({dst_var}, fp377MulByNeg5({elem}))")
+            else:
+                out.append(
+                    f"\t\t{dst_var} = fp377Add({dst_var}, fp377ScaleConst({elem}, {_fp377_mont_literal(c_mod, p)}))"
+                )
+    return out
+
+
+def emit_go_bls12377_u64_gadget(schedule: BilinearSchedule, fn_name: str) -> str:
+    """Emit a deterministic zero-allocation [6]uint64 (Fp377) Go tower gadget for BLS12-377."""
+    spec = EXTENSION_SPECS[schedule.target_name]
+    if spec.prime != BLS12_377_PRIME:
+        raise ValueError(f"Expected BLS12-377 schedule, got prime {spec.prime}")
+    cert = verify_schedule_certificate(schedule, spec)
+    z_cert = certify_over_Z(schedule, spec)
+    if not cert.passed or not z_cert.passed:
+        raise ValueError(f"Unverified BLS12-377 schedule {schedule.name}: {cert.errors or z_cert.errors}")
+
+    p = spec.prime
+    d = schedule.degree
+    r = schedule.rank
+    w_fp = compute_w_fp(schedule, p)
+
+    lines: List[str] = [
+        f"// {fn_name} implements Z-certified {schedule.name} in canonical gnark BLS12-377 tower coordinates",
+        f"// using zero-allocation [6]uint64 Montgomery arithmetic ({r} bilinear fp377Mul calls vs {spec.baseline_muls} baseline).",
+        f"func {fn_name}(a, b [{d}]Fp377) [{d}]Fp377 {{",
+        f"\tvar m [{r}]Fp377",
+    ]
+    for l in range(r):
+        lines.append("\t{")
+        lines.extend(_emit_fp377_signed_row_lines(schedule.U[l], "a", "uAcc", p))
+        lines.extend(_emit_fp377_signed_row_lines(schedule.V[l], "b", "vAcc", p))
+        lines.append(f"\t\tm[{l}] = fp377Mul(uAcc, vAcc)")
+        lines.append("\t}")
+
+    lines.append(f"\tvar out [{d}]Fp377")
+    for k in range(d):
+        lines.append("\t{")
+        lines.extend(_emit_fp377_mod_row_lines(w_fp[k], "m", "wAcc", p))
+        lines.append(f"\t\tout[{k}] = wAcc")
+        lines.append("\t}")
+    lines.append("\treturn out")
+    lines.append("}")
+    return "\n".join(lines) + "\n"
+
+
+def emit_go_bls12377_u64_module(
+    schedules_with_names: Sequence[tuple[BilinearSchedule, str]],
+) -> str:
+    """Emit go_gadgets/bls12377_u64_generated.go for [6]uint64 BLS12-377 tower gadgets."""
+    header = [
+        "// Code generated by `python -m zk_bilinear.cli generate-all`; DO NOT EDIT.",
+        "package gogadgets",
+        "",
+    ]
+    blocks = [emit_go_bls12377_u64_gadget(sched, fn) for sched, fn in schedules_with_names]
+    return "\n".join(header) + "\n".join(blocks)

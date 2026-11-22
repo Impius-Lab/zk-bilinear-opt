@@ -23,7 +23,19 @@ from dataclasses import dataclass
 import math
 from typing import List, Optional, Sequence, Tuple
 
-from .fields import EXTENSION_SPECS, ExtensionSpec, is_irreducible_rabin
+from .fields import (
+    EXTENSION_SPECS,
+    ExtensionSpec,
+    bls12_377_fp2_mul_z,
+    bls12_377_fp6_tower_mul_z,
+    bls12_377_fp12_tower_mul_z,
+    det_int_exact,
+    identity_int_matrix,
+    is_irreducible_rabin,
+    mat_mul_int,
+    mat_vec_int,
+    textbook_poly_mul_fixed_z,
+)
 
 
 @dataclass(frozen=True)
@@ -74,6 +86,34 @@ class BilinearSchedule:
 
 
 @dataclass(frozen=True)
+class ZCertificateReport:
+    schedule_name: str
+    target_name: str
+    degree: int
+    rank: int
+    D: int
+    basis_det_to: int
+    basis_det_from: int
+    basis_pairs_checked: int
+    unimodular_basis_ok: bool
+    exact_z_identity_ok: bool
+    denominator_coprime_ok: bool
+    errors: Tuple[str, ...]
+
+    @property
+    def passed(self) -> bool:
+        return (
+            len(self.errors) == 0
+            and self.unimodular_basis_ok
+            and self.exact_z_identity_ok
+            and self.denominator_coprime_ok
+        )
+
+    def __bool__(self) -> bool:
+        return self.passed
+
+
+@dataclass(frozen=True)
 class CertificateReport:
     schedule_name: str
     target_name: str
@@ -84,6 +124,7 @@ class CertificateReport:
     is_alder_strassen_optimal: bool
     basis_pairs_checked: int
     basis_identity_ok: bool
+    over_z_identity_ok: bool
     isomorphism_ok: bool
     irreducibility_ok: bool
     denominator_invertible_ok: bool
@@ -98,12 +139,123 @@ class CertificateReport:
         return (
             len(self.errors) == 0
             and self.basis_identity_ok
+            and self.over_z_identity_ok
             and self.isomorphism_ok
             and self.irreducibility_ok
             and self.denominator_invertible_ok
             and self.accumulator_bound_ok
             and self.limb_slack_bound_ok
         )
+
+
+_BLS12_377_Z_TOWER_REFS = {
+    "BLS12_377_Fp2": bls12_377_fp2_mul_z,
+    "BLS12_377_Fp6": bls12_377_fp6_tower_mul_z,
+    "BLS12_377_Fp12": bls12_377_fp12_tower_mul_z,
+}
+
+
+def certify_over_Z(
+    schedule: BilinearSchedule, spec: Optional[ExtensionSpec] = None
+) -> ZCertificateReport:
+    """Certify exact integer bilinear identity over Z (characteristic-free, zero mod-p wrap):
+
+        sum_{l=0}^{r-1} U[l, i] * V[l, j] * W_z[k, l] == D * (e_i *_Z e_j)_k   in Z
+
+    for ALL d^2 canonical basis pairs (e_i, e_j), plus unimodular basis checks det(T) == +-1.
+    """
+    if spec is None:
+        if schedule.target_name not in EXTENSION_SPECS:
+            raise KeyError(f"Unknown target extension: {schedule.target_name}")
+        spec = EXTENSION_SPECS[schedule.target_name]
+
+    errors: List[str] = []
+    d = spec.degree
+    r = schedule.rank
+    D = schedule.D
+
+    if schedule.degree != d:
+        errors.append(f"Schedule degree {schedule.degree} != target degree {d}")
+    if len(schedule.U) != r or any(len(row) != d for row in schedule.U):
+        errors.append(f"Malformed U dimensions (expected {r}x{d})")
+    if len(schedule.V) != r or any(len(row) != d for row in schedule.V):
+        errors.append(f"Malformed V dimensions (expected {r}x{d})")
+    if len(schedule.W_z) != d or any(len(row) != r for row in schedule.W_z):
+        errors.append(f"Malformed W_z dimensions (expected {d}x{r})")
+
+    denom_ok = D > 0 and math.gcd(D, spec.prime) == 1
+    if not denom_ok:
+        errors.append(f"Denominator D={D} invalid or not coprime to prime p={spec.prime}")
+
+    ident = identity_int_matrix(d)
+    det_to = det_int_exact(spec.to_simple_basis)
+    det_from = det_int_exact(spec.from_simple_basis)
+    unimod_ok = (
+        abs(det_to) == 1
+        and abs(det_from) == 1
+        and mat_mul_int(spec.from_simple_basis, spec.to_simple_basis) == ident
+        and mat_mul_int(spec.to_simple_basis, spec.from_simple_basis) == ident
+    )
+    if not unimod_ok:
+        errors.append(
+            f"Non-unimodular basis transform for {spec.name}: det_to={det_to}, det_from={det_from}"
+        )
+
+    z_ok = False
+    pairs_checked = 0
+    z_tower_ref = _BLS12_377_Z_TOWER_REFS.get(spec.name)
+    if not errors and unimod_ok:
+        z_ok = True
+        basis_polys = [
+            mat_vec_int(spec.to_simple_basis, [1 if k == idx else 0 for k in range(d)])
+            for idx in range(d)
+        ]
+        for i in range(d):
+            ei = [1 if k == i else 0 for k in range(d)]
+            pi = basis_polys[i]
+            for j in range(d):
+                ej = [1 if k == j else 0 for k in range(d)]
+                pj = basis_polys[j]
+                pairs_checked += 1
+                prod_poly_z = textbook_poly_mul_fixed_z(pi, pj, spec.simple_poly)
+                expected_z = mat_vec_int(spec.from_simple_basis, prod_poly_z)
+                if z_tower_ref is not None:
+                    tower_z = z_tower_ref(ei, ej)
+                    if expected_z != tower_z:
+                        z_ok = False
+                        errors.append(
+                            f"Z-tower isomorphism mismatch at (e_{i}, e_{j}): poly={expected_z}, tower={tower_z}"
+                        )
+                        break
+                m_vec_z = [int(schedule.U[l][i]) * int(schedule.V[l][j]) for l in range(r)]
+                got_scaled_z = [
+                    sum(int(schedule.W_z[k][l]) * m_vec_z[l] for l in range(r))
+                    for k in range(d)
+                ]
+                want_scaled_z = [D * expected_z[k] for k in range(d)]
+                if got_scaled_z != want_scaled_z:
+                    z_ok = False
+                    errors.append(
+                        f"Exact Z identity mismatch at (e_{i}, e_{j}): got {got_scaled_z}, expected {want_scaled_z}"
+                    )
+                    break
+            if not z_ok:
+                break
+
+    return ZCertificateReport(
+        schedule_name=schedule.name,
+        target_name=spec.name,
+        degree=d,
+        rank=r,
+        D=D,
+        basis_det_to=det_to,
+        basis_det_from=det_from,
+        basis_pairs_checked=pairs_checked,
+        unimodular_basis_ok=unimod_ok,
+        exact_z_identity_ok=z_ok,
+        denominator_coprime_ok=denom_ok,
+        errors=tuple(errors),
+    )
 
 
 def compute_w_fp(schedule: BilinearSchedule, p: int) -> List[List[int]]:
@@ -291,6 +443,11 @@ def verify_schedule_certificate(
     if not iso_ok:
         errors.append(f"Basis isomorphism check failed for {spec.name}")
 
+    z_rep = certify_over_Z(schedule, spec)
+    over_z_ok = z_rep.passed
+    if not over_z_ok:
+        errors.extend(z_rep.errors)
+
     basis_ok = False
     pairs_checked = 0
     if not errors and denom_ok:
@@ -396,6 +553,7 @@ def verify_schedule_certificate(
         is_alder_strassen_optimal=is_optimal,
         basis_pairs_checked=pairs_checked,
         basis_identity_ok=basis_ok,
+        over_z_identity_ok=over_z_ok,
         isomorphism_ok=iso_ok,
         irreducibility_ok=irred_ok,
         denominator_invertible_ok=denom_ok,

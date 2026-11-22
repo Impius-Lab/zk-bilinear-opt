@@ -11,7 +11,7 @@ from zk_bilinear.cost_models import (
 )
 from zk_bilinear.fields import EXTENSION_SPECS, textbook_poly_mul_fixed
 from zk_bilinear.pareto_search import get_optimal_native_schedule
-from zk_bilinear.tensor_cert import verify_schedule_certificate
+from zk_bilinear.tensor_cert import certify_over_Z, verify_schedule_certificate
 
 
 class TestAdversarialMutations(unittest.TestCase):
@@ -44,11 +44,22 @@ class TestAdversarialMutations(unittest.TestCase):
 
     def test_02_mutate_single_interpolation_coefficient_caught_red(self) -> None:
         """Corrupt 1 interpolation coefficient in W_z -> verifier MUST reject RED."""
-        for tname in ("QM31", "BabyBear5", "KoalaBear8", "BN254_Fp6", "BLS12_381_Fp12"):
+        for tname in (
+            "QM31",
+            "BabyBear5",
+            "KoalaBear8",
+            "BN254_Fp6",
+            "BLS12_381_Fp12",
+            "BLS12_377_Fp6",
+            "BLS12_377_Fp12",
+        ):
             base = get_optimal_native_schedule(tname)
             wz_list = [list(row) for row in base.W_z]
             wz_list[0][0] += 1
             mut_w = replace(base, W_z=tuple(tuple(r) for r in wz_list))
+            z_rep = certify_over_Z(mut_w)
+            self.assertFalse(z_rep.passed, f"Mutation in W_z for {tname} was not caught over Z!")
+            self.assertFalse(z_rep.exact_z_identity_ok)
             rep = verify_schedule_certificate(mut_w)
             self.assertFalse(rep.passed, f"Mutation in W_z for {tname} was not caught!")
             self.assertFalse(rep.basis_identity_ok)

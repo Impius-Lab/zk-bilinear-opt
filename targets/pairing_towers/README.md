@@ -1,4 +1,4 @@
-# Module C — Non-Native Pairing Towers (`BN254` & `BLS12-381` $`\mathbb{F}_{p^6}`$ and $`\mathbb{F}_{p^{12}}`$)
+# Module C — Pairing Towers (`BN254`, `BLS12-381` & Native 2-Chain `BLS12-377`)
 
 ## 1. Unimodular Simple-Extension Isomorphisms (`det = +-1`, Zero Divisions)
 
@@ -42,6 +42,21 @@ When emulating $`\mathbb{F}_p`$ over a 254-bit SNARK scalar field (`gnark` 2-lim
 | `BLS12_381_Fp12_CRT27` | `27` (-50.00%) | `6` | 46,618 | 47,183 (-30.65%) | 11,176 (-23.38%) | Crosses 56b carry-pack cap on 3 nodes |
 | `BLS12_381_Fp12_Rank23` | **`23` (-57.41%)** | `22` | 50,188 | 50,737 (-25.42%) | 11,100 (-23.90%) | **Native $`\mathbb{F}_p`$ Winner**; carry-heavy in limbs |
 
-## 3. Artifacts in This Directory
+## 3. Native 2-Chain Pairing Tower: `BLS12-377` over `BW6-761` (`fields_bls12377`)
+
+In `Consensys/gnark` (`std/algebra/native/fields_bls12377`), `BLS12-377` is verified natively over `BW6-761` ($`r_{\mathrm{BW6-761}} = p_{\mathrm{BLS12-377}}`$, `377` bits) via:
+
+```math
+\mathbb{F}_{p^2} = \mathbb{F}_p[u]/(u^2 + 5), \qquad \mathbb{F}_{p^6} = \mathbb{F}_{p^2}[v]/(v^3 - u), \qquad \mathbb{F}_{p^{12}} = \mathbb{F}_{p^6}[w]/(w^2 - v).
+```
+
+Setting $`Y = v`$ ($`Y^3 = u \implies Y^6 + 5 = 0`$) and $`W = w`$ ($`W^2 = v, W^6 = u \implies W^{12} + 5 = 0`$) maps `gnark` tower coordinates directly to **binomial simple extensions via pure coordinate permutations** ($`\det = -1`$ over $`\mathbb{Z}`$, **zero basis-conversion additions**):
+- **`BLS12_377_Fp2_Rank3`**: **3** native R1CS multiplications (`7` width-4 PlonK gates), $`\mathbb{Z}`$-certified on all `4` basis pairs.
+- **`BLS12_377_Fp6_Rank11`**: **11** native R1CS multiplications (`-38.89%` vs `18` Karatsuba / **`-26.67%` vs `15` `gnark` Toom3xK**, `95` width-4 PlonK gates), $`\mathbb{Z}`$-certified on all `36` basis pairs.
+- **`BLS12_377_Fp12_Rank23`**: **23** native R1CS multiplications (`-57.41%` vs `54` Karatsuba / **`-48.89%` vs `45` `gnark` Karatsuba-over-Toom3xK**, `407` width-4 PlonK gates), $`\mathbb{Z}`$-certified on all `144` basis pairs.
+
+## 4. Artifacts in This Directory
 - [`bn254_fp6_pareto.json`](./bn254_fp6_pareto.json) & [`bn254_fp12_pareto.json`](./bn254_fp12_pareto.json)
 - [`bls12_381_fp6_pareto.json`](./bls12_381_fp6_pareto.json) & [`bls12_381_fp12_pareto.json`](./bls12_381_fp12_pareto.json)
+- [`bls12_377_fp2_pareto.json`](./bls12_377_fp2_pareto.json), [`bls12_377_fp6_pareto.json`](./bls12_377_fp6_pareto.json) & [`bls12_377_fp12_pareto.json`](./bls12_377_fp12_pareto.json)
+- [`bls12_377_fp2_rank3_cert.json`](./bls12_377_fp2_rank3_cert.json), [`bls12_377_fp6_rank11_cert.json`](./bls12_377_fp6_rank11_cert.json) & [`bls12_377_fp12_rank23_cert.json`](./bls12_377_fp12_rank23_cert.json)

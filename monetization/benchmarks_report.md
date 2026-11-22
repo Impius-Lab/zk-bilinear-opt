@@ -18,7 +18,17 @@
 | `Goldilocks4` | Plonky3 | $`2^{64}-2^{32}+1`$ | 4 | 9 (Karatsuba-4) | **7** | **-22.22%** | 39 | `128b` (`< 2^128`) | `031e3b69aa51` |
 | `Goldilocks5` | Plonky3 | $`2^{64}-2^{32}+1`$ | 5 | 15 (Karatsuba-5 (2+3 split)) | **9** | **-40.00%** | 57 | `128b` (`< 2^128`) | `bb0eb3f2621d` |
 
-## 2. Non-Native Emulated Pairing Towers (`Consensys/gnark` $`4\times 64`$-bit `BN254` & $`6\times 64`$-bit `BLS12-381`)
+### 1.1 Native 2-Chain Pairing Tower: `BLS12-377` over `BW6-761` (`Consensys/gnark` `fields_bls12377`)
+
+Because $`r_{\mathrm{BW6-761}} = p_{\mathrm{BLS12-377}}`$ (`377` bits), `BLS12-377` pairing towers execute natively over $`\mathbb{F}_p`$ with $`u^2 = -5`$, $`v^3 = u`$, $`w^2 = v`$, where canonical tower coordinates map to $`\mathbb{F}_p[Y]/(Y^6 + 5)`$ and $`\mathbb{F}_p[W]/(W^{12} + 5)`$ via **pure unimodular coordinate permutations** ($`\det = -1`$, zero basis-conversion additions):
+
+| Target Extension | Direct Modulus | Deg $`d`$ | Karatsuba / `gnark` R1CS Baseline | Certified Optimal Rank ($`2d-1`$) | R1CS Mul Savings (vs Karatsuba / `gnark`) | Width-4 PlonK Total Gates | $`\mathbb{Z}`$-Basis Pairs | Certificate SHA-256 (prefix) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `BLS12_377_Fp2` | $`X^2 + 5 = 0`$ | 2 | `3` / `3` | **3** | **-0.00%** / **-0.00%** | 7 | `4` | `79530514104e` |
+| `BLS12_377_Fp6` | $`Y^6 + 5 = 0`$ | 6 | `18` / `15` | **11** | **-38.89%** / **-26.67%** | 95 | `36` | `7323a4fc92e0` |
+| `BLS12_377_Fp12` | $`W^{12} + 5 = 0`$ | 12 | `54` / `45` | **23** | **-57.41%** / **-48.89%** | 407 | `144` | `78ccd313923b` |
+
+## 2. Non-Native Emulated Pairing Towers (`Consensys/gnark` $`4\times 64`$-bit `BN254` & $`6\times 64`$-bit `BLS12-381` / `BLS12-377`)
 
 In non-native emulated field circuits over a 254-bit SNARK scalar field (such as `gnark`'s `std/algebra/emulated`),
 two adjacent 64-bit limb equations are packed per carry constraint (`128 + 64 = 192` bits, plus `4` bits for signed carry + co-addition), leaving a **56-bit overflow ceiling**
@@ -66,6 +76,27 @@ and a **64-bit ceiling** on $`\Vert W_{\mathbb{Z},k}\Vert_1 + D`$ before output 
 | `BLS12_381_Fp12_CRT30` | Cyclotomic-CRT | **30** | -44.44% | `45b` | `47.5b` | `0` | 45,492 | **46,078** (-32.27%) | **10,235** (-29.83%) | YES |
 | `BLS12_381_Fp12_CRT27` | Cyclotomic-CRT | **27** | -50.00% | `63b` | `71.2b` | `6` | 46,618 | **47,183** (-30.65%) | **11,176** (-23.38%) | YES |
 | `BLS12_381_Fp12_Rank23` | Vandermonde | **23** | -57.41% | `77b` | `65.5b` | `22` | 50,188 | **50,737** (-25.42%) | **11,100** (-23.90%) | YES |
+
+### 2.5 `BLS12-377` $`\mathbb{F}_{p^6}`$ ($`6\times 64`$-bit Limbs, $`u^2 = -5, v^3 = u`$, Pure Permutation $`Y^6 + 5 = 0`$)
+
+| Schedule | Family | Native $`\mathbb{F}_p`$ Muls ($`r`$) | Mul Savings | $`\log_2(UV)`$ Slack | $`\log_2(D)`$ | Pre-Mul `Reduce()` | Total Range-Check Bits | Net Groth16 R1CS (vs Baseline) | Net PlonK16 Gates (vs Baseline) | Pareto? |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `BLS12_377_Fp6_Tower18` | Karatsuba-Baseline | **18** | -0.00% | `4b` | `0.0b` | `0` | 22,600 | **22,930** (-0.00%) | **4,770** (-0.00%) | YES |
+| `BLS12_377_Fp6_Toom15` | Tower-Hybrid | **15** | -16.67% | `8b` | `2.6b` | `0` | 19,507 | **19,787** (-13.71%) | **4,115** (-13.73%) | YES |
+| `BLS12_377_Fp6_CRT13` | Cyclotomic-CRT | **13** | -27.78% | `18b` | `14.6b` | `0` | 17,936 | **18,184** (-20.70%) | **3,871** (-18.85%) | YES |
+| `BLS12_377_Fp6_CRT12` | Cyclotomic-CRT | **12** | -33.33% | `21b` | `19.7b` | `0` | 17,295 | **17,528** (-23.56%) | **3,655** (-23.38%) | YES |
+| `BLS12_377_Fp6_Rank11` | Vandermonde | **11** | -38.89% | `24b` | `16.9b` | `0` | 16,621 | **16,839** (-26.56%) | **3,465** (-27.36%) | YES |
+
+### 2.6 `BLS12-377` $`\mathbb{F}_{p^{12}}`$ ($`6\times 64`$-bit Limbs, $`w^2 = v, v^3 = u`$, Pure Permutation $`W^{12} + 5 = 0`$)
+
+| Schedule | Family | Native $`\mathbb{F}_p`$ Muls ($`r`$) | Mul Savings | $`\log_2(UV)`$ Slack | $`\log_2(D)`$ | Pre-Mul `Reduce()` | Total Range-Check Bits | Net Groth16 R1CS (vs Baseline) | Net PlonK16 Gates (vs Baseline) | Pareto? |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `BLS12_377_Fp12_Tower54` | Karatsuba-Baseline | **54** | -0.00% | `6b` | `0.0b` | `0` | 65,568 | **66,534** (-0.00%) | **14,472** (-0.00%) | YES |
+| `BLS12_377_Fp12_Toom45` | Tower-Hybrid | **45** | -16.67% | `10b` | `2.6b` | `0` | 56,523 | **57,343** (-13.81%) | **12,647** (-12.61%) | YES |
+| `BLS12_377_Fp12_Tower33` | Tower-Hybrid | **33** | -38.89% | `26b` | `18.5b` | `0` | 47,289 | **47,921** (-27.98%) | **10,717** (-25.95%) | YES |
+| `BLS12_377_Fp12_CRT30` | Cyclotomic-CRT | **30** | -44.44% | `45b` | `47.5b` | `0` | 45,022 | **45,601** (-31.46%) | **10,394** (-28.18%) | YES |
+| `BLS12_377_Fp12_CRT27` | Cyclotomic-CRT | **27** | -50.00% | `63b` | `71.2b` | `6` | 46,152 | **46,710** (-29.80%) | **11,342** (-21.63%) | YES |
+| `BLS12_377_Fp12_Rank23` | Vandermonde | **23** | -57.41% | `77b` | `65.5b` | `22` | 50,089 | **50,638** (-23.89%) | **11,148** (-22.97%) | YES |
 
 ## 3. Key Architectural Takeaway: Why Naive `23`-Mul Vandermonde Loses to `CRT-30` & `Tower-33` in Non-Native Limbs
 

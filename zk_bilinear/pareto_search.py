@@ -612,10 +612,62 @@ def build_all_schedules() -> Dict[str, List[BilinearSchedule]]:
             _make_simple_poly_schedule(f"{curve_key}_Fp12_Rank23", sp12, "Vandermonde", U12_23, V12_23, Wp12_23, "Alder-Strassen optimal 23-mul Vandermonde {-11..10,inf} (native R1CS optimal; limb-carry heavy)"),
         ]
 
+    # 8. Native 2-Chain Pairing Tower: BLS12-377 (u^2 = -5, v^3 = u, w^2 = v; pure coordinate permutations)
+    sp377_2 = EXTENSION_SPECS["BLS12_377_Fp2"]
+    sp377_6 = EXTENSION_SPECS["BLS12_377_Fp6"]
+    sp377_12 = EXTENSION_SPECS["BLS12_377_Fp12"]
+
+    suite[sp377_2.name] = [
+        _make_simple_poly_schedule("BLS12_377_Fp2_Schoolbook4", sp377_2, "Schoolbook-Baseline", Us2, Vs2, Ws2, "Schoolbook Fp2 over u^2 + 5 = 0 (4 Fp muls)"),
+        _make_simple_poly_schedule("BLS12_377_Fp2_Rank3", sp377_2, "Vandermonde", Uk2, Vk2, Wk2, "Alder-Strassen optimal 3-mul Karatsuba Fp2 over u^2 + 5 = 0"),
+    ]
+
+    W2_377_mod = _reduce_poly_W_mod_f(Wk2, [5, 0, 1])
+    L_u_377 = [[0, -5], [1, 0]]  # u * (a0 + a1*u) = -5*a1 + a0*u
+    U6_377_18, V6_377_18, W6_377_18 = compose_binomial_tower(Uk3, Vk3, Wpk3, Uk2, Vk2, W2_377_mod, L_u_377)
+    U6_377_15, V6_377_15, W6_377_15 = compose_binomial_tower(Ut3, Vt3, Wpt3, Uk2, Vk2, W2_377_mod, L_u_377)
+
+    suite[sp377_6.name] = [
+        _make_schedule_from_q("BLS12_377_Fp6_Tower18", sp377_6, "Karatsuba-Baseline", U6_377_18, V6_377_18, W6_377_18, "Standard Karatsuba-3 x Karatsuba-2 tower (18 Fp muls)"),
+        _make_schedule_from_q("BLS12_377_Fp6_Toom15", sp377_6, "Tower-Hybrid", U6_377_15, V6_377_15, W6_377_15, "gnark R1CS baseline Toom-3 over Fp2 x Karatsuba-2 (15 Fp muls)"),
+        _make_simple_poly_schedule("BLS12_377_Fp6_CRT13", sp377_6, "Cyclotomic-CRT", U6_13, V6_13, Wp6_13, "13-mul Cyclotomic CRT on Y^6 + 5 = 0 mapped to tower coordinates"),
+        _make_simple_poly_schedule("BLS12_377_Fp6_CRT12", sp377_6, "Cyclotomic-CRT", U6_12, V6_12, Wp6_12, "12-mul Cyclotomic CRT on Y^6 + 5 = 0 mapped to tower coordinates"),
+        _make_simple_poly_schedule("BLS12_377_Fp6_Rank11", sp377_6, "Vandermonde", U6_11, V6_11, Wp6_11, "Winograd / Alder-Strassen optimal 11-mul Fp6 on Y^6 + 5 at {-5..4, inf} via pure tower permutation"),
+    ]
+
+    L_v_377 = [
+        [0, 0, 0, 0, 0, -5],
+        [0, 0, 0, 0, 1, 0],
+        [1, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0],
+    ]
+    U12_377_54, V12_377_54, W12_377_54 = compose_binomial_tower(Uk2, Vk2, Wk2, U6_377_18, V6_377_18, W6_377_18, L_v_377)
+    U12_377_45, V12_377_45, W12_377_45 = compose_binomial_tower(Uk2, Vk2, Wk2, U6_377_15, V6_377_15, W6_377_15, L_v_377)
+
+    U12_377_33_w6, V12_377_33_w6, W12_377_33_w6 = compose_binomial_tower(U6_11, V6_11, Wp6_11, Uk2, Vk2, W2_377_mod, L_u_377)
+    U12_377_33, V12_377_33, W12_377_33 = _apply_basis_transform(
+        U12_377_33_w6, V12_377_33_w6, W12_377_33_w6, w6_from_gnark, gnark_from_w6
+    )
+
+    suite[sp377_12.name] = [
+        _make_schedule_from_q("BLS12_377_Fp12_Tower54", sp377_12, "Karatsuba-Baseline", U12_377_54, V12_377_54, W12_377_54, "Standard 3x6x3 Karatsuba tower (54 Fp muls)"),
+        _make_schedule_from_q("BLS12_377_Fp12_Toom45", sp377_12, "Tower-Hybrid", U12_377_45, V12_377_45, W12_377_45, "gnark R1CS baseline Karatsuba-2 x Toom-3 x Karatsuba-2 tower (45 Fp muls)"),
+        _make_schedule_from_q("BLS12_377_Fp12_Tower33", sp377_12, "Tower-Hybrid", U12_377_33, V12_377_33, W12_377_33, "Toom-6 over Fp2 x Karatsuba-2 hybrid (33 Fp muls, 18.5b D)"),
+        _make_simple_poly_schedule("BLS12_377_Fp12_CRT30", sp377_12, "Cyclotomic-CRT", U12_30, V12_30, Wp12_30, "30-mul Cyclotomic/Quadratic CRT on W^12 + 5 = 0 (9 linear + 7 quadratic, 0 pre-reductions)"),
+        _make_simple_poly_schedule("BLS12_377_Fp12_CRT27", sp377_12, "Cyclotomic-CRT", U12_27, V12_27, Wp12_27, "27-mul Cyclotomic CRT on W^12 + 5 = 0 (15 linear + 4 quadratic)"),
+        _make_simple_poly_schedule("BLS12_377_Fp12_Rank23", sp377_12, "Vandermonde", U12_23, V12_23, Wp12_23, "Winograd / Alder-Strassen optimal 23-mul Vandermonde on W^12 + 5 at {-11..10, inf} via pure tower permutation"),
+    ]
+
     return suite
 
 
 SCHEDULE_SUITE: Dict[str, List[BilinearSchedule]] = build_all_schedules()
+
+BLS12_377_Fp2_Rank3: BilinearSchedule = SCHEDULE_SUITE["BLS12_377_Fp2"][-1]
+BLS12_377_Fp6_Rank11: BilinearSchedule = SCHEDULE_SUITE["BLS12_377_Fp6"][-1]
+BLS12_377_Fp12_Rank23: BilinearSchedule = SCHEDULE_SUITE["BLS12_377_Fp12"][-1]
 
 
 def get_schedules_for_target(target_name: str) -> List[BilinearSchedule]:

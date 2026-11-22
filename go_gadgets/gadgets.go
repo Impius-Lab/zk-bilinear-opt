@@ -247,3 +247,81 @@ func RefMulFp12Tower(a, b []*big.Int, xi0 int64, p *big.Int) []*big.Int {
 	}
 	return out
 }
+
+func refBLS12377Fp2Mul(a0, a1, b0, b1, p *big.Int) (*big.Int, *big.Int) {
+	ac := new(big.Int).Mul(a0, b0)
+	bd := new(big.Int).Mul(a1, b1)
+	bd5 := new(big.Int).Mul(bd, big.NewInt(5))
+	r0 := new(big.Int).Sub(ac, bd5)
+	r0.Mod(r0, p)
+
+	ad := new(big.Int).Mul(a0, b1)
+	bc := new(big.Int).Mul(a1, b0)
+	r1 := new(big.Int).Add(ad, bc)
+	r1.Mod(r1, p)
+	return r0, r1
+}
+
+func refBLS12377Fp2MulU(x0, x1, p *big.Int) (*big.Int, *big.Int) {
+	// u * (x0 + x1*u) = -5*x1 + x0*u  (u^2 = -5)
+	t0 := new(big.Int).Mul(x1, big.NewInt(-5))
+	t0.Mod(t0, p)
+	t1 := new(big.Int).Mod(x0, p)
+	return t0, t1
+}
+
+// RefMulBLS12377Fp2Tower computes textbook BLS12-377 E2 = Fp[u]/(u^2 + 5).
+func RefMulBLS12377Fp2Tower(a, b []*big.Int, p *big.Int) []*big.Int {
+	r0, r1 := refBLS12377Fp2Mul(a[0], a[1], b[0], b[1], p)
+	return []*big.Int{r0, r1}
+}
+
+// RefMulBLS12377Fp6Tower computes textbook gnark BLS12-377 E6 = E2[v]/(v^3 - u).
+func RefMulBLS12377Fp6Tower(a, b []*big.Int, p *big.Int) []*big.Int {
+	c0 := make([]*big.Int, 5)
+	c1 := make([]*big.Int, 5)
+	for k := 0; k < 5; k++ {
+		c0[k] = new(big.Int)
+		c1[k] = new(big.Int)
+	}
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			p0, p1 := refBLS12377Fp2Mul(a[2*i], a[2*i+1], b[2*j], b[2*j+1], p)
+			c0[i+j].Add(c0[i+j], p0)
+			c0[i+j].Mod(c0[i+j], p)
+			c1[i+j].Add(c1[i+j], p1)
+			c1[i+j].Mod(c1[i+j], p)
+		}
+	}
+	for k := 3; k < 5; k++ {
+		s0, s1 := refBLS12377Fp2MulU(c0[k], c1[k], p)
+		c0[k-3].Add(c0[k-3], s0)
+		c0[k-3].Mod(c0[k-3], p)
+		c1[k-3].Add(c1[k-3], s1)
+		c1[k-3].Mod(c1[k-3], p)
+	}
+	return []*big.Int{c0[0], c1[0], c0[1], c1[1], c0[2], c1[2]}
+}
+
+// RefMulBLS12377Fp12Tower computes textbook gnark BLS12-377 E12 = E6[w]/(w^2 - v).
+func RefMulBLS12377Fp12Tower(a, b []*big.Int, p *big.Int) []*big.Int {
+	a0, a1 := a[:6], a[6:]
+	b0, b1 := b[:6], b[6:]
+	p00 := RefMulBLS12377Fp6Tower(a0, b0, p)
+	p11 := RefMulBLS12377Fp6Tower(a1, b1, p)
+	p01 := RefMulBLS12377Fp6Tower(a0, b1, p)
+	p10 := RefMulBLS12377Fp6Tower(a1, b0, p)
+
+	// v * p11 = (u * B2) + B0*v + B1*v^2
+	uB2_0, uB2_1 := refBLS12377Fp2MulU(p11[4], p11[5], p)
+	vp11 := []*big.Int{uB2_0, uB2_1, p11[0], p11[1], p11[2], p11[3]}
+
+	out := make([]*big.Int, 12)
+	for i := 0; i < 6; i++ {
+		out[i] = new(big.Int).Add(p00[i], vp11[i])
+		out[i].Mod(out[i], p)
+		out[6+i] = new(big.Int).Add(p01[i], p10[i])
+		out[6+i].Mod(out[6+i], p)
+	}
+	return out
+}
