@@ -80,7 +80,7 @@ class TestLimbOverflowAndParetoBounds(unittest.TestCase):
         range-check bit-widths on maximal & sign-aligned vectors, and verify the true Pareto
         tradeoff on BN254 (4x64) and BLS12-381 (6x64).
         """
-        for curve_key, limbs in [("BN254", 4), ("BLS12_381", 6)]:
+        for curve_key, limbs in [("BN254", 4), ("BLS12_381", 6), ("BLS12_377", 6)]:
             # A. Fp6: Rank-11 achieves BOTH minimum rank (11 vs 18) AND lowest Groth16 & PlonK16 gates!
             t6 = f"{curve_key}_Fp6"
             spec6 = EXTENSION_SPECS[t6]

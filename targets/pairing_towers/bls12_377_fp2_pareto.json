@@ -1,0 +1,335 @@
+{
+  "schedules": [
+    {
+      "certificate": {
+        "actual_limb_slack_bits": 0,
+        "alder_strassen_lower_bound": 3,
+        "basis_pairs_checked": 4,
+        "irreducibility_verified": true,
+        "is_alder_strassen_optimal": false,
+        "isomorphism_verified": true,
+        "mul_reduction_vs_baseline_pct": -33.33,
+        "passed": true,
+        "peak_native_bits": null,
+        "rank": 4
+      },
+      "costs": {
+        "emulated_limbs": {
+          "groth16_r1cs_schoolbook_total": 5426,
+          "groth16_r1cs_total": 5326,
+          "limb_muls_schoolbook": 144,
+          "limb_muls_toom": 44,
+          "limbs": "6x64",
+          "plonk_lookup16_gates": 348,
+          "plonk_total_gates": 1038,
+          "pre_mul_reductions": 0,
+          "total_range_check_bits": 5250
+        },
+        "native_air_degree2_muls": 4,
+        "native_plonk_mul_gates": 4,
+        "native_plonk_width4_total_gates": 6,
+        "native_r1cs_constraints": 4
+      },
+      "description": "Schoolbook Fp2 over u^2 + 5 = 0 (4 Fp muls)",
+      "family": "Schoolbook-Baseline",
+      "is_pareto_efficient": true,
+      "matrices": {
+        "D": 1,
+        "U": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "V": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "W_z": [
+          [
+            1,
+            0,
+            0,
+            -5
+          ],
+          [
+            0,
+            1,
+            1,
+            0
+          ]
+        ],
+        "inv_D_mod_p": "1"
+      },
+      "r1cs": {
+        "bilinear_gates": [
+          {
+            "A": {
+              "1": 1
+            },
+            "B": {
+              "3": 1
+            },
+            "C": {
+              "5": 1
+            }
+          },
+          {
+            "A": {
+              "1": 1
+            },
+            "B": {
+              "4": 1
+            },
+            "C": {
+              "6": 1
+            }
+          },
+          {
+            "A": {
+              "2": 1
+            },
+            "B": {
+              "3": 1
+            },
+            "C": {
+              "7": 1
+            }
+          },
+          {
+            "A": {
+              "2": 1
+            },
+            "B": {
+              "4": 1
+            },
+            "C": {
+              "8": 1
+            }
+          }
+        ],
+        "output_linear_forms": [
+          {
+            "D_denominator": 1,
+            "W_z_terms": {
+              "5": 1,
+              "8": -5
+            }
+          },
+          {
+            "D_denominator": 1,
+            "W_z_terms": {
+              "6": 1,
+              "7": 1
+            }
+          }
+        ]
+      },
+      "schedule_name": "BLS12_377_Fp2_Schoolbook4",
+      "schema": "zk-bilinear-opt/certificate/v1",
+      "sha256": "8cd604c7a01e8614aebd4b3446187c0ddb590cb7657d009e90164509598fd2c9",
+      "target": {
+        "baseline_muls": 3,
+        "baseline_name": "Karatsuba-2",
+        "basis_labels": [
+          "A0",
+          "A1"
+        ],
+        "degree": 2,
+        "ecosystem": "Consensys gnark native 2-chain over BW6-761 / arkworks (BLS12-377)",
+        "name": "BLS12_377_Fp2",
+        "prime_bits": 377,
+        "prime_dec": "258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177",
+        "prime_name": "BLS12-377",
+        "simple_poly_coeffs": [
+          5,
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "certificate": {
+        "actual_limb_slack_bits": 2,
+        "alder_strassen_lower_bound": 3,
+        "basis_pairs_checked": 4,
+        "irreducibility_verified": true,
+        "is_alder_strassen_optimal": true,
+        "isomorphism_verified": true,
+        "mul_reduction_vs_baseline_pct": 0.0,
+        "passed": true,
+        "peak_native_bits": null,
+        "rank": 3
+      },
+      "costs": {
+        "emulated_limbs": {
+          "groth16_r1cs_schoolbook_total": 4284,
+          "groth16_r1cs_total": 4209,
+          "limb_muls_schoolbook": 108,
+          "limb_muls_toom": 33,
+          "limbs": "6x64",
+          "plonk_lookup16_gates": 275,
+          "plonk_total_gates": 815,
+          "pre_mul_reductions": 0,
+          "total_range_check_bits": 4150
+        },
+        "native_air_degree2_muls": 3,
+        "native_plonk_mul_gates": 3,
+        "native_plonk_width4_total_gates": 7,
+        "native_r1cs_constraints": 3
+      },
+      "description": "Alder-Strassen optimal 3-mul Karatsuba Fp2 over u^2 + 5 = 0",
+      "family": "Vandermonde",
+      "is_pareto_efficient": true,
+      "matrices": {
+        "D": 1,
+        "U": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "V": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "W_z": [
+          [
+            1,
+            -5,
+            0
+          ],
+          [
+            -1,
+            -1,
+            1
+          ]
+        ],
+        "inv_D_mod_p": "1"
+      },
+      "r1cs": {
+        "bilinear_gates": [
+          {
+            "A": {
+              "1": 1
+            },
+            "B": {
+              "3": 1
+            },
+            "C": {
+              "5": 1
+            }
+          },
+          {
+            "A": {
+              "2": 1
+            },
+            "B": {
+              "4": 1
+            },
+            "C": {
+              "6": 1
+            }
+          },
+          {
+            "A": {
+              "1": 1,
+              "2": 1
+            },
+            "B": {
+              "3": 1,
+              "4": 1
+            },
+            "C": {
+              "7": 1
+            }
+          }
+        ],
+        "output_linear_forms": [
+          {
+            "D_denominator": 1,
+            "W_z_terms": {
+              "5": 1,
+              "6": -5
+            }
+          },
+          {
+            "D_denominator": 1,
+            "W_z_terms": {
+              "5": -1,
+              "6": -1,
+              "7": 1
+            }
+          }
+        ]
+      },
+      "schedule_name": "BLS12_377_Fp2_Rank3",
+      "schema": "zk-bilinear-opt/certificate/v1",
+      "sha256": "79530514104e5ebfeedc09633a47346566eb9059247dc6b67fa426503d155efe",
+      "target": {
+        "baseline_muls": 3,
+        "baseline_name": "Karatsuba-2",
+        "basis_labels": [
+          "A0",
+          "A1"
+        ],
+        "degree": 2,
+        "ecosystem": "Consensys gnark native 2-chain over BW6-761 / arkworks (BLS12-377)",
+        "name": "BLS12_377_Fp2",
+        "prime_bits": 377,
+        "prime_dec": "258664426012969094010652733694893533536393512754914660539884262666720468348340822774968888139573360124440321458177",
+        "prime_name": "BLS12-377",
+        "simple_poly_coeffs": [
+          5,
+          0,
+          1
+        ]
+      }
+    }
+  ],
+  "target": "BLS12_377_Fp2"
+}

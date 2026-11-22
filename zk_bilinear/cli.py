@@ -5,25 +5,31 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import random
 import sys
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from .codegen import (
     emit_go_big_gadget,
+    emit_go_bls12377_u64_module,
     emit_r1cs_json,
     emit_rust_function,
     emit_rust_module,
     schedule_sha256,
 )
 from .cost_models import evaluate_full_cost
-from .fields import EXTENSION_SPECS
+from .fields import EXTENSION_SPECS, PRIMES, is_prime
 from .pareto_search import (
     SCHEDULE_SUITE,
     compute_pareto_frontier,
     get_optimal_native_schedule,
     get_schedules_for_target,
 )
-from .tensor_cert import verify_schedule_certificate
+from .tensor_cert import (
+    certify_over_Z,
+    evaluate_schedule_fp,
+    verify_schedule_certificate,
+)
 
 
 def repo_root() -> Path:
@@ -98,7 +104,33 @@ def render_benchmarks_markdown() -> str:
         )
 
     lines.append("")
-    lines.append("## 2. Non-Native Emulated Pairing Towers (`Consensys/gnark` $`4\\times 64`$-bit `BN254` & $`6\\times 64`$-bit `BLS12-381`)")
+    lines.append("### 1.1 Native 2-Chain Pairing Tower: `BLS12-377` over `BW6-761` (`Consensys/gnark` `fields_bls12377`)")
+    lines.append("")
+    lines.append("Because $`r_{\\mathrm{BW6-761}} = p_{\\mathrm{BLS12-377}}`$ (`377` bits), `BLS12-377` pairing towers execute natively over $`\\mathbb{F}_p`$ with $`u^2 = -5`$, $`v^3 = u`$, $`w^2 = v`$, where canonical tower coordinates map to $`\\mathbb{F}_p[Y]/(Y^6 + 5)`$ and $`\\mathbb{F}_p[W]/(W^{12} + 5)`$ via **pure unimodular coordinate permutations** ($`\\det = -1`$, zero basis-conversion additions):")
+    lines.append("")
+    lines.append("| Target Extension | Direct Modulus | Deg $`d`$ | Karatsuba / `gnark` R1CS Baseline | Certified Optimal Rank ($`2d-1`$) | R1CS Mul Savings (vs Karatsuba / `gnark`) | Width-4 PlonK Total Gates | $`\\mathbb{Z}`$-Basis Pairs | Certificate SHA-256 (prefix) |")
+    lines.append("| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |")
+
+    for tname, mod_disp, gnark_r1cs_base in [
+        ("BLS12_377_Fp2", "$`X^2 + 5 = 0`$", 3),
+        ("BLS12_377_Fp6", "$`Y^6 + 5 = 0`$", 15),
+        ("BLS12_377_Fp12", "$`W^{12} + 5 = 0`$", 45),
+    ]:
+        spec = EXTENSION_SPECS[tname]
+        opt = get_optimal_native_schedule(tname)
+        cert = verify_schedule_certificate(opt, spec)
+        cost = evaluate_full_cost(opt)
+        sav_kar = 100.0 * (spec.baseline_muls - opt.rank) / spec.baseline_muls
+        sav_gnk = 100.0 * (gnark_r1cs_base - opt.rank) / gnark_r1cs_base
+        sha = schedule_sha256(opt, spec.prime)[:12]
+        lines.append(
+            f"| `{tname}` | {mod_disp} | {spec.degree} | `{spec.baseline_muls}` / `{gnark_r1cs_base}` | "
+            f"**{opt.rank}** | **-{sav_kar:.2f}%** / **-{sav_gnk:.2f}%** | "
+            f"{cost.native.plonk_width4_total_gates} | `{cert.basis_pairs_checked}` | `{sha}` |"
+        )
+
+    lines.append("")
+    lines.append("## 2. Non-Native Emulated Pairing Towers (`Consensys/gnark` $`4\\times 64`$-bit `BN254` & $`6\\times 64`$-bit `BLS12-381` / `BLS12-377`)")
     lines.append("")
     lines.append("In non-native emulated field circuits over a 254-bit SNARK scalar field (such as `gnark`'s `std/algebra/emulated`),")
     lines.append("two adjacent 64-bit limb equations are packed per carry constraint (`128 + 64 = 192` bits, plus `4` bits for signed carry + co-addition), leaving a **56-bit overflow ceiling**")
@@ -111,6 +143,8 @@ def render_benchmarks_markdown() -> str:
         ("BN254_Fp12", "### 2.2 `BN254` $`\\mathbb{F}_{p^{12}}`$ ($`4\\times 64`$-bit Limbs, $`\\xi = 9 + u`$, Simple Iso $`w^{12} - 18w^6 + 82 = 0`$)"),
         ("BLS12_381_Fp6", "### 2.3 `BLS12-381` $`\\mathbb{F}_{p^6}`$ ($`6\\times 64`$-bit Limbs, $`\\xi = 1 + u`$, Simple Iso $`v^6 - 2v^3 + 2 = 0`$)"),
         ("BLS12_381_Fp12", "### 2.4 `BLS12-381` $`\\mathbb{F}_{p^{12}}`$ ($`6\\times 64`$-bit Limbs, $`\\xi = 1 + u`$, Simple Iso $`w^{12} - 2w^6 + 2 = 0`$)"),
+        ("BLS12_377_Fp6", "### 2.5 `BLS12-377` $`\\mathbb{F}_{p^6}`$ ($`6\\times 64`$-bit Limbs, $`u^2 = -5, v^3 = u`$, Pure Permutation $`Y^6 + 5 = 0`$)"),
+        ("BLS12_377_Fp12", "### 2.6 `BLS12-377` $`\\mathbb{F}_{p^{12}}`$ ($`6\\times 64`$-bit Limbs, $`w^2 = v, v^3 = u`$, Pure Permutation $`W^{12} + 5 = 0`$)"),
     ]:
         lines.append(header_title)
         lines.append("")
@@ -166,23 +200,21 @@ def render_benchmarks_markdown() -> str:
     return "\n".join(lines)
 
 
-def generate_all_artifacts() -> None:
+def _compute_expected_artifacts() -> Dict[Path, str]:
     root = repo_root()
+    artifacts: Dict[Path, str] = {}
 
     # 1. targets/qm31_stwo/
     qm_dir = root / "targets" / "qm31_stwo"
-    qm_dir.mkdir(parents=True, exist_ok=True)
     qm_opt = get_optimal_native_schedule("QM31")
     qm_base = get_schedules_for_target("QM31")[0]
-    (qm_dir / "qm31_rank7_cert.json").write_text(emit_r1cs_json(qm_opt), encoding="utf-8")
-    (qm_dir / "qm31_stwo.rs").write_text(
-        emit_rust_module([(qm_opt, "mul_qm31_rank7"), (qm_base, "mul_qm31_karatsuba9")]),
-        encoding="utf-8",
+    artifacts[qm_dir / "qm31_rank7_cert.json"] = emit_r1cs_json(qm_opt)
+    artifacts[qm_dir / "qm31_stwo.rs"] = emit_rust_module(
+        [(qm_opt, "mul_qm31_rank7"), (qm_base, "mul_qm31_karatsuba9")]
     )
 
     # 2. targets/plonky3_extensions/
     p3_dir = root / "targets" / "plonky3_extensions"
-    p3_dir.mkdir(parents=True, exist_ok=True)
     p3_pairs: List[Tuple[object, str]] = []
     for tname, fname, slug in [
         ("BabyBear4", "mul_babybear4_rank7", "babybear4_rank7_cert.json"),
@@ -194,21 +226,20 @@ def generate_all_artifacts() -> None:
         ("Goldilocks5", "mul_goldilocks5_rank9", "goldilocks5_rank9_cert.json"),
     ]:
         sched = get_optimal_native_schedule(tname)
-        (p3_dir / slug).write_text(emit_r1cs_json(sched), encoding="utf-8")
+        artifacts[p3_dir / slug] = emit_r1cs_json(sched)
         p3_pairs.append((sched, fname))
-    (p3_dir / "plonky3_extensions.rs").write_text(
-        emit_rust_module(p3_pairs),  # type: ignore[arg-type]
-        encoding="utf-8",
-    )
+    artifacts[p3_dir / "plonky3_extensions.rs"] = emit_rust_module(p3_pairs)  # type: ignore[arg-type]
 
     # 3. targets/pairing_towers/
     pt_dir = root / "targets" / "pairing_towers"
-    pt_dir.mkdir(parents=True, exist_ok=True)
     for tname, fname_json in [
         ("BN254_Fp6", "bn254_fp6_pareto.json"),
         ("BN254_Fp12", "bn254_fp12_pareto.json"),
         ("BLS12_381_Fp6", "bls12_381_fp6_pareto.json"),
         ("BLS12_381_Fp12", "bls12_381_fp12_pareto.json"),
+        ("BLS12_377_Fp2", "bls12_377_fp2_pareto.json"),
+        ("BLS12_377_Fp6", "bls12_377_fp6_pareto.json"),
+        ("BLS12_377_Fp12", "bls12_377_fp12_pareto.json"),
     ]:
         frontier = compute_pareto_frontier(tname)
         entries = []
@@ -216,14 +247,19 @@ def generate_all_artifacts() -> None:
             cert_obj = json.loads(emit_r1cs_json(sched))
             cert_obj["is_pareto_efficient"] = is_par
             entries.append(cert_obj)
-        (pt_dir / fname_json).write_text(
-            json.dumps({"target": tname, "schedules": entries}, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
+        artifacts[pt_dir / fname_json] = (
+            json.dumps({"target": tname, "schedules": entries}, indent=2, sort_keys=True) + "\n"
         )
+
+    for tname, cert_slug in [
+        ("BLS12_377_Fp2", "bls12_377_fp2_rank3_cert.json"),
+        ("BLS12_377_Fp6", "bls12_377_fp6_rank11_cert.json"),
+        ("BLS12_377_Fp12", "bls12_377_fp12_rank23_cert.json"),
+    ]:
+        artifacts[pt_dir / cert_slug] = emit_r1cs_json(get_optimal_native_schedule(tname))
 
     # 4. rust_crates/src/generated.rs
     rust_src = root / "rust_crates" / "src"
-    rust_src.mkdir(parents=True, exist_ok=True)
     all_rust_scheds = [
         (get_optimal_native_schedule("CM31"), "mul_cm31_rank3"),
         (qm_opt, "mul_qm31_rank7"),
@@ -231,14 +267,12 @@ def generate_all_artifacts() -> None:
         *p3_pairs,
     ]
     gen_rs_blocks = [emit_rust_function(s, fn) for s, fn in all_rust_scheds]  # type: ignore[arg-type]
-    (rust_src / "generated.rs").write_text(
-        "// Auto-generated by `python -m zk_bilinear generate-all`.\n\n" + "\n".join(gen_rs_blocks),
-        encoding="utf-8",
+    artifacts[rust_src / "generated.rs"] = (
+        "// Auto-generated by `python -m zk_bilinear generate-all`.\n\n" + "\n".join(gen_rs_blocks)
     )
 
-    # 5. go_gadgets/gadgets_generated.go
+    # 5. go_gadgets/gadgets_generated.go & go_gadgets/bls12377_u64_generated.go
     go_dir = root / "go_gadgets"
-    go_dir.mkdir(parents=True, exist_ok=True)
     go_targets = [
         (get_optimal_native_schedule("QM31"), "MulQM31Rank7"),
         (get_schedules_for_target("QM31")[0], "MulQM31Karatsuba9"),
@@ -258,6 +292,15 @@ def generate_all_artifacts() -> None:
         (get_schedules_for_target("BLS12_381_Fp12")[3], "MulBLS12381Fp12CRT30"),
         (get_optimal_native_schedule("BLS12_381_Fp12"), "MulBLS12381Fp12Rank23"),
         (get_schedules_for_target("BLS12_381_Fp12")[0], "MulBLS12381Fp12Tower54"),
+        (get_optimal_native_schedule("BLS12_377_Fp2"), "MulBLS12377Fp2Rank3"),
+        (get_optimal_native_schedule("BLS12_377_Fp6"), "MulBLS12377Fp6Rank11"),
+        (get_schedules_for_target("BLS12_377_Fp6")[1], "MulBLS12377Fp6Toom15"),
+        (get_schedules_for_target("BLS12_377_Fp6")[0], "MulBLS12377Fp6Tower18"),
+        (get_schedules_for_target("BLS12_377_Fp12")[2], "MulBLS12377Fp12Tower33"),
+        (get_schedules_for_target("BLS12_377_Fp12")[3], "MulBLS12377Fp12CRT30"),
+        (get_optimal_native_schedule("BLS12_377_Fp12"), "MulBLS12377Fp12Rank23"),
+        (get_schedules_for_target("BLS12_377_Fp12")[1], "MulBLS12377Fp12Toom45"),
+        (get_schedules_for_target("BLS12_377_Fp12")[0], "MulBLS12377Fp12Tower54"),
     ]
     go_header = [
         "// Code generated by `python -m zk_bilinear generate-all`; DO NOT EDIT.",
@@ -267,28 +310,120 @@ def generate_all_artifacts() -> None:
         "",
     ]
     go_body = [emit_go_big_gadget(s, fn) for s, fn in go_targets]
-    (go_dir / "gadgets_generated.go").write_text(
-        "\n".join(go_header) + "\n".join(go_body),
-        encoding="utf-8",
-    )
+    artifacts[go_dir / "gadgets_generated.go"] = "\n".join(go_header) + "\n".join(go_body)
+
+    u64_targets = [
+        (get_optimal_native_schedule("BLS12_377_Fp2"), "MulBLS12377Fp2Rank3U64"),
+        (get_optimal_native_schedule("BLS12_377_Fp6"), "MulBLS12377Fp6Rank11U64"),
+        (get_optimal_native_schedule("BLS12_377_Fp12"), "MulBLS12377Fp12Rank23U64"),
+    ]
+    artifacts[go_dir / "bls12377_u64_generated.go"] = emit_go_bls12377_u64_module(u64_targets)
 
     # 6. monetization/benchmarks_report.md
     mon_dir = root / "monetization"
-    mon_dir.mkdir(parents=True, exist_ok=True)
-    (mon_dir / "benchmarks_report.md").write_text(render_benchmarks_markdown(), encoding="utf-8")
-    print("[OK] Generated targets/, rust_crates/src/generated.rs, go_gadgets/gadgets_generated.go, and monetization/benchmarks_report.md.")
+    artifacts[mon_dir / "benchmarks_report.md"] = render_benchmarks_markdown()
+    return artifacts
+
+
+def generate_all_artifacts() -> None:
+    expected = _compute_expected_artifacts()
+    for path, content in expected.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+    print(
+        "[OK] Generated targets/, rust_crates/src/generated.rs, "
+        "go_gadgets/{gadgets_generated.go,bls12377_u64_generated.go}, and monetization/benchmarks_report.md."
+    )
+
+
+def audit_all_suite() -> int:
+    """Comprehensive audit: primality, Rabin irreducibility, unimodular Z-certification,
+    Fp basis certificates, 500-sample per-target Fp fuzzing, and artifact sync.
+    """
+    # 1. Primality & Extension Isomorphisms
+    for pname, pval in PRIMES.items():
+        if not is_prime(pval):
+            print(f"[FAIL] Prime check failed for {pname}", file=sys.stderr)
+            return 1
+    print(f"[PASS] Primality verified across {len(PRIMES)} primes ({', '.join(PRIMES)}).")
+
+    for tname, spec in EXTENSION_SPECS.items():
+        if not spec.verify_isomorphism():
+            print(f"[FAIL] Isomorphism / Rabin irreducibility failed for {tname}", file=sys.stderr)
+            return 1
+    print(f"[PASS] Rabin irreducibility & unimodular basis isomorphisms verified across {len(EXTENSION_SPECS)} extensions.")
+
+    # 2. Exact over-Z and over-Fp basis-complete certification
+    total_scheds = 0
+    total_z_pairs = 0
+    for target_name, scheds in SCHEDULE_SUITE.items():
+        spec = EXTENSION_SPECS[target_name]
+        for s in scheds:
+            z_rep = certify_over_Z(s, spec)
+            if not z_rep.passed:
+                print(f"[FAIL] certify_over_Z failed on {s.name}: {z_rep.errors}", file=sys.stderr)
+                return 1
+            fp_rep = verify_schedule_certificate(s, spec)
+            if not fp_rep.passed:
+                print(f"[FAIL] verify_schedule_certificate failed on {s.name}: {fp_rep.errors}", file=sys.stderr)
+                return 1
+            total_scheds += 1
+            total_z_pairs += z_rep.basis_pairs_checked
+    print(
+        f"[PASS] Certified {total_scheds} schedules over Z and Fp "
+        f"({total_z_pairs} basis-pair identities, det(T) == +-1)."
+    )
+
+    # 3. Deterministic 500-trial random Fp differential fuzzing per extension
+    rng = random.Random(20261122)
+    fuzz_trials_per_ext = 500
+    fuzz_total = 0
+    for tname, spec in EXTENSION_SPECS.items():
+        opt = get_optimal_native_schedule(tname)
+        p = spec.prime
+        d = spec.degree
+        for _ in range(fuzz_trials_per_ext):
+            a = [rng.randrange(p) for _ in range(d)]
+            b = [rng.randrange(p) for _ in range(d)]
+            got = evaluate_schedule_fp(opt, a, b, p)
+            want = spec.reference_mul(a, b)
+            if got != want:
+                print(f"[FAIL] Differential fuzz mismatch on {opt.name}", file=sys.stderr)
+                return 1
+            fuzz_total += 1
+    print(
+        f"[PASS] Differential Fp fuzzing passed ({fuzz_total} random trials across "
+        f"{len(EXTENSION_SPECS)} optimal schedules, >= {fuzz_trials_per_ext} each)."
+    )
+
+    # 4. Deterministic codegen & certificate sync check
+    expected = _compute_expected_artifacts()
+    for path, want_text in expected.items():
+        if not path.exists():
+            print(f"[FAIL] Missing generated artifact: {path}", file=sys.stderr)
+            return 1
+        got_text = path.read_text(encoding="utf-8")
+        if got_text != want_text:
+            print(f"[FAIL] Stale generated artifact (re-run generate-all): {path}", file=sys.stderr)
+            return 1
+    print(f"[PASS] All {len(expected)} generated JSON, Rust, Go & Markdown artifacts match live codegen.")
+    print("ALL PASS")
+    return 0
 
 
 def main(argv: List[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="zk-bilinear", description="ZK Bilinear Rank Certifier & Code Generator")
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("verify", help="Run basis-complete algebraic & overflow checks on all schedules")
+    sub.add_parser("audit", help="Run full Z + Fp certification, fuzzing, and artifact sync audit")
     sub.add_parser("generate-all", help="Deterministically regenerate targets, Rust, Go & benchmark report")
     sub.add_parser("report", help="Print Markdown benchmark report to stdout")
 
     args = parser.parse_args(argv)
     if args.cmd == "verify":
         return verify_all_suite()
+    if args.cmd == "audit":
+        return audit_all_suite()
     if args.cmd == "generate-all":
         rc = verify_all_suite()
         if rc != 0:

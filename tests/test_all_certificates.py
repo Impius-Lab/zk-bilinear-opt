@@ -7,10 +7,14 @@ import random
 import unittest
 
 from zk_bilinear.cli import render_benchmarks_markdown
-from zk_bilinear.codegen import emit_r1cs_json
+from zk_bilinear.codegen import emit_go_bls12377_u64_module, emit_r1cs_json
 from zk_bilinear.fields import EXTENSION_SPECS, PRIMES, is_prime
 from zk_bilinear.pareto_search import SCHEDULE_SUITE, get_optimal_native_schedule
-from zk_bilinear.tensor_cert import compute_w_fp, verify_schedule_certificate
+from zk_bilinear.tensor_cert import (
+    certify_over_Z,
+    compute_w_fp,
+    verify_schedule_certificate,
+)
 
 
 class TestAllCertificatesAndFuzz(unittest.TestCase):
@@ -19,13 +23,13 @@ class TestAllCertificatesAndFuzz(unittest.TestCase):
             with self.subTest(prime=pname):
                 self.assertTrue(is_prime(pval), f"{pname} failed primality check")
 
-        self.assertGreaterEqual(len(EXTENSION_SPECS), 15)
+        self.assertGreaterEqual(len(EXTENSION_SPECS), 18)
         for tname, spec in EXTENSION_SPECS.items():
             with self.subTest(target=tname):
                 self.assertTrue(spec.verify_isomorphism(), f"{tname} isomorphism failed")
                 self.assertEqual(spec.optimal_rank, 2 * spec.degree - 1)
 
-    def test_02_all_51_schedules_basis_complete_and_alder_strassen(self) -> None:
+    def test_02_all_64_schedules_basis_complete_and_alder_strassen(self) -> None:
         total_schedules = 0
         total_basis_pairs = 0
 
@@ -34,6 +38,8 @@ class TestAllCertificatesAndFuzz(unittest.TestCase):
             found_optimal = False
             for sched in scheds:
                 with self.subTest(schedule=sched.name):
+                    z_rep = certify_over_Z(sched, spec)
+                    self.assertTrue(z_rep.passed, f"{sched.name} Z-cert failed: {z_rep.errors}")
                     rep = verify_schedule_certificate(sched, spec)
                     self.assertTrue(rep.passed, f"{sched.name} failed: {rep.errors}")
                     self.assertEqual(rep.basis_pairs_checked, spec.degree * spec.degree)
@@ -45,8 +51,8 @@ class TestAllCertificatesAndFuzz(unittest.TestCase):
                     total_basis_pairs += rep.basis_pairs_checked
             self.assertTrue(found_optimal, f"No Alder-Strassen 2d-1 optimal schedule for {tname}")
 
-        self.assertEqual(total_schedules, 51)
-        self.assertEqual(total_basis_pairs, 2654)
+        self.assertEqual(total_schedules, 64)
+        self.assertEqual(total_basis_pairs, 3706)
 
     def test_03_headline_rank_reductions_pinned(self) -> None:
         expected_ranks = {
@@ -63,6 +69,9 @@ class TestAllCertificatesAndFuzz(unittest.TestCase):
             "BN254_Fp12": (54, 23),
             "BLS12_381_Fp6": (18, 11),
             "BLS12_381_Fp12": (54, 23),
+            "BLS12_377_Fp2": (3, 3),
+            "BLS12_377_Fp6": (18, 11),
+            "BLS12_377_Fp12": (54, 23),
         }
         for tname, (base_r, opt_r) in expected_ranks.items():
             spec = EXTENSION_SPECS[tname]
@@ -71,7 +80,7 @@ class TestAllCertificatesAndFuzz(unittest.TestCase):
             self.assertEqual(opt.rank, opt_r)
 
     def test_04_100k_randomized_differential_fuzz(self) -> None:
-        """Run 100,000 deterministic randomized differential fuzz samples across all targets
+        """Run >100,000 deterministic randomized differential fuzz samples across all targets
         against independent textbook / tower reference multiplication.
         """
         rng = random.Random(20261121)
@@ -94,6 +103,11 @@ class TestAllCertificatesAndFuzz(unittest.TestCase):
             (SCHEDULE_SUITE["BLS12_381_Fp12"][2], 1_500),  # Tower33
             (SCHEDULE_SUITE["BLS12_381_Fp12"][3], 1_500),  # CRT30
             (get_optimal_native_schedule("BLS12_381_Fp12"), 1_000),  # Rank23
+            (get_optimal_native_schedule("BLS12_377_Fp2"), 1_000),  # Rank3
+            (get_optimal_native_schedule("BLS12_377_Fp6"), 3_000),  # Rank11
+            (SCHEDULE_SUITE["BLS12_377_Fp12"][2], 1_000),  # Tower33
+            (SCHEDULE_SUITE["BLS12_377_Fp12"][3], 1_000),  # CRT30
+            (get_optimal_native_schedule("BLS12_377_Fp12"), 1_000),  # Rank23
         ]
 
         total_samples = 0
@@ -126,7 +140,7 @@ class TestAllCertificatesAndFuzz(unittest.TestCase):
                     total_samples += 1
 
         self.assertGreaterEqual(total_samples, 100_000)
-        self.assertEqual(total_samples, 102_000)
+        self.assertEqual(total_samples, 109_000)
 
     def test_05_committed_artifacts_match_deterministic_codegen(self) -> None:
         root = Path(__file__).resolve().parent.parent
@@ -135,6 +149,30 @@ class TestAllCertificatesAndFuzz(unittest.TestCase):
         self.assertEqual(
             qm_cert_path.read_text(encoding="utf-8"),
             emit_r1cs_json(get_optimal_native_schedule("QM31")),
+        )
+        for tname, slug in [
+            ("BLS12_377_Fp2", "bls12_377_fp2_rank3_cert.json"),
+            ("BLS12_377_Fp6", "bls12_377_fp6_rank11_cert.json"),
+            ("BLS12_377_Fp12", "bls12_377_fp12_rank23_cert.json"),
+        ]:
+            cpath = root / "targets" / "pairing_towers" / slug
+            self.assertTrue(cpath.exists())
+            self.assertEqual(
+                cpath.read_text(encoding="utf-8"),
+                emit_r1cs_json(get_optimal_native_schedule(tname)),
+            )
+
+        u64_go_path = root / "go_gadgets" / "bls12377_u64_generated.go"
+        self.assertTrue(u64_go_path.exists())
+        self.assertEqual(
+            u64_go_path.read_text(encoding="utf-8"),
+            emit_go_bls12377_u64_module(
+                [
+                    (get_optimal_native_schedule("BLS12_377_Fp2"), "MulBLS12377Fp2Rank3U64"),
+                    (get_optimal_native_schedule("BLS12_377_Fp6"), "MulBLS12377Fp6Rank11U64"),
+                    (get_optimal_native_schedule("BLS12_377_Fp12"), "MulBLS12377Fp12Rank23U64"),
+                ]
+            ),
         )
         bench_path = root / "monetization" / "benchmarks_report.md"
         self.assertTrue(bench_path.exists())

@@ -150,3 +150,201 @@ func TestBLS12381PairingTowers(t *testing.T) {
 	verifyGadgetComplete(t, "BLS12_381_Fp12_Rank23", 12, pBLS, 500, MulBLS12381Fp12Rank23, ref12)
 	verifyGadgetComplete(t, "BLS12_381_Fp12_Tower54", 12, pBLS, 300, MulBLS12381Fp12Tower54, ref12)
 }
+
+func TestBLS12377PairingTowers(t *testing.T) {
+	p377 := BLS12377PrimeBig()
+	ref2 := func(a, b []*big.Int) []*big.Int { return RefMulBLS12377Fp2Tower(a, b, p377) }
+	ref6 := func(a, b []*big.Int) []*big.Int { return RefMulBLS12377Fp6Tower(a, b, p377) }
+	ref12 := func(a, b []*big.Int) []*big.Int { return RefMulBLS12377Fp12Tower(a, b, p377) }
+
+	verifyGadgetComplete(t, "BLS12_377_Fp2_Rank3", 2, p377, 1000, MulBLS12377Fp2Rank3, ref2)
+
+	verifyGadgetComplete(t, "BLS12_377_Fp6_Rank11", 6, p377, 1000, MulBLS12377Fp6Rank11, ref6)
+	verifyGadgetComplete(t, "BLS12_377_Fp6_Toom15", 6, p377, 500, MulBLS12377Fp6Toom15, ref6)
+	verifyGadgetComplete(t, "BLS12_377_Fp6_Tower18", 6, p377, 300, MulBLS12377Fp6Tower18, ref6)
+
+	verifyGadgetComplete(t, "BLS12_377_Fp12_Tower33", 12, p377, 500, MulBLS12377Fp12Tower33, ref12)
+	verifyGadgetComplete(t, "BLS12_377_Fp12_CRT30", 12, p377, 500, MulBLS12377Fp12CRT30, ref12)
+	verifyGadgetComplete(t, "BLS12_377_Fp12_Rank23", 12, p377, 1000, MulBLS12377Fp12Rank23, ref12)
+	verifyGadgetComplete(t, "BLS12_377_Fp12_Toom45", 12, p377, 300, MulBLS12377Fp12Toom45, ref12)
+	verifyGadgetComplete(t, "BLS12_377_Fp12_Tower54", 12, p377, 300, MulBLS12377Fp12Tower54, ref12)
+}
+
+func TestBLS12377U64LimbGadgets(t *testing.T) {
+	p377 := BLS12377PrimeBig()
+	pm1 := new(big.Int).Sub(p377, big.NewInt(1))
+
+	// 1. Base-field [6]uint64 Montgomery arithmetic sanity & edge cases
+	zero := Fp377FromBigInt(big.NewInt(0))
+	one := Fp377FromBigInt(big.NewInt(1))
+	maxElem := Fp377FromBigInt(pm1)
+	if one != BLS12377OneMont {
+		t.Fatalf("Fp377FromBigInt(1) != BLS12377OneMont: got %x", one)
+	}
+	if fp377Add(maxElem, one) != zero {
+		t.Fatalf("(p-1) + 1 != 0 in Fp377")
+	}
+	if fp377Sub(zero, one) != maxElem {
+		t.Fatalf("0 - 1 != p-1 in Fp377")
+	}
+	// (p-1)*(p-1) == 1 mod p and (p-1) + (p-1) == p - 2 mod p
+	if fp377Mul(maxElem, maxElem) != one {
+		t.Fatalf("(p-1)*(p-1) != 1 in Fp377")
+	}
+	pm2 := Fp377FromBigInt(new(big.Int).Sub(p377, big.NewInt(2)))
+	if fp377Add(maxElem, maxElem) != pm2 {
+		t.Fatalf("(p-1) + (p-1) != p-2 in Fp377")
+	}
+	if fp377Sub(maxElem, maxElem) != zero {
+		t.Fatalf("(p-1) - (p-1) != 0 in Fp377")
+	}
+	if fp377Neg(zero) != zero || fp377Neg(maxElem) != one {
+		t.Fatalf("fp377Neg boundary check failed")
+	}
+	if fp377MulByNeg5(maxElem) != Fp377FromBigInt(big.NewInt(5)) {
+		t.Fatalf("(-5)*(p-1) != 5 in Fp377")
+	}
+
+	rng := rand.New(rand.NewSource(20261122))
+	for s := 0; s < 2000; s++ {
+		xa := new(big.Int).Rand(rng, p377)
+		xb := new(big.Int).Rand(rng, p377)
+		fa := Fp377FromBigInt(xa)
+		fb := Fp377FromBigInt(xb)
+
+		gotMul := fp377Mul(fa, fb).ToBigInt()
+		wantMul := new(big.Int).Mul(xa, xb)
+		wantMul.Mod(wantMul, p377)
+		if gotMul.Cmp(wantMul) != 0 {
+			t.Fatalf("fp377Mul mismatch: got %s, want %s", gotMul, wantMul)
+		}
+
+		gotAdd := fp377Add(fa, fb).ToBigInt()
+		wantAdd := new(big.Int).Add(xa, xb)
+		wantAdd.Mod(wantAdd, p377)
+		if gotAdd.Cmp(wantAdd) != 0 {
+			t.Fatalf("fp377Add mismatch: got %s, want %s", gotAdd, wantAdd)
+		}
+
+		gotSub := fp377Sub(fa, fb).ToBigInt()
+		wantSub := new(big.Int).Sub(xa, xb)
+		wantSub.Mod(wantSub, p377)
+		if gotSub.Cmp(wantSub) != 0 {
+			t.Fatalf("fp377Sub mismatch: got %s, want %s", gotSub, wantSub)
+		}
+	}
+
+	// 2. E2 Rank-3 [6]uint64: all 4 basis pairs + max(p-1) + 1000 random trials
+	for i := 0; i < 2; i++ {
+		for j := 0; j < 2; j++ {
+			var ei, ej [2]Fp377
+			ei[i] = one
+			ej[j] = one
+			if MulBLS12377Fp2Rank3U64(ei, ej) != RefMulBLS12377Fp2U64(ei, ej) {
+				t.Fatalf("E2 U64 basis mismatch at (%d, %d)", i, j)
+			}
+		}
+	}
+	max2 := [2]Fp377{maxElem, maxElem}
+	if MulBLS12377Fp2Rank3U64(max2, max2) != RefMulBLS12377Fp2U64(max2, max2) {
+		t.Fatalf("E2 U64 max(p-1) mismatch")
+	}
+	for s := 0; s < 1000; s++ {
+		var a2, b2 [2]Fp377
+		aBig := randVec(rng, 2, p377)
+		bBig := randVec(rng, 2, p377)
+		for k := 0; k < 2; k++ {
+			a2[k] = Fp377FromBigInt(aBig[k])
+			b2[k] = Fp377FromBigInt(bBig[k])
+		}
+		got2 := MulBLS12377Fp2Rank3U64(a2, b2)
+		ref2U64 := RefMulBLS12377Fp2U64(a2, b2)
+		if got2 != ref2U64 {
+			t.Fatalf("E2 U64 fuzz mismatch at sample %d", s)
+		}
+		ref2Big := RefMulBLS12377Fp2Tower(aBig, bBig, p377)
+		for k := 0; k < 2; k++ {
+			if got2[k].ToBigInt().Cmp(ref2Big[k]) != 0 {
+				t.Fatalf("E2 U64 vs big.Int mismatch at sample %d coord %d", s, k)
+			}
+		}
+	}
+
+	// 3. E6 Rank-11 [6]uint64: all 36 basis pairs + max(p-1) + 1000 random trials
+	for i := 0; i < 6; i++ {
+		for j := 0; j < 6; j++ {
+			var ei, ej [6]Fp377
+			ei[i] = one
+			ej[j] = one
+			if MulBLS12377Fp6Rank11U64(ei, ej) != RefMulBLS12377Fp6TowerU64(ei, ej) {
+				t.Fatalf("E6 U64 basis mismatch at (%d, %d)", i, j)
+			}
+		}
+	}
+	var max6 [6]Fp377
+	for k := 0; k < 6; k++ {
+		max6[k] = maxElem
+	}
+	if MulBLS12377Fp6Rank11U64(max6, max6) != RefMulBLS12377Fp6TowerU64(max6, max6) {
+		t.Fatalf("E6 U64 max(p-1) mismatch")
+	}
+	for s := 0; s < 1000; s++ {
+		var a6, b6 [6]Fp377
+		aBig := randVec(rng, 6, p377)
+		bBig := randVec(rng, 6, p377)
+		for k := 0; k < 6; k++ {
+			a6[k] = Fp377FromBigInt(aBig[k])
+			b6[k] = Fp377FromBigInt(bBig[k])
+		}
+		got6 := MulBLS12377Fp6Rank11U64(a6, b6)
+		ref6U64 := RefMulBLS12377Fp6TowerU64(a6, b6)
+		if got6 != ref6U64 {
+			t.Fatalf("E6 U64 fuzz mismatch at sample %d", s)
+		}
+		ref6Big := RefMulBLS12377Fp6Tower(aBig, bBig, p377)
+		for k := 0; k < 6; k++ {
+			if got6[k].ToBigInt().Cmp(ref6Big[k]) != 0 {
+				t.Fatalf("E6 U64 vs big.Int mismatch at sample %d coord %d", s, k)
+			}
+		}
+	}
+
+	// 4. E12 Rank-23 [6]uint64: all 144 basis pairs + max(p-1) + 1000 random trials
+	for i := 0; i < 12; i++ {
+		for j := 0; j < 12; j++ {
+			var ei, ej [12]Fp377
+			ei[i] = one
+			ej[j] = one
+			if MulBLS12377Fp12Rank23U64(ei, ej) != RefMulBLS12377Fp12TowerU64(ei, ej) {
+				t.Fatalf("E12 U64 basis mismatch at (%d, %d)", i, j)
+			}
+		}
+	}
+	var max12 [12]Fp377
+	for k := 0; k < 12; k++ {
+		max12[k] = maxElem
+	}
+	if MulBLS12377Fp12Rank23U64(max12, max12) != RefMulBLS12377Fp12TowerU64(max12, max12) {
+		t.Fatalf("E12 U64 max(p-1) mismatch")
+	}
+	for s := 0; s < 1000; s++ {
+		var a12, b12 [12]Fp377
+		aBig := randVec(rng, 12, p377)
+		bBig := randVec(rng, 12, p377)
+		for k := 0; k < 12; k++ {
+			a12[k] = Fp377FromBigInt(aBig[k])
+			b12[k] = Fp377FromBigInt(bBig[k])
+		}
+		got12 := MulBLS12377Fp12Rank23U64(a12, b12)
+		ref12U64 := RefMulBLS12377Fp12TowerU64(a12, b12)
+		if got12 != ref12U64 {
+			t.Fatalf("E12 U64 fuzz mismatch at sample %d", s)
+		}
+		ref12Big := RefMulBLS12377Fp12Tower(aBig, bBig, p377)
+		for k := 0; k < 12; k++ {
+			if got12[k].ToBigInt().Cmp(ref12Big[k]) != 0 {
+				t.Fatalf("E12 U64 vs big.Int mismatch at sample %d coord %d", s, k)
+			}
+		}
+	}
+}

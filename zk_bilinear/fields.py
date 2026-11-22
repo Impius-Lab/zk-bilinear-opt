@@ -8,6 +8,9 @@ Covers:
   - BN254 & BLS12-381 pairing towers: Fp2 = Fp[u]/(u^2 + 1),
     Fp6 = Fp2[v]/(v^3 - xi) (xi = 9 + u for BN254, xi = 1 + u for BLS12-381),
     Fp12 = Fp6[w]/(w^2 - v) (Consensys gnark / arkworks canonical coordinates).
+  - BLS12-377 native 2-chain pairing tower (over BW6-761 in Consensys gnark):
+    Fp2 = Fp[u]/(u^2 + 5), Fp6 = Fp2[v]/(v^3 - u) ~= Fp[Y]/(Y^6 + 5),
+    Fp12 = Fp6[w]/(w^2 - v) ~= Fp[W]/(W^12 + 5) via pure coordinate permutations.
 """
 
 from __future__ import annotations
@@ -26,6 +29,10 @@ BN254_PRIME: int = (
 BLS12_381_PRIME: int = (
     0x1A0111EA397FE69A4B1BA7B6434BACD764774B84F38512BF6730D2A0F6B0F6241EABFFFEB153FFFFB9FEFFFFFFFFAAAB
 )
+BLS12_377_PRIME: int = (
+    0x01AE3A4617C510EAC63B05C06CA1493B1A22D9F300F5138F1EF3622FBA094800170B5D44300000008508C00000000001
+)
+P_BLS12_377: int = BLS12_377_PRIME
 
 _ISOMORPHISM_CACHE: Dict[Tuple[object, ...], bool] = {}
 
@@ -36,6 +43,7 @@ PRIMES: Dict[str, int] = {
     "Goldilocks": GOLDILOCKS_PRIME,
     "BN254": BN254_PRIME,
     "BLS12-381": BLS12_381_PRIME,
+    "BLS12-377": BLS12_377_PRIME,
 }
 
 
@@ -261,6 +269,151 @@ def fp12_tower_mul_ref(a: Sequence[int], b: Sequence[int], xi0: int, p: int) -> 
     return out0 + out1
 
 
+def bls12_377_fp2_mul_z(a: Sequence[int], b: Sequence[int]) -> List[int]:
+    """Exact integer-ring multiplication in Z[u]/(u^2 + 5), basis [1, u] (u^2 = -5)."""
+    a0, a1 = int(a[0]), int(a[1])
+    b0, b1 = int(b[0]), int(b[1])
+    return [a0 * b0 - 5 * a1 * b1, a0 * b1 + a1 * b0]
+
+
+def bls12_377_fp2_mul_ref(a: Sequence[int], b: Sequence[int], p: int = BLS12_377_PRIME) -> List[int]:
+    """Reference BLS12-377 Fp2 = Fp[u]/(u^2 + 5) multiplication, basis [A0, A1]."""
+    z = bls12_377_fp2_mul_z(a, b)
+    return [z[0] % p, z[1] % p]
+
+
+def _bls12_377_fp2_mul_by_u_z(x: Sequence[int]) -> List[int]:
+    """Multiply x0 + x1*u by non-residue u in Z[u]/(u^2 + 5): u*(x0 + x1*u) = -5*x1 + x0*u."""
+    return [-5 * int(x[1]), int(x[0])]
+
+
+def bls12_377_fp6_tower_mul_z(a: Sequence[int], b: Sequence[int]) -> List[int]:
+    """Exact integer-ring multiplication in Z[u, v]/(u^2 + 5, v^3 - u).
+
+    Canonical gnark E6 coordinates: [B0.A0, B0.A1, B1.A0, B1.A1, B2.A0, B2.A1].
+    """
+    A = [[int(a[0]), int(a[1])], [int(a[2]), int(a[3])], [int(a[4]), int(a[5])]]
+    B = [[int(b[0]), int(b[1])], [int(b[2]), int(b[3])], [int(b[4]), int(b[5])]]
+    C = [[0, 0] for _ in range(5)]
+    for i in range(3):
+        for j in range(3):
+            prod = bls12_377_fp2_mul_z(A[i], B[j])
+            C[i + j][0] += prod[0]
+            C[i + j][1] += prod[1]
+    for k in (3, 4):
+        shifted = _bls12_377_fp2_mul_by_u_z(C[k])
+        C[k - 3][0] += shifted[0]
+        C[k - 3][1] += shifted[1]
+    return [C[0][0], C[0][1], C[1][0], C[1][1], C[2][0], C[2][1]]
+
+
+def bls12_377_fp6_tower_mul_ref(
+    a: Sequence[int], b: Sequence[int], p: int = BLS12_377_PRIME
+) -> List[int]:
+    """Reference gnark BLS12-377 E6 = E2[v]/(v^3 - u) tower multiplication."""
+    return [c % p for c in bls12_377_fp6_tower_mul_z(a, b)]
+
+
+def _bls12_377_fp6_mul_by_v_z(x: Sequence[int]) -> List[int]:
+    """Multiply B0 + B1*v + B2*v^2 by v in Z[u,v]/(u^2+5, v^3-u): u*B2 + B0*v + B1*v^2."""
+    b2_u = _bls12_377_fp2_mul_by_u_z([x[4], x[5]])
+    return [b2_u[0], b2_u[1], int(x[0]), int(x[1]), int(x[2]), int(x[3])]
+
+
+def bls12_377_fp12_tower_mul_z(a: Sequence[int], b: Sequence[int]) -> List[int]:
+    """Exact integer-ring multiplication in Z[u, v, w]/(u^2 + 5, v^3 - u, w^2 - v).
+
+    Canonical gnark E12 coordinates: [C0 (6 coords), C1 (6 coords)].
+    """
+    a0, a1 = a[:6], a[6:]
+    b0, b1 = b[:6], b[6:]
+    c00 = bls12_377_fp6_tower_mul_z(a0, b0)
+    c11 = bls12_377_fp6_tower_mul_z(a1, b1)
+    c11_v = _bls12_377_fp6_mul_by_v_z(c11)
+    c01 = bls12_377_fp6_tower_mul_z(a0, b1)
+    c10 = bls12_377_fp6_tower_mul_z(a1, b0)
+    out0 = [c00[i] + c11_v[i] for i in range(6)]
+    out1 = [c01[i] + c10[i] for i in range(6)]
+    return out0 + out1
+
+
+def bls12_377_fp12_tower_mul_ref(
+    a: Sequence[int], b: Sequence[int], p: int = BLS12_377_PRIME
+) -> List[int]:
+    """Reference gnark BLS12-377 E12 = E6[w]/(w^2 - v) tower multiplication."""
+    return [c % p for c in bls12_377_fp12_tower_mul_z(a, b)]
+
+
+# ---------------------------------------------------------------------------
+# Exact Z-Polynomial & Unimodular Integer Basis Helpers
+# ---------------------------------------------------------------------------
+
+def poly_mod_z(a: Sequence[int], f_monic: Sequence[int]) -> List[int]:
+    """Exact division remainder a(X) mod f_monic(X) in Z[X] (requires monic modulus)."""
+    if not f_monic or f_monic[-1] != 1:
+        raise ValueError("Modulus must be monic over Z")
+    d = len(f_monic) - 1
+    rem = [int(c) for c in a]
+    while len(rem) - 1 >= d:
+        lead = rem[-1]
+        if lead != 0:
+            shift = len(rem) - 1 - d
+            for i in range(d + 1):
+                rem[shift + i] -= lead * int(f_monic[i])
+        rem.pop()
+    if len(rem) < d:
+        rem.extend([0] * (d - len(rem)))
+    return rem[:d]
+
+
+def textbook_poly_mul_fixed_z(
+    a: Sequence[int], b: Sequence[int], f_monic: Sequence[int]
+) -> List[int]:
+    """Exact schoolbook multiplication in Z[X]/(f_monic(X)) over Z, returning length d."""
+    d = len(f_monic) - 1
+    if len(a) != d or len(b) != d or f_monic[-1] != 1:
+        raise ValueError(f"Expected degree-{d} operands and monic degree-{d} modulus")
+    prod = [0] * (2 * d - 1)
+    for i, ai in enumerate(a):
+        if ai:
+            for j, bj in enumerate(b):
+                prod[i + j] += int(ai) * int(bj)
+    return poly_mod_z(prod, f_monic)
+
+
+def mat_vec_int(M: Sequence[Sequence[int]], v: Sequence[int]) -> List[int]:
+    return [sum(int(M[i][j]) * int(v[j]) for j in range(len(v))) for i in range(len(M))]
+
+
+def det_int_exact(M: Sequence[Sequence[int]]) -> int:
+    """Exact Bareiss fraction-free determinant over Z."""
+    n = len(M)
+    if n == 0:
+        return 1
+    A = [[int(M[i][j]) for j in range(n)] for i in range(n)]
+    sign = 1
+    prev_pivot = 1
+    for k in range(n - 1):
+        if A[k][k] == 0:
+            swap_row = None
+            for r in range(k + 1, n):
+                if A[r][k] != 0:
+                    swap_row = r
+                    break
+            if swap_row is None:
+                return 0
+            A[k], A[swap_row] = A[swap_row], A[k]
+            sign = -sign
+        piv = A[k][k]
+        for i in range(k + 1, n):
+            for j in range(k + 1, n):
+                num = A[i][j] * piv - A[i][k] * A[k][j]
+                assert num % prev_pivot == 0
+                A[i][j] = num // prev_pivot
+        prev_pivot = piv
+    return sign * A[n - 1][n - 1]
+
+
 # ---------------------------------------------------------------------------
 # Unimodular Integer Basis Isomorphisms: Tower <-> Simple Extension F_p[X]/(f)
 # ---------------------------------------------------------------------------
@@ -354,6 +507,42 @@ def _fp12_basis_pair(xi0: int) -> Tuple[List[List[int]], List[List[int]]]:
         from_poly[idx_a][j] = 1
         from_poly[idx_a][j + 6] = xi0
         from_poly[idx_b][j + 6] = 1
+    return to_poly, from_poly
+
+
+def _bls12_377_fp6_basis_pair() -> Tuple[List[List[int]], List[List[int]]]:
+    """Pure coordinate-permutation isomorphism for gnark BLS12-377 E6 <-> Fp[Y]/(Y^6 + 5).
+
+    Tower basis: (B0.A0, B0.A1, B1.A0, B1.A1, B2.A0, B2.A1) = (1, u, v, uv, v^2, uv^2)
+    with u^2 = -5 and v^3 = u. Setting Y = v (so Y^3 = u, Y^6 + 5 = 0):
+      poly = [t[0], t[2], t[4], t[1], t[3], t[5]]  (matches towerToMonomial6 in fields_bls12377/e6_sz.go).
+    Unimodular permutation over Z with det = -1 and ZERO additions.
+    """
+    perm6 = (0, 2, 4, 1, 3, 5)
+    to_poly = [[0] * 6 for _ in range(6)]
+    from_poly = [[0] * 6 for _ in range(6)]
+    for deg_idx, tow_idx in enumerate(perm6):
+        to_poly[deg_idx][tow_idx] = 1
+        from_poly[tow_idx][deg_idx] = 1
+    return to_poly, from_poly
+
+
+def _bls12_377_fp12_basis_pair() -> Tuple[List[List[int]], List[List[int]]]:
+    """Pure coordinate-permutation isomorphism for gnark BLS12-377 E12 <-> Fp[W]/(W^12 + 5).
+
+    Tower basis (e12Coeffs in fields_bls12377/e12_sz.go):
+      (1, u, v, uv, v^2, uv^2, w, uw, vw, uvw, v^2w, uv^2w)
+    with u^2 = -5, v^3 = u, w^2 = v. Setting W = w (so W^2 = v, W^6 = u, W^12 + 5 = 0):
+      poly = [t[0], t[6], t[2], t[8], t[4], t[10], t[1], t[7], t[3], t[9], t[5], t[11]]
+      (matches towerToMonomial12 in fields_bls12377/e12_sz.go line 39).
+    Unimodular involution permutation over Z with det = -1 and ZERO additions.
+    """
+    perm12 = (0, 6, 2, 8, 4, 10, 1, 7, 3, 9, 5, 11)
+    to_poly = [[0] * 12 for _ in range(12)]
+    from_poly = [[0] * 12 for _ in range(12)]
+    for deg_idx, tow_idx in enumerate(perm12):
+        to_poly[deg_idx][tow_idx] = 1
+        from_poly[tow_idx][deg_idx] = 1
     return to_poly, from_poly
 
 
@@ -595,7 +784,75 @@ def build_extension_registry() -> Dict[str, ExtensionSpec]:
             reference_mul=lambda a, b, x0=xi0, pv=p_val: fp12_tower_mul_ref(a, b, x0, pv),
         )
 
+    # 5. BLS12-377 Native 2-Chain Pairing Tower (Consensys gnark fields_bls12377 over BW6-761)
+    reg["BLS12_377_Fp2"] = ExtensionSpec(
+        name="BLS12_377_Fp2",
+        ecosystem="Consensys gnark native 2-chain over BW6-761 / arkworks (BLS12-377)",
+        prime_name="BLS12-377",
+        prime=BLS12_377_PRIME,
+        degree=2,
+        simple_poly=(5, 0, 1),  # u^2 + 5 = 0
+        basis_labels=("A0", "A1"),
+        to_simple_basis=ident2,
+        from_simple_basis=ident2,
+        baseline_muls=3,
+        baseline_name="Karatsuba-2",
+        optimal_rank=3,
+        native_accumulator_bits=None,
+        emulated_limbs=(6, 64),
+        xi0=0,
+        reference_mul=lambda a, b: bls12_377_fp2_mul_ref(a, b, BLS12_377_PRIME),
+    )
+
+    to6_377, from6_377 = _bls12_377_fp6_basis_pair()
+    reg["BLS12_377_Fp6"] = ExtensionSpec(
+        name="BLS12_377_Fp6",
+        ecosystem="Consensys gnark native 2-chain over BW6-761 / arkworks (BLS12-377)",
+        prime_name="BLS12-377",
+        prime=BLS12_377_PRIME,
+        degree=6,
+        simple_poly=(5, 0, 0, 0, 0, 0, 1),  # Y^6 + 5 = 0 (Y = v, v^3 = u, u^2 = -5)
+        basis_labels=("B0.A0", "B0.A1", "B1.A0", "B1.A1", "B2.A0", "B2.A1"),
+        to_simple_basis=_tuple2d(to6_377),
+        from_simple_basis=_tuple2d(from6_377),
+        baseline_muls=18,
+        baseline_name="Karatsuba-3 x Karatsuba-2 (18; gnark R1CS Toom3xK = 15)",
+        optimal_rank=11,
+        native_accumulator_bits=None,
+        emulated_limbs=(6, 64),
+        xi0=0,
+        reference_mul=lambda a, b: bls12_377_fp6_tower_mul_ref(a, b, BLS12_377_PRIME),
+    )
+
+    to12_377, from12_377 = _bls12_377_fp12_basis_pair()
+    reg["BLS12_377_Fp12"] = ExtensionSpec(
+        name="BLS12_377_Fp12",
+        ecosystem="Consensys gnark native 2-chain over BW6-761 / arkworks (BLS12-377)",
+        prime_name="BLS12-377",
+        prime=BLS12_377_PRIME,
+        degree=12,
+        simple_poly=(5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1),  # W^12 + 5 = 0 (W = w, w^2 = v)
+        basis_labels=(
+            "C0.B0.A0", "C0.B0.A1", "C0.B1.A0", "C0.B1.A1", "C0.B2.A0", "C0.B2.A1",
+            "C1.B0.A0", "C1.B0.A1", "C1.B1.A0", "C1.B1.A1", "C1.B2.A0", "C1.B2.A1",
+        ),
+        to_simple_basis=_tuple2d(to12_377),
+        from_simple_basis=_tuple2d(from12_377),
+        baseline_muls=54,
+        baseline_name="Karatsuba Tower (54; gnark R1CS Karatsuba-over-Toom3xK = 45)",
+        optimal_rank=23,
+        native_accumulator_bits=None,
+        emulated_limbs=(6, 64),
+        xi0=0,
+        reference_mul=lambda a, b: bls12_377_fp12_tower_mul_ref(a, b, BLS12_377_PRIME),
+    )
+
     return reg
 
 
 EXTENSION_SPECS: Dict[str, ExtensionSpec] = build_extension_registry()
+FIELD_CATALOG: Dict[str, ExtensionSpec] = EXTENSION_SPECS
+
+BLS12_377_FP2: ExtensionSpec = EXTENSION_SPECS["BLS12_377_Fp2"]
+BLS12_377_FP6: ExtensionSpec = EXTENSION_SPECS["BLS12_377_Fp6"]
+BLS12_377_FP12: ExtensionSpec = EXTENSION_SPECS["BLS12_377_Fp12"]
