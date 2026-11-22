@@ -187,9 +187,22 @@ func TestBLS12377U64LimbGadgets(t *testing.T) {
 	if fp377Sub(zero, one) != maxElem {
 		t.Fatalf("0 - 1 != p-1 in Fp377")
 	}
-	// (p-1)*(p-1) == 1 mod p
+	// (p-1)*(p-1) == 1 mod p and (p-1) + (p-1) == p - 2 mod p
 	if fp377Mul(maxElem, maxElem) != one {
 		t.Fatalf("(p-1)*(p-1) != 1 in Fp377")
+	}
+	pm2 := Fp377FromBigInt(new(big.Int).Sub(p377, big.NewInt(2)))
+	if fp377Add(maxElem, maxElem) != pm2 {
+		t.Fatalf("(p-1) + (p-1) != p-2 in Fp377")
+	}
+	if fp377Sub(maxElem, maxElem) != zero {
+		t.Fatalf("(p-1) - (p-1) != 0 in Fp377")
+	}
+	if fp377Neg(zero) != zero || fp377Neg(maxElem) != one {
+		t.Fatalf("fp377Neg boundary check failed")
+	}
+	if fp377MulByNeg5(maxElem) != Fp377FromBigInt(big.NewInt(5)) {
+		t.Fatalf("(-5)*(p-1) != 5 in Fp377")
 	}
 
 	rng := rand.New(rand.NewSource(20261122))
