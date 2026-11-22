@@ -760,7 +760,7 @@ def compute_exact_qm31_u64_bounds(
     max_eval_neg = max(sum(-x for x in row if x < 0) for row in sched.U) * p_m1
     max_eval_i64_abs = max(max_eval_pos, max_eval_neg)
 
-    max_mul_u64 = p_m1 * p_m1  # (2^31 - 2)^2 = 4,611,686,014,132,420,609 < 2^62
+    max_mul_u64 = p_m1 * p_m1  # (2^31 - 2)^2 = 4,611,686,009,837,453,316 < 2^62
 
     max_interp_pos = max(sum(x for x in row if x > 0) for row in sched.W_z) * p_m1
     max_interp_neg = max(sum(-x for x in row if x < 0) for row in sched.W_z) * p_m1
