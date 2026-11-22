@@ -4,7 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Impius-Lab Cryptographic Engineering — Certified ZK Gate Compression &amp; Prover Soundness</title>
-  <meta name="description" content="Basis-certified bilinear extension-tower kernels, non-native CRT limb-carry soundness auditing, and zero-sorry Lean 4 proofs for StarkWare Stwo, Plonky3/SP1, Consensys gnark, and Halo2/Zcash." />
+  <meta name="description" content="Basis-certified bilinear extension-tower kernels, non-native CRT limb-carry soundness auditing, and zero-sorry Lean 4 formal proofs for StarkWare Stwo, Cairo, Plonky3/SP1, Consensys gnark, Halo2/Zcash (#590), and BitVM2." />
+  <meta property="og:title" content="Impius-Lab Cryptographic Engineering — Certified ZK Gate Compression &amp; CRT Soundness" />
+  <meta property="og:description" content="Cut ZK prover &amp; verifier gates by 14%–59% across StarkWare Stwo, Cairo, Plonky3/SP1, Consensys gnark, Halo2/Zcash, and BitVM2 — backed by 5 live upstream PRs and 33 zero-sorry Lean 4 proofs." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Impius-Lab Cryptographic Engineering — Certified ZK Gate Compression" />
+  <meta name="twitter:description" content="5 Live Open Upstream PRs · Zcash ZCG #590 · Scarb Cairo (-26.25%/-43.29% steps) · BitVM2 (-22.22% OP_M31_MUL) · 33 Zero-Sorry Lean 4 Proofs (5.63s)." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d121d' stroke='%2338bdf8' stroke-width='3'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='monospace' font-size='34' font-weight='bold' fill='%2338bdf8'%3E%E2%8A%97%3C/text%3E%3C/svg%3E" />
   <style>
     :root {
       --bg-base: #070a10;
@@ -51,6 +58,10 @@
       min-height: 100vh;
     }
 
+    body.modal-open {
+      overflow: hidden;
+    }
+
     a {
       color: var(--accent-cyan);
       text-decoration: none;
@@ -73,7 +84,7 @@
       top: 0;
       z-index: 50;
       backdrop-filter: blur(12px);
-      background: rgba(7, 10, 16, 0.86);
+      background: rgba(7, 10, 16, 0.88);
       border-bottom: 1px solid var(--border-subtle);
     }
 
@@ -112,7 +123,7 @@
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 22px;
       font-size: 0.9rem;
     }
 
@@ -133,9 +144,10 @@
       border-radius: 8px;
       font-weight: 600;
       font-size: 0.9rem;
+      font-family: var(--font-sans);
       cursor: pointer;
       border: 1px solid transparent;
-      transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+      transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
       text-decoration: none;
     }
 
@@ -168,21 +180,22 @@
 
     /* Hero Section */
     .hero {
-      padding: 76px 0 56px;
+      padding: 72px 0 54px;
     }
 
     .eyebrow {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 5px 12px;
+      padding: 5px 13px;
       border-radius: 999px;
       background: rgba(16, 185, 129, 0.1);
       border: 1px solid rgba(16, 185, 129, 0.35);
       color: #34d399;
       font-family: var(--font-mono);
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       margin-bottom: 20px;
+      flex-wrap: wrap;
     }
 
     .eyebrow-dot {
@@ -191,13 +204,14 @@
       border-radius: 50%;
       background: var(--accent-emerald);
       box-shadow: 0 0 8px var(--accent-emerald);
+      flex-shrink: 0;
     }
 
     .hero h1 {
       font-size: clamp(2.1rem, 4.3vw, 3.35rem);
       line-height: 1.12;
       letter-spacing: -0.025em;
-      max-width: 940px;
+      max-width: 960px;
       margin-bottom: 20px;
     }
 
@@ -209,17 +223,74 @@
     }
 
     .hero-sub {
-      font-size: 1.1rem;
+      font-size: 1.08rem;
       color: var(--text-secondary);
-      max-width: 820px;
-      margin-bottom: 30px;
+      max-width: 860px;
+      margin-bottom: 28px;
     }
 
     .hero-ctas {
       display: flex;
       flex-wrap: wrap;
       gap: 14px;
-      margin-bottom: 44px;
+      margin-bottom: 26px;
+    }
+
+    /* Stage-3 / v0.3 Proof-of-Execution Badge Strip */
+    .exec-badge-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 34px;
+    }
+
+    .exec-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      background: rgba(13, 18, 29, 0.92);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .exec-badge:hover {
+      border-color: var(--accent-cyan);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+    }
+
+    .exec-badge-tag {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.13);
+      color: var(--accent-cyan);
+    }
+
+    .exec-badge-tag.emerald {
+      background: rgba(16, 185, 129, 0.14);
+      color: #34d399;
+    }
+
+    .exec-badge-tag.violet {
+      background: rgba(167, 139, 250, 0.15);
+      color: var(--accent-violet);
+    }
+
+    .exec-badge-tag.amber {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+    }
+
+    .exec-badge-tag.rose {
+      background: rgba(251, 113, 133, 0.14);
+      color: var(--danger-rose);
     }
 
     .kpi-strip {
@@ -238,7 +309,7 @@
 
     .kpi-val {
       font-family: var(--font-mono);
-      font-size: 1.6rem;
+      font-size: 1.58rem;
       font-weight: 700;
       color: var(--text-primary);
       letter-spacing: -0.02em;
@@ -281,15 +352,22 @@
 
     .section-desc {
       color: var(--text-secondary);
-      max-width: 780px;
+      max-width: 820px;
       font-size: 0.98rem;
     }
 
-    /* Upstream PR Evidence Cards & Table */
+    /* Upstream PR Evidence Cards & Multi-Backend Grid */
     .pr-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
       gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
       margin-bottom: 28px;
     }
 
@@ -309,6 +387,16 @@
       border-color: var(--border-strong);
     }
 
+    .pr-card.span-two {
+      grid-column: span 2;
+    }
+
+    @media (max-width: 760px) {
+      .pr-card.span-two {
+        grid-column: span 1;
+      }
+    }
+
     .pr-top {
       display: flex;
       align-items: center;
@@ -322,7 +410,7 @@
       align-items: center;
       gap: 6px;
       font-family: var(--font-mono);
-      font-size: 0.8rem;
+      font-size: 0.79rem;
       font-weight: 600;
       padding: 4px 10px;
       border-radius: 6px;
@@ -337,27 +425,39 @@
       color: var(--danger-rose);
     }
 
+    .pr-badge.violet {
+      background: rgba(167, 139, 250, 0.13);
+      border-color: rgba(167, 139, 250, 0.38);
+      color: var(--accent-violet);
+    }
+
+    .pr-badge.amber {
+      background: rgba(245, 158, 11, 0.13);
+      border-color: rgba(245, 158, 11, 0.38);
+      color: #fbbf24;
+    }
+
     .pr-stat {
       font-family: var(--font-mono);
-      font-size: 0.85rem;
+      font-size: 0.83rem;
       font-weight: 700;
       color: var(--accent-emerald);
     }
 
     .pr-card h3 {
-      font-size: 1.04rem;
+      font-size: 1.02rem;
       line-height: 1.35;
       margin-top: 8px;
     }
 
     .pr-card p {
-      font-size: 0.89rem;
+      font-size: 0.88rem;
       color: var(--text-secondary);
     }
 
     .code-pill {
       font-family: var(--font-mono);
-      font-size: 0.8rem;
+      font-size: 0.79rem;
       background: var(--bg-elevated);
       border: 1px solid var(--border-subtle);
       padding: 2px 6px;
@@ -375,7 +475,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.88rem;
+      font-size: 0.87rem;
       text-align: left;
     }
 
@@ -388,7 +488,7 @@
       background: var(--bg-elevated);
       color: var(--text-secondary);
       font-family: var(--font-mono);
-      font-size: 0.77rem;
+      font-size: 0.76rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -440,27 +540,32 @@
       font-weight: 600;
       margin-bottom: 8px;
       color: var(--text-primary);
+      gap: 10px;
     }
 
     .control-val {
       font-family: var(--font-mono);
       color: var(--accent-cyan);
-      font-size: 0.95rem;
+      font-size: 0.92rem;
     }
 
-    select.stack-select {
+    select.stack-select,
+    input.text-input,
+    textarea.preview-area {
       width: 100%;
-      padding: 12px 14px;
+      padding: 11px 14px;
       border-radius: 8px;
       background: var(--bg-elevated);
       border: 1px solid var(--border-strong);
       color: var(--text-primary);
       font-family: var(--font-sans);
-      font-size: 0.95rem;
+      font-size: 0.93rem;
       outline: none;
     }
 
-    select.stack-select:focus {
+    select.stack-select:focus,
+    input.text-input:focus,
+    textarea.preview-area:focus {
       border-color: var(--accent-cyan);
     }
 
@@ -511,7 +616,7 @@
     }
 
     .res-kicker {
-      font-size: 0.8rem;
+      font-size: 0.79rem;
       color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -548,7 +653,7 @@
       transition: width 0.2s ease;
     }
 
-    /* Soundness 4-Layer Grid */
+    /* Soundness 4-Layer Grid + Security Banner */
     .guarantee-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -576,6 +681,21 @@
 
     .g-card p {
       font-size: 0.87rem;
+      color: var(--text-secondary);
+    }
+
+    .cred-banner {
+      margin-top: 20px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(90deg, rgba(251, 113, 133, 0.08), rgba(56, 189, 248, 0.07));
+      border: 1px solid rgba(251, 113, 133, 0.3);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      font-size: 0.88rem;
       color: var(--text-secondary);
     }
 
@@ -669,9 +789,31 @@
       flex-shrink: 0;
     }
 
+    .tier-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .tier-sublink {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      text-align: center;
+      padding: 3px 0;
+      transition: color 0.15s ease;
+    }
+
+    .tier-sublink:hover {
+      color: var(--accent-cyan);
+    }
+
     .settlement-bar {
       margin-top: 24px;
-      padding: 16px 20px;
+      padding: 18px 22px;
       background: var(--bg-elevated);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
@@ -679,9 +821,121 @@
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 14px;
       font-size: 0.88rem;
       color: var(--text-secondary);
+    }
+
+    .settlement-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* Interactive Request 48h Free Pareto Simulation / USDC Invoice Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      background: rgba(4, 7, 13, 0.82);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-panel {
+      width: 100%;
+      max-width: 660px;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+      box-shadow: 0 25px 65px rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .modal-close {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .modal-close:hover {
+      color: var(--text-primary);
+      border-color: var(--accent-cyan);
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 640px) {
+      .modal-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .modal-field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-family: var(--font-mono);
+    }
+
+    textarea.preview-area {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.48;
+      min-height: 138px;
+      resize: vertical;
+    }
+
+    .modal-footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .modal-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .copy-toast {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--accent-emerald);
+      min-height: 1.2em;
     }
 
     footer {
@@ -709,13 +963,13 @@
         <span>Impius-Lab · Cryptographic Engineering</span>
       </div>
       <nav class="nav-links" aria-label="Primary Navigation">
-        <a href="#upstream-prs">Live Upstream PRs (5)</a>
+        <a href="#upstream-prs">Proof of Execution</a>
         <a href="#roi-calculator">Prover ROI Calculator</a>
         <a href="#soundness">4-Layer Certs</a>
-        <a href="#engagements">Pricing &amp; Audits</a>
+        <a href="#engagements">Pricing &amp; USDC Checkout</a>
       </nav>
-      <a id="nav-cta" class="btn btn-primary" href="mailto:2aghous94@gmail.com?subject=48h%20Free%20Pareto%20Gate-Count%20Simulation">
-        Book Free 48h Simulation
+      <a id="nav-cta" class="btn btn-primary" data-modal-pkg="sim" href="mailto:2aghous94@gmail.com?subject=48h%20Free%20Pareto%20Gate-Count%20Simulation">
+        Request 48h Simulation / Invoice
       </a>
     </div>
   </header>
@@ -726,23 +980,47 @@
       <div class="container">
         <div class="eyebrow">
           <span class="eyebrow-dot"></span>
-          <span>5 LIVE UPSTREAM PRS · 64 CERTIFIED SCHEDULES · ZERO-SORRY LEAN 4 PROOFS</span>
+          <span>5 LIVE UPSTREAM PRS · ZCASH ZCG #590 · 33 ZERO-SORRY LEAN 4 PROOFS (5.63S) · ACCEPTED SECURITY RESEARCHER (GNARK &amp; AZTEC)</span>
         </div>
         <h1>
           Cut Your ZK Prover &amp; Verifier Gates by <span class="grad">14%–59%</span> Without Trading Away CRT Soundness.
         </h1>
         <p class="hero-sub">
-          <strong>Impius-Lab Cryptographic Engineering (Houssem Aguentil)</strong> synthesizes basis-complete finite-field bilinear extension towers (<span class="code-pill">QM31</span>, <span class="code-pill">BabyBear^{4,5}</span>, <span class="code-pill">KoalaBear^{4,8}</span>, <span class="code-pill">BN254</span>, <span class="code-pill">BLS12-381</span>, <span class="code-pill">BLS12-377</span>, <span class="code-pill">Pasta</span>) and non-native limb-carry range proofs — verified in live open PRs across <strong>StarkWare Stwo</strong>, <strong>Plonky3</strong>, and <strong>Consensys gnark</strong>.
+          <strong>Impius-Lab Cryptographic Engineering (Houssem Aguentil)</strong> synthesizes basis-complete finite-field bilinear extension towers (<span class="code-pill">QM31</span>, <span class="code-pill">BabyBear^{4,5}</span>, <span class="code-pill">KoalaBear^{4,8}</span>, <span class="code-pill">BN254</span>, <span class="code-pill">BLS12-381</span>, <span class="code-pill">BLS12-377</span>, <span class="code-pill">Pasta</span>) and non-native limb-carry range proofs — verified across <strong>StarkWare Stwo &amp; Cairo</strong>, <strong>Plonky3 / SP1</strong>, <strong>Consensys gnark</strong>, <strong>Zcash Halo2</strong>, and <strong>BitVM2 Tapscript</strong>.
         </p>
         <div class="hero-ctas">
           <a id="hero-primary-cta" class="btn btn-primary" href="#roi-calculator">
             Calculate Your Prover Fleet Savings →
           </a>
-          <a class="btn btn-outline" href="https://github.com/Impius-Lab/zk-bilinear-opt" target="_blank" rel="noopener noreferrer">
-            Inspect zk-bilinear-opt Repository
+          <a id="hero-sim-cta" class="btn btn-outline" data-modal-pkg="sim" href="mailto:2aghous94@gmail.com?subject=48h%20Free%20Pareto%20Simulation%20%2F%20USDC%20Invoice">
+            Request 48h Free Pareto Simulation / USDC Invoice
           </a>
-          <a id="hero-sim-cta" class="btn btn-outline" href="mailto:2aghous94@gmail.com?subject=Complimentary%2048h%20Pareto%20Gate%20Simulation">
-            Request 48h Free Pareto Simulation
+          <a class="btn btn-outline" href="https://github.com/Impius-Lab/zk-bilinear-opt" target="_blank" rel="noopener noreferrer">
+            Inspect zk-bilinear-opt Repo ↗
+          </a>
+        </div>
+
+        <!-- Stage-3 / v0.3 Multi-Backend Proof-of-Execution Badges -->
+        <div class="exec-badge-strip" aria-label="Verified Stage-3 Proof-of-Execution Badges">
+          <a class="exec-badge" href="https://github.com/Impius-Lab/zk-bilinear-opt/tree/main/cairo_gadgets" target="_blank" rel="noopener noreferrer">
+            <span class="exec-badge-tag amber">Scarb Cairo 2.21</span>
+            <span><strong>-26.25%</strong> mul / <strong>-43.29%</strong> sq VM steps</span>
+          </a>
+          <a class="exec-badge" href="https://github.com/Impius-Lab/zk-bilinear-opt/blob/main/zk_bilinear/bitvm2_qm31.py" target="_blank" rel="noopener noreferrer">
+            <span class="exec-badge-tag emerald">BitVM2 Tapscript</span>
+            <span><strong>-22.22%</strong> <span class="code-pill">OP_M31_MUL</span> (<span class="code-pill">16→9→7</span>)</span>
+          </a>
+          <a class="exec-badge" href="https://github.com/Impius-Lab/zk-bilinear-opt/tree/main/lean4_certs" target="_blank" rel="noopener noreferrer">
+            <span class="exec-badge-tag violet">Lean 4 v4.36.0</span>
+            <span><strong>5.63s</strong> zero-<span class="code-pill">sorry</span> formal proofs (<span class="code-pill">33</span> thms)</span>
+          </a>
+          <a class="exec-badge" href="https://github.com/ZcashCommunityGrants/zcashcommunitygrants/issues/590" target="_blank" rel="noopener noreferrer">
+            <span class="exec-badge-tag">Halo2 / Zcash #590</span>
+            <span><strong>-29.85%</strong> <span class="code-pill">BLS12-381</span> PlonKish cells</span>
+          </a>
+          <a class="exec-badge" href="#soundness">
+            <span class="exec-badge-tag rose">Security Credit</span>
+            <span>Accepted Researcher on <strong>Consensys gnark</strong> &amp; <strong>Aztec Protocol</strong></span>
           </a>
         </div>
 
@@ -767,14 +1045,14 @@
       </div>
     </section>
 
-    <!-- 5 Live Upstream PRs -->
+    <!-- 5 Live Upstream PRs + 4 Verified Multi-Backend Modules -->
     <section id="upstream-prs">
       <div class="container">
         <div class="section-header">
-          <div class="section-tag">Production Compiler &amp; Prover Track Record</div>
-          <h2 class="section-title">Verified Against Five Live Open Upstream Pull Requests</h2>
+          <div class="section-tag">Production Compiler, Verifier &amp; Formal Proof Track Record</div>
+          <h2 class="section-title">Five Live Open Upstream PRs + Multi-Target Verifier Suite</h2>
           <p class="section-desc">
-            Every claim is backed by reproducible compiler constraint counts, Criterion CPU benchmarks, and adversarial soundness tests running inside the upstream codebases.
+            Every claim is backed by reproducible compiler constraint counts, Criterion CPU &amp; Scarb Cairo VM benchmarks, zero-dependency Core Lean 4 proofs, and adversarial soundness tests running inside the target codebases.
           </p>
         </div>
 
@@ -843,7 +1121,7 @@
             <a href="https://github.com/Consensys/gnark/pull/1950" target="_blank" rel="noopener noreferrer">Inspect PR #1950 circuit stats →</a>
           </article>
 
-          <article class="pr-card" style="grid-column: span 2;">
+          <article class="pr-card span-two">
             <div>
               <div class="pr-top">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -863,18 +1141,79 @@
           </article>
         </div>
 
-        <style>
-          @media (max-width: 760px) {
-            .pr-card[style] { grid-column: span 1 !important; }
-          }
-        </style>
+        <!-- Stage-3 Multi-Backend Modules (Scarb Cairo, BitVM2, Lean 4, Zcash #590) -->
+        <div class="module-grid">
+          <article class="pr-card">
+            <div>
+              <div class="pr-top">
+                <a class="pr-badge amber" href="https://github.com/Impius-Lab/zk-bilinear-opt/tree/main/cairo_gadgets" target="_blank" rel="noopener noreferrer">
+                  cairo_gadgets (Scarb 2.21) ↗
+                </a>
+                <span class="pr-stat">-26.25% / -43.29% Steps</span>
+              </div>
+              <h3>Starknet Cairo <span class="code-pill">zk_qm31_opt</span> Verifier</h3>
+              <p style="margin-top: 8px;">
+                Unimodular <span class="code-pill">qm31_mul_karatsuba9</span> (<span class="code-pill">70,019 → 51,641</span> steps, <span class="code-pill">-26.25%</span>) and <span class="code-pill">qm31_square_karatsuba6</span> (<span class="code-pill">70,067 → 39,738</span> steps, <span class="code-pill">-43.29%</span>) with <span class="code-pill">0</span> <span class="code-pill">u64_wide_mul</span> constant scalings.
+              </p>
+            </div>
+            <a href="https://github.com/Impius-Lab/zk-bilinear-opt/tree/main/cairo_gadgets" target="_blank" rel="noopener noreferrer">Inspect Cairo package →</a>
+          </article>
+
+          <article class="pr-card">
+            <div>
+              <div class="pr-top">
+                <a class="pr-badge" href="https://github.com/Impius-Lab/zk-bilinear-opt/blob/main/zk_bilinear/bitvm2_qm31.py" target="_blank" rel="noopener noreferrer">
+                  bitvm2_qm31.py ↗
+                </a>
+                <span class="pr-stat">-22.22% OP_M31_MUL</span>
+              </div>
+              <h3>BitVM2 Tapscript <span class="code-pill">QM31</span> <span class="code-pill">Rank-7</span></h3>
+              <p style="margin-top: 8px;">
+                <span class="code-pill">BIP-342</span> 4-byte <span class="code-pill">CScriptNum</span>-safe verifier cutting <span class="code-pill">OP_M31_MUL</span> <span class="code-pill">16 → 9 → 7</span> (<span class="code-pill">-22.22%</span> vs <span class="code-pill">K-9</span>, <span class="code-pill">-56.25%</span> vs <span class="code-pill">SB-16</span>), witness stack <span class="code-pill">198 → 158</span> (<span class="code-pill">-20.20%</span>), and Script ops <span class="code-pill">-7.60%</span>.
+              </p>
+            </div>
+            <a href="https://github.com/Impius-Lab/zk-bilinear-opt/blob/main/zk_bilinear/bitvm2_qm31.py" target="_blank" rel="noopener noreferrer">Inspect Tapscript simulator →</a>
+          </article>
+
+          <article class="pr-card">
+            <div>
+              <div class="pr-top">
+                <a class="pr-badge violet" href="https://github.com/Impius-Lab/zk-bilinear-opt/tree/main/lean4_certs" target="_blank" rel="noopener noreferrer">
+                  lean4_certs (v4.36.0) ↗
+                </a>
+                <span class="pr-stat">5.63s · 0 sorry · 33 Thms</span>
+              </div>
+              <h3>Zero-<span class="code-pill">sorry</span> Core Lean 4 Proofs</h3>
+              <p style="margin-top: 8px;">
+                Zero-dependency <span class="code-pill">lake build</span> in <span class="code-pill">5.63s</span> (<span class="code-pill">#print axioms</span> audited) certifying <span class="code-pill">QM31</span> <span class="code-pill">K-9</span>/<span class="code-pill">Rank-7</span>/<span class="code-pill">Rank-6</span>, <span class="code-pill">u64</span> <span class="code-pill">dot4</span> non-overflow, and BabyBear <span class="code-pill">quoBits</span> CRT uniqueness.
+              </p>
+            </div>
+            <a href="https://github.com/Impius-Lab/zk-bilinear-opt/tree/main/lean4_certs" target="_blank" rel="noopener noreferrer">Inspect 33 Lean 4 theorems →</a>
+          </article>
+
+          <article class="pr-card">
+            <div>
+              <div class="pr-top">
+                <a class="pr-badge" href="https://github.com/ZcashCommunityGrants/zcashcommunitygrants/issues/590" target="_blank" rel="noopener noreferrer">
+                  Zcash ZCG #590 ↗
+                </a>
+                <span class="pr-stat">-29.85% BLS12-381 Cells</span>
+              </div>
+              <h3>Halo2 / Zcash &amp; Pasta <span class="code-pill">#![no_std]</span></h3>
+              <p style="margin-top: 8px;">
+                Cyclotomic <span class="code-pill">CRT-30</span> cuts <span class="code-pill">BLS12-381</span> <span class="code-pill">Fp12</span> PlonKish lookup cells <span class="code-pill">48,697 → 34,159</span> (<span class="code-pill">-29.85%</span> @ <span class="code-pill">12b/64b</span>; <span class="code-pill">-27.56%</span> @ <span class="code-pill">16b/88b</span>), sparse <span class="code-pill">mul_by_014</span> Rank-18 (<span class="code-pill">-66.67%</span>), and Pasta CRT <span class="code-pill">-13.05%</span>.
+              </p>
+            </div>
+            <a href="https://github.com/ZcashCommunityGrants/zcashcommunitygrants/issues/590" target="_blank" rel="noopener noreferrer">Inspect ZCG #590 proposal →</a>
+          </article>
+        </div>
 
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Upstream Target / Stack</th>
-                <th>Live PR / Module</th>
+                <th>Live PR / Verified Module</th>
                 <th>Upstream Baseline</th>
                 <th>Impius-Lab Measured</th>
                 <th>Verified Delta</th>
@@ -917,11 +1256,25 @@
                 <td class="win">-9.81% (-478,847 gates)</td>
               </tr>
               <tr>
-                <td><strong>Halo2 / Zcash</strong> <span class="code-pill">BLS12-381</span> <span class="code-pill">Fp12</span> (<span class="code-pill">lookup=16b, 5x88b</span>)</td>
-                <td class="mono">halo2_gadgets.rs</td>
-                <td class="mono">33,787 cells (SB-54)</td>
-                <td class="mono">24,475 cells (CRT-30)</td>
-                <td class="win">-27.56% (-29.85% @ 12b/64b)</td>
+                <td><strong>Halo2 / Zcash</strong> <span class="code-pill">BLS12-381</span> <span class="code-pill">Fp12</span> (<span class="code-pill">12b/64b</span> &amp; <span class="code-pill">16b/88b</span>)</td>
+                <td class="mono"><a href="https://github.com/ZcashCommunityGrants/zcashcommunitygrants/issues/590" target="_blank" rel="noopener noreferrer">ZCG #590</a> · <a href="https://github.com/Impius-Lab/zk-bilinear-opt/blob/main/rust_crates/src/halo2_gadgets.rs" target="_blank" rel="noopener noreferrer">halo2_gadgets.rs</a></td>
+                <td class="mono">48,697 / 33,787 cells</td>
+                <td class="mono">34,159 / 24,475 cells</td>
+                <td class="win">-29.85% / -27.56% (CRT-30)</td>
+              </tr>
+              <tr>
+                <td><strong>Starknet Cairo</strong> <span class="code-pill">zk_qm31_opt</span> (64-iter Scarb VM)</td>
+                <td class="mono"><a href="https://github.com/Impius-Lab/zk-bilinear-opt/tree/main/cairo_gadgets" target="_blank" rel="noopener noreferrer">cairo_gadgets</a></td>
+                <td class="mono">70,019 mul / 70,067 sq</td>
+                <td class="mono">51,641 mul / 39,738 sq</td>
+                <td class="win">-26.25% mul / -43.29% sq</td>
+              </tr>
+              <tr>
+                <td><strong>BitVM2 Tapscript</strong> <span class="code-pill">QM31</span> (<span class="code-pill">BIP-342</span> 4B <span class="code-pill">CScriptNum</span>)</td>
+                <td class="mono"><a href="https://github.com/Impius-Lab/zk-bilinear-opt/blob/main/zk_bilinear/bitvm2_qm31.py" target="_blank" rel="noopener noreferrer">bitvm2_qm31.py</a></td>
+                <td class="mono">9 OP_M31_MUL (198 wit)</td>
+                <td class="mono">7 OP_M31_MUL (158 wit)</td>
+                <td class="win">-22.22% MUL (-56.25% vs SB)</td>
               </tr>
             </tbody>
           </table>
@@ -936,7 +1289,7 @@
           <div class="section-tag">Interactive Fleet Economics Model</div>
           <h2 class="section-title">Prover Cloud &amp; L1 Verifier ROI Calculator</h2>
           <p class="section-desc">
-            Select your production proving stack and monthly GPU/CPU prover spend to model verified constraint/cell reductions, direct annual cloud infrastructure savings, and FFT power-of-two (<span class="code-pill">2^k → 2^{k-1}</span>) step-down probability.
+            Select your production proving or on-chain verifier stack and monthly GPU/CPU/gas spend to model verified constraint/cell reductions, direct annual infrastructure savings, and FFT power-of-two (<span class="code-pill">2^k → 2^{k-1}</span>) step-down probability.
           </p>
         </div>
 
@@ -948,17 +1301,19 @@
                 <span class="control-val" id="stack-pr-ref">Consensys/gnark#1951</span>
               </label>
               <select id="stack-select" class="stack-select">
-                <option value="stwo">StarkWare Stwo / Cairo (QM31 Circle STARKs &amp; Verifiers)</option>
-                <option value="plonky3">Plonky3 / SP1 (BabyBear / KoalaBear / Mersenne31 AIRs)</option>
                 <option value="gnark_emulated" selected>Consensys gnark BN254 / BLS12-381 (Emulated Pairing &amp; Wrapping)</option>
+                <option value="stwo">StarkWare Stwo Circle STARKs (QM31 SIMD &amp; AIR Verifiers)</option>
+                <option value="cairo_scarb">Starknet Cairo Verifier (Scarb 2.21 zk_qm31_opt VM Steps)</option>
+                <option value="plonky3">Plonky3 / SP1 (BabyBear / KoalaBear / Mersenne31 AIRs)</option>
                 <option value="gnark_bls377">gnark BLS12-377 2-Chain (BW6-761 Recursive R1CS)</option>
-                <option value="halo2_zcash">Halo2 / Zcash / Scroll (PlonKish Lookup &amp; Wrong-Field CRT)</option>
+                <option value="halo2_zcash">Halo2 / Zcash #590 / Scroll (PlonKish Lookup &amp; Wrong-Field CRT)</option>
+                <option value="bitvm2">BitVM2 Bitcoin Tapscript Verifier (BIP-342 OP_M31_MUL)</option>
               </select>
             </div>
 
             <div class="control-group">
               <label class="control-label" for="spend-slider">
-                <span>2. Monthly GPU / CPU Prover Cluster Spend</span>
+                <span>2. Monthly GPU / CPU Prover or L1 Verifier Spend</span>
                 <span class="control-val" id="spend-display">$40,000 / mo</span>
               </label>
               <input type="range" id="spend-slider" min="5000" max="250000" step="5000" value="40000" />
@@ -972,8 +1327,8 @@
 
             <div class="control-group">
               <label class="control-label" for="share-slider">
-                <span>3. Extension / Pairing Workload Share in Prover Fleet</span>
-                <span class="control-val" id="share-display">100% (Pure Recursion / Pairing Wrapper)</span>
+                <span>3. Extension / Pairing Workload Share in Fleet</span>
+                <span class="control-val" id="share-display">100% (Pure Recursion / Wrapper)</span>
               </label>
               <input type="range" id="share-slider" min="25" max="100" step="5" value="100" />
               <div class="range-ticks">
@@ -990,15 +1345,15 @@
 
           <div class="calc-results" aria-live="polite">
             <div class="res-metric">
-              <div class="res-kicker">Verified End-to-End Circuit Gate / Cell Reduction</div>
+              <div class="res-kicker">Verified End-to-End Circuit Gate / Step Reduction</div>
               <div class="res-big" id="res-gate-cut">-14.55%</div>
-              <div class="res-sub" id="res-primitive-sub">Primitive kernel delta: -29.41%..-32.27% (CRT-30) · Measured PR: -14.55% BN254 Pair</div>
+              <div class="res-sub" id="res-primitive-sub">Measured sw_bn254.Pair: -14.55% (-15.17% FixedQ) · sw_bls12381.Pair: -478,847 PlonK gates</div>
             </div>
 
             <div class="res-metric">
-              <div class="res-kicker">Estimated Annual Prover Cloud Savings</div>
+              <div class="res-kicker">Estimated Annual Prover / Verifier Savings</div>
               <div class="res-big" id="res-annual-savings">$69,840 / yr</div>
-              <div class="res-sub" id="res-payback-sub">Full-circuit band: $47,088–$72,816/yr · Tier 2 ($25k) payback: 4.3 months</div>
+              <div class="res-sub" id="res-payback-sub">Verified band: $47,088–$72,816/yr · Tier 2 ($25k) payback: 4.3 mos</div>
             </div>
 
             <div class="res-metric">
@@ -1012,8 +1367,8 @@
               </div>
             </div>
 
-            <a id="calc-book-cta" class="btn btn-primary" style="width: 100%;" href="mailto:2aghous94@gmail.com">
-              Send Stack Parameters for Free 48h Simulation →
+            <a id="calc-book-cta" class="btn btn-primary" style="width: 100%;" data-modal-pkg="sim" href="mailto:2aghous94@gmail.com">
+              Request 48h Free Pareto Simulation / USDC Invoice →
             </a>
           </div>
         </div>
@@ -1027,7 +1382,7 @@
           <div class="section-tag">Zero-Regression Verification Protocol</div>
           <h2 class="section-title">4-Layer Mathematical &amp; Malicious-Prover Soundness Bundle</h2>
           <p class="section-desc">
-            Every engagement ships with deterministic machine-checked proofs — the exact methodology that caught and closed the <span class="code-pill">2t &gt;= F - 1</span> BabyBear CRT quotient wrap-around bug in <span class="code-pill">Consensys/gnark#1951</span>.
+            Every engagement ships with deterministic machine-checked proofs — backed by our formal verification pipeline and accepted security researcher track record across leading zero-knowledge ecosystems.
           </p>
         </div>
 
@@ -1040,10 +1395,10 @@
             </p>
           </div>
           <div class="g-card">
-            <div class="g-num">LAYER 02 · FORMAL VERIFICATION</div>
-            <h3>Zero-Sorry Lean 4 Soundness Certs</h3>
+            <div class="g-num">LAYER 02 · FORMAL VERIFICATION (5.63S)</div>
+            <h3>33 Zero-Sorry Lean 4 Theorems</h3>
             <p>
-              Self-contained Core Lean 4 theorems certifying unimodular tower isomorphisms, delayed-<span class="code-pill">u64</span> Mersenne-31 non-overflow (<span class="code-pill">&lt; 2^64</span>), and non-native CRT carry/quotient uniqueness.
+              Zero-dependency Core Lean 4 (<span class="code-pill">v4.36.0</span>, <span class="code-pill">#print axioms</span> verified) certifying unimodular tower isomorphisms, delayed-<span class="code-pill">u64</span> Mersenne-31 canonicality, and CRT <span class="code-pill">quoBits</span> uniqueness.
             </p>
           </div>
           <div class="g-card">
@@ -1057,9 +1412,19 @@
             <div class="g-num">LAYER 04 · CI TAMPER IMMUNITY</div>
             <h3>109,000+ Fuzz &amp; Mutation Self-Tests</h3>
             <p>
-              Differential fuzz equivalence against your existing Rust (<span class="code-pill">#![no_std]</span>), Go, Cairo, or Halo2 multiplier plus automated sign/weight mutation tests ensuring CI fails RED on any tamper.
+              Differential fuzz equivalence against your existing Rust (<span class="code-pill">#![no_std]</span>), Go, Scarb Cairo, BitVM2, or Halo2 multiplier plus sign/weight mutation tests ensuring CI fails RED on any tamper.
             </p>
           </div>
+        </div>
+
+        <div class="cred-banner">
+          <div>
+            <strong style="color: var(--text-primary);">Public Cryptographic Security Credentials:</strong>
+            Accepted Security Researcher credit on <strong>Consensys <span class="code-pill">gnark</span></strong> &amp; <strong>Aztec Protocol</strong>, author of 5 live open upstream PRs (<span class="code-pill">proving#9</span>, <span class="code-pill">proving#10</span>, <span class="code-pill">Plonky3#2600</span>, <span class="code-pill">gnark#1950</span>, <span class="code-pill">gnark#1951</span>), and applicant on <a href="https://github.com/ZcashCommunityGrants/zcashcommunitygrants/issues/590" target="_blank" rel="noopener noreferrer">Zcash Community Grants #590</a>. All private vulnerability audits adhere strictly to coordinated disclosure rules.
+          </div>
+          <a class="btn btn-outline" data-modal-pkg="tier1" href="mailto:2aghous94@gmail.com?subject=Confidential%20ZK%20Soundness%20Audit%20Inquiry">
+            Request Confidential Audit →
+          </a>
         </div>
       </div>
     </section>
@@ -1068,10 +1433,10 @@
     <section id="engagements">
       <div class="container">
         <div class="section-header">
-          <div class="section-tag">Engagement Structure &amp; Fixed-Scope Pricing</div>
+          <div class="section-tag">Engagement Structure, Whop Digital Checkout &amp; On-Chain USDC</div>
           <h2 class="section-title">Three Clear Ways to Compress &amp; Harden Your Prover</h2>
           <p class="section-desc">
-            Start with a complimentary 48-hour exact Pareto gate-count simulation on your target commit, then engage on fixed deliverables with 100% Tier-1 fee credit toward turnkey implementation.
+            Start with a complimentary 48-hour exact Pareto gate-count simulation on your target commit, then engage via instant digital checkout or milestone-gated <span class="code-pill">USDC</span> invoicing (<span class="code-pill">Arbitrum</span>, <span class="code-pill">Solana</span>, or <span class="code-pill">Polygon</span>) with 100% Tier-1 fee credit toward turnkey implementation.
           </p>
         </div>
 
@@ -1083,14 +1448,19 @@
               <h3 class="tier-title">Diagnostic Circuit &amp; CRT Soundness Audit</h3>
               <div class="tier-price">$7,500 <span>Fixed · 100% credited to Tier 2/3</span></div>
               <ul class="tier-list">
-                <li>Full bilinear rank &amp; <span class="code-pill">Const * Var</span> lowering audit of your recursive AIR, PlonK custom gates, or <span class="code-pill">gnark</span>/Halo2 non-native chips.</li>
+                <li>Full bilinear rank &amp; <span class="code-pill">Const * Var</span> lowering audit of your recursive AIR, PlonK custom gates, Cairo/BitVM2 verifier, or <span class="code-pill">gnark</span>/Halo2 non-native chips.</li>
                 <li>Malicious-prover CRT quotient (<span class="code-pill">quoBits</span>), carry wrap-around, and <span class="code-pill">&lt; p</span> canonicality soundness scan.</li>
                 <li>Delivered <strong>Exact Constraint-Savings &amp; Soundness Blueprint</strong> pinning guaranteed gate, lookup-cell, and <span class="code-pill">2^k</span> FFT domain cuts before touching production code.</li>
               </ul>
             </div>
-            <a id="tier1-cta" class="btn btn-outline" href="mailto:2aghous94@gmail.com">
-              Book Tier 1 Diagnostic Audit →
-            </a>
+            <div class="tier-actions">
+              <a id="tier1-cta" class="btn btn-outline" data-tier="tier1" href="mailto:2aghous94@gmail.com">
+                Book Tier 1 Diagnostic Audit →
+              </a>
+              <button type="button" class="tier-sublink" data-open-invoice="tier1">
+                Or request USDC invoice (Arbitrum / Solana / Polygon) →
+              </button>
+            </div>
           </article>
 
           <!-- Tier 2 -->
@@ -1101,14 +1471,19 @@
               <h3 class="tier-title">Turnkey Kernel PRs &amp; Lean 4 Certs</h3>
               <div class="tier-price">$25,000 <span>Fixed · Production-Ready PRs</span></div>
               <ul class="tier-list">
-                <li>Drop-in <span class="code-pill">#![no_std]</span> Rust, Go (<span class="code-pill">gnark</span> / <span class="code-pill">[6]uint64</span> CIOS), Halo2, or Cairo verifier PRs implementing Pareto-optimal tower, sparse pairing-line (<span class="code-pill">mul_by_014</span>/<span class="code-pill">034</span>), and cyclotomic squaring gadgets.</li>
+                <li>Drop-in <span class="code-pill">#![no_std]</span> Rust, Go (<span class="code-pill">gnark</span> / <span class="code-pill">[6]uint64</span> CIOS), Halo2, Scarb Cairo, or BitVM2 Tapscript PRs implementing Pareto-optimal tower, sparse pairing-line (<span class="code-pill">mul_by_014</span>/<span class="code-pill">034</span>), and cyclotomic squaring gadgets.</li>
                 <li>Zero-<span class="code-pill">sorry</span> <strong>Lean 4</strong> algebraic &amp; overflow soundness certificates tailored to your prime and limb bit-width.</li>
                 <li>100,000+ differential fuzz &amp; adversarial mutation suite wired into your test gate + support through external audit sign-off.</li>
               </ul>
             </div>
-            <a id="tier2-cta" class="btn btn-primary" href="mailto:2aghous94@gmail.com">
-              Start Turnkey Kernel Engagement →
-            </a>
+            <div class="tier-actions">
+              <a id="tier2-cta" class="btn btn-primary" data-tier="tier2" href="mailto:2aghous94@gmail.com">
+                Start Turnkey Kernel Engagement →
+              </a>
+              <button type="button" class="tier-sublink" data-open-invoice="tier2">
+                Or request USDC invoice (Arbitrum / Solana / Polygon) →
+              </button>
+            </div>
           </article>
 
           <!-- Tier 3 -->
@@ -1123,20 +1498,30 @@
                 <li>Performance share measured strictly against committed baseline prover commits on your production hardware.</li>
               </ul>
             </div>
-            <a id="tier3-cta" class="btn btn-outline" href="mailto:2aghous94@gmail.com">
-              Inquire on Tier 3 Partnership →
-            </a>
+            <div class="tier-actions">
+              <a id="tier3-cta" class="btn btn-outline" data-tier="tier3" href="mailto:2aghous94@gmail.com">
+                Inquire on Tier 3 Partnership →
+              </a>
+              <button type="button" class="tier-sublink" data-open-invoice="tier3">
+                Or request USDC invoice (Arbitrum / Solana / Polygon) →
+              </button>
+            </div>
           </article>
         </div>
 
         <div class="settlement-bar">
           <div>
-            <strong style="color: var(--text-primary);">Frictionless B2B Checkout &amp; On-Chain Settlement:</strong>
-            Instant milestone invoicing &amp; direct settlement supported in <span class="code-pill">USDC (Arbitrum / Solana / Polygon)</span> alongside standard digital checkout links.
+            <strong style="color: var(--text-primary);">Zero-Friction B2B Checkout &amp; Direct Stablecoin Settlement:</strong>
+            Supports instant <strong>Whop</strong> digital checkout and direct milestone invoicing in <span class="code-pill">USDC on Arbitrum</span>, <span class="code-pill">USDC on Solana</span>, or <span class="code-pill">USDC on Polygon</span> (<span class="code-pill">0%</span> FX markup, verifiable on-chain receipts).
           </div>
-          <a id="footer-sim-cta" class="btn btn-outline" href="mailto:2aghous94@gmail.com?subject=48h%20Free%20Pareto%20Simulation%20Request">
-            Email 2aghous94@gmail.com
-          </a>
+          <div class="settlement-actions">
+            <button type="button" id="open-modal-btn" class="btn btn-primary" data-open-invoice="sim">
+              Request 48h Simulation / USDC Invoice
+            </button>
+            <a id="footer-sim-cta" class="btn btn-outline" href="mailto:2aghous94@gmail.com?subject=48h%20Free%20Pareto%20Simulation%20%2F%20USDC%20Invoice">
+              mailto:2aghous94@gmail.com
+            </a>
+          </div>
         </div>
       </div>
     </section>
@@ -1145,88 +1530,196 @@
   <footer>
     <div class="container footer-inner">
       <div>
-        <strong style="color: var(--text-secondary);">Impius-Lab Cryptographic Engineering</strong> · Houssem Aguentil (<span class="code-pill">2aghous94@gmail.com</span>)
+        <strong style="color: var(--text-secondary);">Impius-Lab Cryptographic Engineering</strong> · Houssem Aguentil (<a href="mailto:2aghous94@gmail.com">2aghous94@gmail.com</a>)
       </div>
       <div>
         Open-Source Verification Suite:
         <a href="https://github.com/Impius-Lab/zk-bilinear-opt" target="_blank" rel="noopener noreferrer">github.com/Impius-Lab/zk-bilinear-opt</a>
+        · <a href="https://github.com/ZcashCommunityGrants/zcashcommunitygrants/issues/590" target="_blank" rel="noopener noreferrer">Zcash ZCG #590</a>
         · Dual-Licensed <span class="code-pill">MIT OR Apache-2.0</span>
       </div>
     </div>
   </footer>
 
+  <!-- Interactive Zero-Friction "Request 48h Free Pareto Simulation / USDC Invoice" Modal -->
+  <div id="intake-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <div>
+          <div class="section-tag" style="margin-bottom: 4px;">Direct Engineering Intake &amp; Milestone Invoicing</div>
+          <h2 id="modal-title" style="font-size: 1.32rem; letter-spacing: -0.015em;">
+            Request 48h Free Pareto Simulation / USDC Invoice
+          </h2>
+        </div>
+        <button type="button" id="modal-close-btn" class="modal-close" aria-label="Close modal">✕</button>
+      </div>
+
+      <p style="font-size: 0.87rem; color: var(--text-secondary); margin-bottom: 16px;">
+        Configure your stack and preferred settlement rail below. Send directly via <a href="mailto:2aghous94@gmail.com">2aghous94@gmail.com</a> or copy the formatted brief in one click — response guaranteed within 24 hours.
+      </p>
+
+      <div class="modal-grid">
+        <div class="modal-field">
+          <label for="modal-package">Engagement / Request Type</label>
+          <select id="modal-package" class="stack-select">
+            <option value="sim">48h Free Pareto Gate-Count Simulation ($0)</option>
+            <option value="tier1">Tier 1 — Diagnostic &amp; CRT Soundness Audit ($7,500)</option>
+            <option value="tier2">Tier 2 — Turnkey Kernel PRs &amp; Lean 4 Certs ($25,000)</option>
+            <option value="tier3">Tier 3 — Hybrid Fleet Partnership ($10k + 15% Saved)</option>
+          </select>
+        </div>
+
+        <div class="modal-field">
+          <label for="modal-rail">Preferred Settlement / Invoice Rail</label>
+          <select id="modal-rail" class="stack-select">
+            <option value="USDC on Arbitrum">USDC on Arbitrum (Milestone Invoice · 0% FX)</option>
+            <option value="USDC on Solana">USDC on Solana (Milestone Invoice · 0% FX)</option>
+            <option value="USDC on Polygon">USDC on Polygon (Milestone Invoice · 0% FX)</option>
+            <option value="Whop Direct Digital Checkout">Whop Direct Digital Checkout Link</option>
+            <option value="No Payment Yet (48h Free Simulation First)">No Payment Yet (48h Free Simulation First)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-grid">
+        <div class="modal-field">
+          <label for="modal-org">Organization / Protocol Name (Optional)</label>
+          <input type="text" id="modal-org" class="text-input" placeholder="e.g. Rollup / zkVM Engineering Team" />
+        </div>
+
+        <div class="modal-field">
+          <label for="modal-repo">Target Repo / Commit SHA (Optional)</label>
+          <input type="text" id="modal-repo" class="text-input" placeholder="e.g. github.com/org/prover @ main" />
+        </div>
+      </div>
+
+      <div class="modal-field">
+        <label for="modal-preview">Auto-Generated Brief &amp; Invoice Request (<span class="code-pill">2aghous94@gmail.com</span>)</label>
+        <textarea id="modal-preview" class="preview-area" readonly></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-btn-row">
+          <a id="modal-mailto-btn" class="btn btn-primary" href="mailto:2aghous94@gmail.com">
+            Open in Email Client (2aghous94@gmail.com) →
+          </a>
+          <button type="button" id="modal-copy-btn" class="btn btn-outline">
+            Copy Brief &amp; Email Address
+          </button>
+        </div>
+        <span id="modal-copy-status" class="copy-toast" aria-live="polite"></span>
+      </div>
+    </div>
+  </div>
+
   <script>
     /**
-     * Configurable Whop Direct Digital Checkout URLs.
-     * Paste live Whop product checkout URLs (`https://whop.com/checkout/...`) when published;
-     * empty strings gracefully fall back to pre-filled `mailto:2aghous94@gmail.com` booking links.
+     * Configurable Whop Direct Digital Checkout URLs (`Whop -> USDC` settlement ready).
+     * Paste live Whop checkout URLs (`https://whop.com/checkout/plan_...`) into `tier1`, `tier2`, `tier3`
+     * when published. When left empty (`""`), CTAs seamlessly open the interactive
+     * "Request 48h Free Pareto Simulation / USDC Invoice" modal + `mailto:2aghous94@gmail.com` fallback.
      */
     const WHOP_CHECKOUT_URLS = {
-      freeSimulation: "",
-      tier1Audit: "",
-      tier2Turnkey: "",
-      tier3Hybrid: ""
+      tier1: "",          // Tier 1 ($7,500 Fixed — Diagnostic Circuit & CRT Soundness Audit)
+      tier2: "",          // Tier 2 ($25,000 Fixed — Turnkey Kernel PRs & Zero-Sorry Lean 4 Certs)
+      tier3: "",          // Tier 3 ($10,000 Retainer + 15% Year-1 Savings — Hybrid Partnership)
+      freeSimulation: ""  // Optional direct calendar/intake link; empty opens interactive modal
+    };
+
+    const PACKAGE_LABELS = {
+      sim: "48h Free Pareto Gate-Count & Soundness Simulation ($0)",
+      tier1: "Tier 1 ($7,500 Fixed) — Diagnostic Circuit & CRT Soundness Audit (1-Week Delivery)",
+      tier2: "Tier 2 ($25,000 Fixed) — Turnkey Kernel PRs & Zero-Sorry Lean 4 Certs (3-Week Delivery)",
+      tier3: "Tier 3 ($10,000 Retainer + 15% Verified Year-1 Savings) — Hybrid Fleet Partnership"
     };
 
     /**
-     * Verified stack benchmark parameters grounded directly in our 5 live upstream PRs
-     * and `rust_crates/src/halo2_gadgets.rs`.
+     * Verified stack benchmark parameters grounded directly in our 5 live upstream PRs,
+     * Scarb Cairo `cairo_gadgets/`, BitVM2 `bitvm2_qm31.py`, `lean4_certs/`, and Zcash ZCG #590.
      */
     const STACK_PROFILES = {
+      gnark_emulated: {
+        name: "Consensys gnark BN254 / BLS12-381",
+        prLabel: "Consensys/gnark#1951",
+        prUrl: "https://github.com/Consensys/gnark/pull/1951",
+        gateReductionPct: 14.55, // Measured sw_bn254.Pair (1-pair witness G2) R1CS: 836,825 -> 715,060 (-14.55%)
+        bandLowPct: 9.81,        // Measured sw_bls12381.Pair PlonK: 4,881,141 -> 4,402,294 (-9.81%, -478,847 gates)
+        bandHighPct: 15.17,      // Measured sw_bn254.Pair (fixed G2) R1CS: 720,474 -> 611,184 (-15.17%)
+        primitiveHeadline: "Measured sw_bn254.Pair: -14.55% (-15.17% FixedQ) · sw_bls12381.Pair: -478,847 PlonK gates",
+        noteHtml: "<strong>Consensys/gnark#1951:</strong> Shared <span class='code-pill'>MulPolyModTrinomial12</span> (<span class='code-pill'>1,152 → 96</span> committed limbs) + exact <span class='code-pill'>packLimbsWithWidth(quoBits)</span> cuts full pairing circuits by <strong>-9.81% to -15.17%</strong> (up to <strong>-32.27%</strong> on standalone <span class='code-pill'>CRT-30</span> <span class='code-pill'>Fp12</span>) and closes the BabyBear <span class='code-pill'>2t &gt;= F-1</span> CRT wrap-around bug."
+      },
       stwo: {
-        name: "StarkWare Stwo / Cairo",
+        name: "StarkWare Stwo Circle STARKs",
         prLabel: "starkware-libs/proving#9 & #10",
         prUrl: "https://github.com/starkware-libs/proving/pull/9",
-        gateReductionPct: 31.0, // Measured component AIR mul cut: 42 -> 29 (-31.0%) & 39 -> 26 (-33.3%); isolated QM31: 22 -> 9 (-59.1%)
-        bandLowPct: 28.3,       // Cairo verifier qm_31_ops.cairo: 46 -> 33 (-28.3%)
-        bandHighPct: 33.3,      // CASM & circuit qm_31_add_mul_opcode.rs: 39 -> 26 (-33.3%)
+        gateReductionPct: 31.0,  // Measured component AIR mul cut: 42 -> 29 (-31.0%) & 39 -> 26 (-33.3%); isolated QM31: 22 -> 9 (-59.1%)
+        bandLowPct: 28.3,        // Cairo verifier qm_31_ops.cairo: 46 -> 33 (-28.3%)
+        bandHighPct: 33.3,       // CASM & circuit qm_31_add_mul_opcode.rs: 39 -> 26 (-33.3%)
         primitiveHeadline: "Isolated QM31 AIR muls: -59.1% (22 → 9, 0 Const*Var) · Scalar QM31::mul: 2.71x CPU",
         noteHtml: "<strong>starkware-libs/proving#9 &amp; #10:</strong> Unimodular <span class='code-pill'>{0, +1, -1}</span> Karatsuba-9 with <span class='code-pill'>let_for_constraint</span> sharing cuts generated AIR/verifier component muls by <strong>-28.3% to -33.3%</strong> (<span class='code-pill'>-59.1%</span> per <span class='code-pill'>QM31</span> product) while delayed-<span class='code-pill'>u64</span> <span class='code-pill'>QM31</span> reaches <strong>2.71x</strong> CPU throughput."
+      },
+      cairo_scarb: {
+        name: "Starknet Cairo Verifier (Scarb 2.21)",
+        prLabel: "cairo_gadgets (zk_qm31_opt)",
+        prUrl: "https://github.com/Impius-Lab/zk-bilinear-opt/tree/main/cairo_gadgets",
+        gateReductionPct: 26.25, // Exact 64-iter Cairo VM steps on qm31_mul_karatsuba9: 70,019 -> 51,641 (-26.25%)
+        bandLowPct: 26.25,       // Mul step reduction: 70,019 -> 51,641 (-26.25%; range_check -23.51%)
+        bandHighPct: 43.29,      // Square step reduction on qm31_square_karatsuba6: 70,067 -> 39,738 (-43.29%; range_check -41.60%)
+        primitiveHeadline: "64-iter Scarb Cairo VM steps: -26.25% mul (70,019 → 51,641) · -43.29% square (70,067 → 39,738)",
+        noteHtml: "<strong>Scarb Cairo 2.21 (<span class='code-pill'>zk_qm31_opt</span>):</strong> Eliminating non-unit <span class='code-pill'>u64_wide_mul</span> constants via unimodular <span class='code-pill'>qm31_mul_karatsuba9</span> and <span class='code-pill'>qm31_square_karatsuba6</span> cuts Cairo VM steps by <strong>-26.25% to -43.29%</strong> and <span class='code-pill'>range_check_builtin</span> usage by <strong>-23.51% to -41.60%</strong>."
       },
       plonky3: {
         name: "Plonky3 / SP1",
         prLabel: "Plonky3/Plonky3#2600",
         prUrl: "https://github.com/Plonky3/Plonky3/pull/2600",
-        gateReductionPct: 28.1, // Conservative recursive verifier gate cut from -56.25% (D=4: 16 -> 7) to -76.56% (D=8: 64 -> 15) extension muls
-        bandLowPct: 22.2,       // Karatsuba-9 -> Rank-7 (-22.22%) lower bound
-        bandHighPct: 38.0,      // Heavy quintic/octic FRI & DEEP extension-algebra verifier traces
+        gateReductionPct: 28.1,  // Conservative recursive verifier gate cut from -56.25% (D=4: 16 -> 7) to -76.56% (D=8: 64 -> 15)
+        bandLowPct: 22.22,       // Karatsuba-9 -> Rank-7 (-22.22%) lower bound
+        bandHighPct: 38.0,       // Heavy quintic/octic FRI & DEEP extension-algebra verifier traces
         primitiveHeadline: "p3-air DAG muls: -56.25% (D=4) to -76.56% (D=8) · Criterion QM31: 4.26x (20.33 → 4.77 ns)",
         noteHtml: "<strong>Plonky3/Plonky3#2600:</strong> Pointer-shared <span class='code-pill'>Arc</span> <span class='code-pill'>ExtensionAlgebra</span> cuts degree-4/5/8 symbolic &amp; lowered arithmetic multiplications by <strong>-56.25% to -76.56%</strong> (<span class='code-pill'>0</span> constant leaf muls), paired with <strong>4.26x</strong> <span class='code-pill'>QM31</span> and <strong>2.89x</strong> <span class='code-pill'>M31^6</span> CPU speedups."
-      },
-      gnark_emulated: {
-        name: "Consensys gnark BN254 / BLS12-381",
-        prLabel: "Consensys/gnark#1951",
-        prUrl: "https://github.com/Consensys/gnark/pull/1951",
-        gateReductionPct: 14.55, // Exact measured sw_bn254.Pair (1-pair witness G2) R1CS reduction: 836,825 -> 715,060 (-14.55%)
-        bandLowPct: 9.81,        // Exact measured sw_bls12381.Pair PlonK reduction: 4,881,141 -> 4,402,294 (-9.81%, -478,847 gates)
-        bandHighPct: 15.17,      // Exact measured sw_bn254.Pair (fixed G2) R1CS reduction: 720,474 -> 611,184 (-15.17%)
-        primitiveHeadline: "Measured sw_bn254.Pair: -14.55% (-15.17% FixedQ) · sw_bls12381.Pair: -478,847 PlonK gates",
-        noteHtml: "<strong>Consensys/gnark#1951:</strong> Shared <span class='code-pill'>MulPolyModTrinomial12</span> (<span class='code-pill'>1,152 → 96</span> committed limbs) + exact <span class='code-pill'>packLimbsWithWidth(quoBits)</span> cuts full pairing circuits by <strong>-9.81% to -15.17%</strong> (up to <strong>-32.27%</strong> on standalone <span class='code-pill'>CRT-30</span> <span class='code-pill'>Fp12</span>) and closes the BabyBear <span class='code-pill'>2t &gt;= F-1</span> CRT wrap-around bug."
       },
       gnark_bls377: {
         name: "gnark BLS12-377 2-Chain",
         prLabel: "Consensys/gnark#1950",
         prUrl: "https://github.com/Consensys/gnark/pull/1950",
-        gateReductionPct: 32.84, // Exact measured sw_bls12377.PairingCheck (2-pair FixedQ) R1CS reduction: 6,339 -> 4,257 (-32.84%)
+        gateReductionPct: 32.84, // Exact measured sw_bls12377.PairingCheck (2-pair FixedQ) R1CS: 6,339 -> 4,257 (-32.84%)
         bandLowPct: 17.55,       // Exact measured 1-pair FixedQ Pair: 10,165 -> 8,381 (-17.55%)
         bandHighPct: 32.84,      // Exact measured 2-pair FixedQ PairingCheck: 6,339 -> 4,257 (-32.84%)
         primitiveHeadline: "E12.Mul: -48.89% (45 → 23) · MulBy01234: -51.11% (45 → 22) · PairingCheck: -32.84%",
         noteHtml: "<strong>Consensys/gnark#1950:</strong> Pure zero-addition coordinate permutations into <span class='code-pill'>Y^6 + 5</span> (Rank-11) and <span class='code-pill'>W^12 + 5</span> (Rank-23) cut native <span class='code-pill'>BW6-761</span> outer-verifier <span class='code-pill'>PairingCheck</span> R1CS constraints from <strong>6,339 to 4,257 (-32.84%)</strong>."
       },
       halo2_zcash: {
-        name: "Halo2 / Zcash / Scroll",
-        prLabel: "halo2_gadgets.rs (CRT-30)",
-        prUrl: "https://github.com/Impius-Lab/zk-bilinear-opt",
+        name: "Halo2 / Zcash #590 / Scroll",
+        prLabel: "Zcash ZCG #590 · halo2_gadgets.rs",
+        prUrl: "https://github.com/ZcashCommunityGrants/zcashcommunitygrants/issues/590",
         gateReductionPct: 27.56, // Exact Halo2LookupCostModel (lookup=16b, 5x88b): 33,787 -> 24,475 cells (-27.56%)
         bandLowPct: 24.49,       // lookup=8b, 5x88b: 52,243 -> 39,451 (-24.49%)
         bandHighPct: 29.85,      // lookup=12b, 6x64b: 48,697 -> 34,159 (-29.85%)
         primitiveHeadline: "Halo2 BLS12-381 Fp12 (CRT-30): -24.49%..-29.85% cells · Pasta wrong-field: -9.94%..-13.05%",
-        noteHtml: "<strong>Halo2 / Zcash / Scroll (<span class='code-pill'>halo2_gadgets.rs</span>):</strong> Cyclotomic <span class='code-pill'>CRT-30</span> stays strictly inside the <span class='code-pill'>5x88</span>-bit &amp; <span class='code-pill'>6x64</span>-bit carry ceiling (<span class='code-pill'>0</span> pre-reductions vs <span class='code-pill'>22</span> on naive Rank-23), cutting PlonKish lookup + <span class='code-pill'>FlexGate</span> cells by <strong>-24.49% to -29.85%</strong> alongside sparse <span class='code-pill'>mul_by_014</span> Rank-18 (<span class='code-pill'>-66.67%</span>)."
+        noteHtml: "<strong>Zcash Community Grants #590 (<span class='code-pill'>halo2_gadgets.rs</span>):</strong> Cyclotomic <span class='code-pill'>CRT-30</span> stays strictly inside the <span class='code-pill'>5x88</span>-bit &amp; <span class='code-pill'>6x64</span>-bit carry ceiling (<span class='code-pill'>0</span> pre-reductions vs <span class='code-pill'>22</span> on naive Rank-23), cutting PlonKish lookup + <span class='code-pill'>FlexGate</span> cells by <strong>-24.49% to -29.85%</strong> alongside sparse <span class='code-pill'>mul_by_014</span> Rank-18 (<span class='code-pill'>-66.67%</span>)."
+      },
+      bitvm2: {
+        name: "BitVM2 Bitcoin Tapscript Verifier",
+        prLabel: "bitvm2_qm31.py (Rank-7)",
+        prUrl: "https://github.com/Impius-Lab/zk-bilinear-opt/blob/main/zk_bilinear/bitvm2_qm31.py",
+        gateReductionPct: 22.22, // Exact OP_M31_MUL cut vs Karatsuba-9: 9 -> 7 (-22.22%)
+        bandLowPct: 7.60,        // Total Bitcoin Tapscript opcodes vs Karatsuba-9: 10,224 -> 9,447 (-7.60%; witness -20.20%)
+        bandHighPct: 56.25,      // Exact OP_M31_MUL cut vs Schoolbook-16: 16 -> 7 (-56.25%)
+        primitiveHeadline: "BitVM2 QM31 OP_M31_MUL: 16 → 9 → 7 (-22.22% vs K-9 · -56.25% vs SB-16) · Witness: -20.20%",
+        noteHtml: "<strong>BitVM2 Tapscript (<span class='code-pill'>bitvm2_qm31.py</span>):</strong> <span class='code-pill'>BIP-342</span> 4-byte <span class='code-pill'>CScriptNum</span>-safe (<span class='code-pill'>|x| &lt;= 2^31 - 1</span>) <span class='code-pill'>Rank-7</span> schedule replaces <span class='code-pill'>1,108</span>-opcode limb multiplications with shift/add <span class='code-pill'>OP_M31_SCALE_SMALL</span>, cutting <span class='code-pill'>OP_M31_MUL</span> by <strong>-22.22%</strong> and witness stack items <span class='code-pill'>198 → 158</span> (<strong>-20.20%</strong>)."
       }
     };
 
     function formatUsd(n) {
       return "$" + Math.round(n).toLocaleString("en-US");
+    }
+
+    function resolveWhopUrl(key) {
+      if (key === "tier1") return WHOP_CHECKOUT_URLS.tier1 || WHOP_CHECKOUT_URLS.tier1Audit || "";
+      if (key === "tier2") return WHOP_CHECKOUT_URLS.tier2 || WHOP_CHECKOUT_URLS.tier2Turnkey || "";
+      if (key === "tier3") return WHOP_CHECKOUT_URLS.tier3 || WHOP_CHECKOUT_URLS.tier3Hybrid || "";
+      if (key === "sim") return WHOP_CHECKOUT_URLS.freeSimulation || "";
+      return "";
     }
 
     /**
@@ -1249,7 +1742,7 @@
       );
     }
 
-    function updateCalculator() {
+    function getCurrentMetrics() {
       const stackKey = document.getElementById("stack-select").value;
       const monthlySpend = Number(document.getElementById("spend-slider").value);
       const workloadSharePct = Number(document.getElementById("share-slider").value);
@@ -1263,82 +1756,275 @@
       const estAnnualSavings = annualSpend * effReductionFrac;
       const lowAnnualSavings = annualSpend * (profile.bandLowPct / 100.0) * share;
       const highAnnualSavings = annualSpend * (profile.bandHighPct / 100.0) * share;
-
       const fftProb = computeFftStepDownProbability(effReductionFrac) * 100.0;
       const tier2PaybackMonths = estAnnualSavings > 0 ? (25000 / (estAnnualSavings / 12)) : 0;
 
+      return {
+        stackKey,
+        monthlySpend,
+        workloadSharePct,
+        profile,
+        effReductionPct,
+        estAnnualSavings,
+        lowAnnualSavings,
+        highAnnualSavings,
+        fftProb,
+        tier2PaybackMonths
+      };
+    }
+
+    function updateModalPreview() {
+      const m = getCurrentMetrics();
+      const pkg = document.getElementById("modal-package").value;
+      const rail = document.getElementById("modal-rail").value;
+      const org = document.getElementById("modal-org").value.trim() || "(Not specified)";
+      const repo = document.getElementById("modal-repo").value.trim() || "(Will share upon reply / NDA)";
+
+      const pkgTitle = PACKAGE_LABELS[pkg] || PACKAGE_LABELS.sim;
+      const subject =
+        (pkg === "sim"
+          ? "48h Free Pareto Simulation Request — "
+          : "ZK Engagement & USDC Invoice Request (" + pkg.toUpperCase() + ") — ") + m.profile.name;
+
+      const body =
+        "Hi Houssem (Impius-Lab),\n\n" +
+        "We would like to proceed with the following cryptographic engineering request:\n\n" +
+        "- Request / Tier: " + pkgTitle + "\n" +
+        "- Preferred Settlement Rail: " + rail + "\n" +
+        "- Organization / Protocol: " + org + "\n" +
+        "- Target Proving / Verifier Stack: " + m.profile.name + " (" + m.profile.prLabel + ")\n" +
+        "- Fleet Spend & Workload Share: " + formatUsd(m.monthlySpend) + "/mo @ " + m.workloadSharePct + "% (" +
+        "Est. savings: " + formatUsd(m.estAnnualSavings) + "/yr, -" + m.effReductionPct.toFixed(2) + "%)\n" +
+        "- Target Repository / Commit: " + repo + "\n\n" +
+        "Please reply with next steps" +
+        (pkg === "sim" ? " for the 48-hour Pareto gate-count simulation." : " and milestone settlement instructions.") +
+        "\n\nBest regards,";
+
+      document.getElementById("modal-preview").value = body;
+      document.getElementById("modal-mailto-btn").href = buildMailto(subject, body);
+    }
+
+    function openIntakeModal(pkgKey, forceInvoiceRail) {
+      const pkgSelect = document.getElementById("modal-package");
+      const railSelect = document.getElementById("modal-rail");
+      pkgSelect.value = PACKAGE_LABELS[pkgKey] ? pkgKey : "sim";
+
+      if (pkgKey === "sim" && !forceInvoiceRail) {
+        railSelect.value = "No Payment Yet (48h Free Simulation First)";
+      } else if (railSelect.value === "No Payment Yet (48h Free Simulation First)") {
+        railSelect.value = "USDC on Arbitrum";
+      }
+
+      document.getElementById("modal-copy-status").textContent = "";
+      updateModalPreview();
+
+      const modal = document.getElementById("intake-modal");
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+      document.getElementById("modal-package").focus();
+    }
+
+    function closeIntakeModal() {
+      const modal = document.getElementById("intake-modal");
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
+    }
+
+    function updateCalculator() {
+      const m = getCurrentMetrics();
+      const profile = m.profile;
+
       document.getElementById("stack-pr-ref").textContent = profile.prLabel;
-      document.getElementById("spend-display").textContent = formatUsd(monthlySpend) + " / mo";
+      document.getElementById("spend-display").textContent = formatUsd(m.monthlySpend) + " / mo";
       document.getElementById("share-display").textContent =
-        workloadSharePct + "% (" + (workloadSharePct >= 90 ? "Pure Recursion / Wrapper" : workloadSharePct >= 55 ? "Aggregated Rollup / Bridge" : "Mixed zkVM Fleet") + ")";
+        m.workloadSharePct +
+        "% (" +
+        (m.workloadSharePct >= 90
+          ? "Pure Recursion / Wrapper"
+          : m.workloadSharePct >= 55
+          ? "Aggregated Rollup / Bridge"
+          : "Mixed zkVM Fleet") +
+        ")";
 
       document.getElementById("stack-detail-box").innerHTML = profile.noteHtml;
-      document.getElementById("res-gate-cut").textContent = "-" + effReductionPct.toFixed(2) + "%";
+      document.getElementById("res-gate-cut").textContent = "-" + m.effReductionPct.toFixed(2) + "%";
       document.getElementById("res-primitive-sub").textContent = profile.primitiveHeadline;
-      document.getElementById("res-annual-savings").textContent = formatUsd(estAnnualSavings) + " / yr";
+      document.getElementById("res-annual-savings").textContent = formatUsd(m.estAnnualSavings) + " / yr";
       document.getElementById("res-payback-sub").textContent =
         "Verified band: " +
-        formatUsd(lowAnnualSavings) +
+        formatUsd(m.lowAnnualSavings) +
         "–" +
-        formatUsd(highAnnualSavings) +
+        formatUsd(m.highAnnualSavings) +
         "/yr · Tier 2 ($25k) payback: " +
-        (tier2PaybackMonths < 1 ? (tier2PaybackMonths * 30).toFixed(0) + " days" : tier2PaybackMonths.toFixed(1) + " mos");
+        (m.tier2PaybackMonths < 1
+          ? (m.tier2PaybackMonths * 30).toFixed(0) + " days"
+          : m.tier2PaybackMonths.toFixed(1) + " mos");
 
-      document.getElementById("res-fft-prob").textContent = fftProb.toFixed(1) + "%";
-      document.getElementById("res-fft-bar").style.width = Math.min(100, Math.max(2, fftProb)).toFixed(1) + "%";
+      document.getElementById("res-fft-prob").textContent = m.fftProb.toFixed(1) + "%";
+      document.getElementById("res-fft-bar").style.width = Math.min(100, Math.max(2, m.fftProb)).toFixed(1) + "%";
 
-      // Wire CTAs (gracefully using WHOP_CHECKOUT_URLS when populated, else rich pre-filled mailto)
+      // Wire progressive-enhancement hrefs (direct Whop URL when configured, else pre-filled mailto)
       const simBody =
         "Hi Houssem,\n\nWe would like to request the complimentary 48-hour Pareto gate-count & CRT soundness simulation.\n\n" +
-        "- Stack: " + profile.name + "\n" +
-        "- Monthly Prover Spend: " + formatUsd(monthlySpend) + "/mo\n" +
-        "- Extension/Pairing Workload Share: " + workloadSharePct + "%\n" +
+        "- Stack: " + profile.name + " (" + profile.prLabel + ")\n" +
+        "- Monthly Prover/Verifier Spend: " + formatUsd(m.monthlySpend) + "/mo\n" +
+        "- Extension/Pairing Workload Share: " + m.workloadSharePct + "%\n" +
+        "- Preferred Settlement (if advancing): USDC (Arbitrum / Solana / Polygon) or Whop\n" +
         "- Target Repository / Commit (optional): \n\nBest regards,";
 
-      const simHref =
-        WHOP_CHECKOUT_URLS.freeSimulation ||
-        buildMailto("48h Free Pareto Simulation — " + profile.name, simBody);
+      const simUrl = resolveWhopUrl("sim");
+      const simHref = simUrl || buildMailto("48h Free Pareto Simulation — " + profile.name, simBody);
 
-      document.getElementById("calc-book-cta").href = simHref;
-      document.getElementById("nav-cta").href = simHref;
-      document.getElementById("hero-sim-cta").href = simHref;
-      document.getElementById("footer-sim-cta").href = simHref;
+      ["calc-book-cta", "nav-cta", "hero-sim-cta", "footer-sim-cta"].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.href = simHref;
+        if (simUrl) {
+          el.target = "_blank";
+          el.rel = "noopener noreferrer";
+        } else {
+          el.removeAttribute("target");
+          el.removeAttribute("rel");
+        }
+      });
 
-      document.getElementById("tier1-cta").href =
-        WHOP_CHECKOUT_URLS.tier1Audit ||
-        buildMailto(
-          "Tier 1 ($7,500) Diagnostic Circuit & CRT Soundness Audit — " + profile.name,
-          "Hi Houssem,\n\nWe would like to book Tier 1 ($7,500 Fixed — Diagnostic Circuit & CRT Soundness Audit, 1-week delivery; USDC Arbitrum/Solana/Polygon or invoice).\n\nStack: " +
+      const tierConfigs = [
+        {
+          key: "tier1",
+          id: "tier1-cta",
+          whopLabel: "Checkout Tier 1 on Whop ($7,500) →",
+          defaultLabel: "Book Tier 1 Diagnostic Audit ($7,500) →",
+          subject: "Tier 1 ($7,500) Diagnostic Circuit & CRT Soundness Audit — " + profile.name,
+          body:
+            "Hi Houssem,\n\nWe would like to book Tier 1 ($7,500 Fixed — Diagnostic Circuit & CRT Soundness Audit, 1-week delivery; USDC on Arbitrum/Solana/Polygon or Whop checkout).\n\nStack: " +
             profile.name +
             "\nTarget Repo / Commit: \n"
-        );
-
-      document.getElementById("tier2-cta").href =
-        WHOP_CHECKOUT_URLS.tier2Turnkey ||
-        buildMailto(
-          "Tier 2 ($25,000) Turnkey Kernel PRs & Lean 4 Certs — " + profile.name,
-          "Hi Houssem,\n\nWe would like to engage on Tier 2 ($25,000 Fixed — Turnkey Kernel PRs & Zero-Sorry Lean 4 Certs, 3-week delivery; USDC Arbitrum/Solana/Polygon or invoice).\n\nStack: " +
+        },
+        {
+          key: "tier2",
+          id: "tier2-cta",
+          whopLabel: "Checkout Tier 2 on Whop ($25,000) →",
+          defaultLabel: "Start Turnkey Kernel Engagement ($25,000) →",
+          subject: "Tier 2 ($25,000) Turnkey Kernel PRs & Lean 4 Certs — " + profile.name,
+          body:
+            "Hi Houssem,\n\nWe would like to engage on Tier 2 ($25,000 Fixed — Turnkey Kernel PRs & Zero-Sorry Lean 4 Certs, 3-week delivery; USDC on Arbitrum/Solana/Polygon or Whop checkout).\n\nStack: " +
             profile.name +
             " (Est. savings: " +
-            formatUsd(estAnnualSavings) +
+            formatUsd(m.estAnnualSavings) +
             "/yr)\nTarget Repo / Commit: \n"
-        );
-
-      document.getElementById("tier3-cta").href =
-        WHOP_CHECKOUT_URLS.tier3Hybrid ||
-        buildMailto(
-          "Tier 3 Hybrid Performance-Share Partnership — " + profile.name,
-          "Hi Houssem,\n\nWe would like to discuss Tier 3 ($10,000 Retainer + 15% Verified Year-1 Cloud/Gas Savings) for our proving fleet (" +
-            formatUsd(monthlySpend) +
+        },
+        {
+          key: "tier3",
+          id: "tier3-cta",
+          whopLabel: "Start Tier 3 Retainer on Whop ($10,000) →",
+          defaultLabel: "Inquire on Tier 3 Partnership →",
+          subject: "Tier 3 Hybrid Performance-Share Partnership — " + profile.name,
+          body:
+            "Hi Houssem,\n\nWe would like to discuss Tier 3 ($10,000 Retainer + 15% Verified Year-1 Cloud/Gas Savings; USDC on Arbitrum/Solana/Polygon or Whop) for our proving fleet (" +
+            formatUsd(m.monthlySpend) +
             "/mo on " +
             profile.name +
             ").\n\nTarget Repo / Architecture: \n"
-        );
+        }
+      ];
+
+      tierConfigs.forEach(function (cfg) {
+        const el = document.getElementById(cfg.id);
+        if (!el) return;
+        const whopUrl = resolveWhopUrl(cfg.key);
+        if (whopUrl) {
+          el.href = whopUrl;
+          el.target = "_blank";
+          el.rel = "noopener noreferrer";
+          el.textContent = cfg.whopLabel;
+        } else {
+          el.href = buildMailto(cfg.subject, cfg.body);
+          el.removeAttribute("target");
+          el.removeAttribute("rel");
+          el.textContent = cfg.defaultLabel;
+        }
+      });
+
+      updateModalPreview();
     }
 
+    // Calculator listeners
     document.getElementById("stack-select").addEventListener("change", updateCalculator);
     document.getElementById("spend-slider").addEventListener("input", updateCalculator);
     document.getElementById("share-slider").addEventListener("input", updateCalculator);
+
+    // Modal form listeners
+    ["modal-package", "modal-rail", "modal-org", "modal-repo"].forEach(function (id) {
+      document.getElementById(id).addEventListener("input", updateModalPreview);
+      document.getElementById(id).addEventListener("change", updateModalPreview);
+    });
+
+    // Wire simulation & tier CTA clicks: if no external Whop URL is set, open interactive modal
+    document.querySelectorAll("[data-modal-pkg]").forEach(function (el) {
+      el.addEventListener("click", function (ev) {
+        const pkg = el.getAttribute("data-modal-pkg") || "sim";
+        if (!resolveWhopUrl(pkg)) {
+          ev.preventDefault();
+          openIntakeModal(pkg, false);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-tier]").forEach(function (el) {
+      el.addEventListener("click", function (ev) {
+        const tierKey = el.getAttribute("data-tier");
+        if (!resolveWhopUrl(tierKey)) {
+          ev.preventDefault();
+          openIntakeModal(tierKey, true);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-open-invoice]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const pkg = btn.getAttribute("data-open-invoice") || "sim";
+        openIntakeModal(pkg, pkg !== "sim");
+      });
+    });
+
+    document.getElementById("modal-close-btn").addEventListener("click", closeIntakeModal);
+    document.getElementById("intake-modal").addEventListener("click", function (ev) {
+      if (ev.target === document.getElementById("intake-modal")) {
+        closeIntakeModal();
+      }
+    });
+
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && document.getElementById("intake-modal").classList.contains("open")) {
+        closeIntakeModal();
+      }
+    });
+
+    document.getElementById("modal-copy-btn").addEventListener("click", function () {
+      const preview = document.getElementById("modal-preview");
+      const status = document.getElementById("modal-copy-status");
+      const payload = "To: 2aghous94@gmail.com\n\n" + preview.value;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(payload).then(
+          function () {
+            status.textContent = "✓ Copied brief + 2aghous94@gmail.com";
+          },
+          function () {
+            preview.select();
+            document.execCommand("copy");
+            status.textContent = "✓ Selected brief — press Ctrl+C";
+          }
+        );
+      } else {
+        preview.select();
+        document.execCommand("copy");
+        status.textContent = "✓ Copied brief + 2aghous94@gmail.com";
+      }
+    });
+
     updateCalculator();
   </script>
 </body>

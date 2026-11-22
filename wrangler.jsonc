@@ -1,0 +1,16 @@
+{
+  // Cloudflare Workers Static Assets configuration for the Impius-Lab B2B Storefront.
+  // Serves `./docs/index.html` directly at `/` with HTTP 200 from Cloudflare's edge
+  // with zero Worker invocation overhead required.
+  // Note: If Google Search Console HTML file verification (`/google*.html`) is added later,
+  // pair with a minimal Worker entrypoint and `"run_worker_first": ["/google*.html"]`
+  // so `.html` is not 307-stripped by `auto-trailing-slash`.
+  "name": "impius-lab-zk",
+  "compatibility_date": "2026-11-19",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./docs",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  }
+}
