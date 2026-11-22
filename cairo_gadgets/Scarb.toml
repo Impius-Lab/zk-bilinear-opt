@@ -1,0 +1,13 @@
+[package]
+name = "zk_qm31_opt"
+version = "0.1.0"
+edition = "2024_07"
+description = "Certified QM31 multiplication & squaring schedules (Schoolbook-16, Unimodular Karatsuba-9/6, Winograd Rank-7) over u64-backed Mersenne-31 for Cairo verifiers."
+license = "MIT OR Apache-2.0"
+
+[cairo]
+enable-gas = false
+allow-warnings = false
+
+[dev-dependencies]
+cairo_test = "2.21.0"
