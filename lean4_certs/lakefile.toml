@@ -1,0 +1,6 @@
+name = "ZkBilinearCerts"
+version = "0.1.0"
+defaultTargets = ["ZkBilinearCerts"]
+
+[[lean_lib]]
+name = "ZkBilinearCerts"
