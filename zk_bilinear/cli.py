@@ -58,12 +58,12 @@ def render_benchmarks_markdown() -> str:
     lines.append("# Reproducible Benchmark & Constraint-Reduction Report (`zk-bilinear-opt`)")
     lines.append("")
     lines.append("> **Reproducibility Guarantee**: Every figure in this report is computed deterministically")
-    lines.append("> from basis-certified integer-rational bilinear decompositions $(U, V, W_{\\mathbb{Z}}, D)$")
+    lines.append("> from basis-certified integer-rational bilinear decompositions $`(U, V, W_{\\mathbb{Z}}, D)`$")
     lines.append("> via `.venv\\Scripts\\python.exe -m zk_bilinear verify` and `.venv\\Scripts\\python.exe -m zk_bilinear generate-all`.")
     lines.append("")
     lines.append("## 1. Native STARK / AIR / R1CS Extension Towers (`stwo` & `Plonky3` / `SP1`)")
     lines.append("")
-    lines.append("| Target Extension | Ecosystem | Prime $p$ | Deg $d$ | Baseline Muls | Certified Optimal Rank ($2d-1$) | Mul / R1CS / Degree-2 AIR Savings | Width-4 PlonK Total Gates | Peak Accumulator Bits (Limit) | Certificate SHA-256 (prefix) |")
+    lines.append("| Target Extension | Ecosystem | Prime $`p`$ | Deg $`d`$ | Baseline Muls | Certified Optimal Rank ($`2d-1`$) | Mul / R1CS / Degree-2 AIR Savings | Width-4 PlonK Total Gates | Peak Accumulator Bits (Limit) | Certificate SHA-256 (prefix) |")
     lines.append("| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |")
 
     native_targets = [
@@ -86,10 +86,10 @@ def render_benchmarks_markdown() -> str:
         lim = 63 if spec.native_accumulator_bits == 64 else 128
         sha = schedule_sha256(opt, spec.prime)[:12]
         p_disp = {
-            "M31": "$2^{31}-1$",
-            "BabyBear": "$2^{31}-2^{27}+1$",
-            "KoalaBear": "$2^{31}-2^{24}+1$",
-            "Goldilocks": "$2^{64}-2^{32}+1$",
+            "M31": "$`2^{31}-1`$",
+            "BabyBear": "$`2^{31}-2^{27}+1`$",
+            "KoalaBear": "$`2^{31}-2^{24}+1`$",
+            "Goldilocks": "$`2^{64}-2^{32}+1`$",
         }[spec.prime_name]
         lines.append(
             f"| `{tname}` | {spec.ecosystem} | {p_disp} | {spec.degree} | {spec.baseline_muls} ({spec.baseline_name}) | "
@@ -98,19 +98,19 @@ def render_benchmarks_markdown() -> str:
         )
 
     lines.append("")
-    lines.append("## 2. Non-Native Emulated Pairing Towers (`Consensys/gnark` $4\\times 64$-bit `BN254` & $6\\times 64$-bit `BLS12-381`)")
+    lines.append("## 2. Non-Native Emulated Pairing Towers (`Consensys/gnark` $`4\\times 64`$-bit `BN254` & $`6\\times 64`$-bit `BLS12-381`)")
     lines.append("")
     lines.append("In non-native emulated field circuits over a 254-bit SNARK scalar field (such as `gnark`'s `std/algebra/emulated`),")
     lines.append("two adjacent 64-bit limb equations are packed per carry constraint (`128 + 64 = 192` bits, plus `4` bits for signed carry + co-addition), leaving a **56-bit overflow ceiling**")
-    lines.append("(`192 + 4 + 56 = 252 < 254` bits) for $L \\cdot \\|U_\\ell\\|_1 \\cdot \\|V_\\ell\\|_1$ before mandatory pre-multiplication `Reduce()` calls are triggered,")
-    lines.append("and a **64-bit ceiling** on $\\|W_{\\mathbb{Z},k}\\|_1 + D$ before output modular-reduction quotients split into multi-limb witnesses.")
+    lines.append("(`192 + 4 + 56 = 252 < 254` bits) for $`L \\cdot \\Vert U_\\ell\\Vert_1 \\cdot \\Vert V_\\ell\\Vert_1`$ before mandatory pre-multiplication `Reduce()` calls are triggered,")
+    lines.append("and a **64-bit ceiling** on $`\\Vert W_{\\mathbb{Z},k}\\Vert_1 + D`$ before output modular-reduction quotients split into multi-limb witnesses.")
     lines.append("")
 
     for tname, header_title in [
-        ("BN254_Fp6", "### 2.1 `BN254` $\\mathbb{F}_{p^6}$ ($4\\times 64$-bit Limbs, $\\xi = 9 + u$, Simple Iso $v^6 - 18v^3 + 82 = 0$)"),
-        ("BN254_Fp12", "### 2.2 `BN254` $\\mathbb{F}_{p^{12}}$ ($4\\times 64$-bit Limbs, $\\xi = 9 + u$, Simple Iso $w^{12} - 18w^6 + 82 = 0$)"),
-        ("BLS12_381_Fp6", "### 2.3 `BLS12-381` $\\mathbb{F}_{p^6}$ ($6\\times 64$-bit Limbs, $\\xi = 1 + u$, Simple Iso $v^6 - 2v^3 + 2 = 0$)"),
-        ("BLS12_381_Fp12", "### 2.4 `BLS12-381` $\\mathbb{F}_{p^{12}}$ ($6\\times 64$-bit Limbs, $\\xi = 1 + u$, Simple Iso $w^{12} - 2w^6 + 2 = 0$)"),
+        ("BN254_Fp6", "### 2.1 `BN254` $`\\mathbb{F}_{p^6}`$ ($`4\\times 64`$-bit Limbs, $`\\xi = 9 + u`$, Simple Iso $`v^6 - 18v^3 + 82 = 0`$)"),
+        ("BN254_Fp12", "### 2.2 `BN254` $`\\mathbb{F}_{p^{12}}`$ ($`4\\times 64`$-bit Limbs, $`\\xi = 9 + u`$, Simple Iso $`w^{12} - 18w^6 + 82 = 0`$)"),
+        ("BLS12_381_Fp6", "### 2.3 `BLS12-381` $`\\mathbb{F}_{p^6}`$ ($`6\\times 64`$-bit Limbs, $`\\xi = 1 + u`$, Simple Iso $`v^6 - 2v^3 + 2 = 0`$)"),
+        ("BLS12_381_Fp12", "### 2.4 `BLS12-381` $`\\mathbb{F}_{p^{12}}`$ ($`6\\times 64`$-bit Limbs, $`\\xi = 1 + u`$, Simple Iso $`w^{12} - 2w^6 + 2 = 0`$)"),
     ]:
         lines.append(header_title)
         lines.append("")
@@ -121,7 +121,7 @@ def render_benchmarks_markdown() -> str:
         base_plonk = base_cost.emulated.plonk_total_gates
         base_muls = base_cost.rank
 
-        lines.append("| Schedule | Family | Native $\\mathbb{F}_p$ Muls ($r$) | Mul Savings | $\\log_2(UV)$ Slack | $\\log_2(D)$ | Pre-Mul `Reduce()` | Total Range-Check Bits | Net Groth16 R1CS (vs Baseline) | Net PlonK16 Gates (vs Baseline) | Pareto? |")
+        lines.append("| Schedule | Family | Native $`\\mathbb{F}_p`$ Muls ($`r`$) | Mul Savings | $`\\log_2(UV)`$ Slack | $`\\log_2(D)`$ | Pre-Mul `Reduce()` | Total Range-Check Bits | Net Groth16 R1CS (vs Baseline) | Net PlonK16 Gates (vs Baseline) | Pareto? |")
         lines.append("| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |")
 
         for sched, fcost, is_par in frontier:
@@ -157,11 +157,11 @@ def render_benchmarks_markdown() -> str:
 
     lines.append("## 3. Key Architectural Takeaway: Why Naive `23`-Mul Vandermonde Loses to `CRT-30` & `Tower-33` in Non-Native Limbs")
     lines.append("")
-    lines.append("1. **Native $\\mathbb{F}_p$ Circuits (e.g., BW6-761 / Pasta 2-chains / Native R1CS)**: Scalar multiplications by $D^{-1} W_{\\mathbb{Z}} \\bmod p$ fold into linear combinations for **zero** multiplicative gates, so `Rank-23` Vandermonde achieves the exact Winograd / Alder–Strassen global minimum of **23 R1CS constraints** (`-57.41%` vs `54`).")
-    lines.append(f"2. **Emulated $L\\times 64$-bit Non-Native Circuits (`gnark` Groth16 / PlonK)**: `Vandermonde-Rank23` evaluates at nodes up to $\\alpha = -11$, where $|-11|^{{11}} \\approx 2^{{38.1}}$ pushes $\\|U_\\ell\\|_1 \\|V_\\ell\\|_1$ to **`77` bits** (`> 56`-bit 2-limb malicious-witness non-wrap limit), triggering **{v23_reds} mandatory pre-multiplication `Reduce()` gadgets**, while $D = \\operatorname{{lcm}}(\\dots) \\approx 2^{{65.5}}$ and $\\|W_{{\\mathbb{{Z}}}}\\|_1 \\approx 2^{{113}}$ force 2-limb output reduction quotients.")
+    lines.append("1. **Native $`\\mathbb{F}_p`$ Circuits (e.g., BW6-761 / Pasta 2-chains / Native R1CS)**: Scalar multiplications by $`D^{-1} W_{\\mathbb{Z}} \\bmod p`$ fold into linear combinations for **zero** multiplicative gates, so `Rank-23` Vandermonde achieves the exact Winograd / Alder–Strassen global minimum of **23 R1CS constraints** (`-57.41%` vs `54`).")
+    lines.append(f"2. **Emulated $`L\\times 64`$-bit Non-Native Circuits (`gnark` Groth16 / PlonK)**: `Vandermonde-Rank23` evaluates at nodes up to $`\\alpha = -11`$, where $`\\vert -11\\vert^{{11}} \\approx 2^{{38.1}}`$ pushes $`\\Vert U_\\ell\\Vert_1 \\Vert V_\\ell\\Vert_1`$ to **`77` bits** (`> 56`-bit 2-limb malicious-witness non-wrap limit), triggering **{v23_reds} mandatory pre-multiplication `Reduce()` gadgets**, while $`D = \\mathrm{{lcm}}(\\dots) \\approx 2^{{65.5}}`$ and $`\\Vert W_{{\\mathbb{{Z}}}}\\Vert_1 \\approx 2^{{113}}`$ force 2-limb output reduction quotients.")
     lines.append("3. **The Certified Non-Native Sweet Spots**:")
-    lines.append(f"   - **On $\\mathbb{{F}}_{{p^6}}$**: `Rank-11` (`{{-5..4, inf}}`) stays strictly inside the 2-limb packing envelope (`0` pre-reductions, `18.5`-bit $D$), achieving **both** optimal native rank (`18 -> 11`, `-38.89%`) **and** the global minimum net Groth16 R1CS (`-{bn6_g16_sav:.2f}%` on BN254, `-{bls6_g16_sav:.2f}%` on BLS12-381) and PlonK16 (`-{bn6_plk_sav:.2f}%` / `-{bls6_plk_sav:.2f}%`) constraint counts!")
-    lines.append(f"   - **On $\\mathbb{{F}}_{{p^{{12}}}}$**: `CRT-30` (`9` small linear nodes `{{-4..3, inf}}` + `7` cyclotomic/small quadratic moduli, `0` pre-reductions, single-word output quotients) and `Tower-33` (`Toom-6` over $\\mathbb{{F}}_{{p^2}}$ $\\times$ `Karatsuba-2`, `18.5`-bit $D$, `0` pre-reductions) eliminate 100% of pre-multiplication reductions and beat `Tower-54` by **`-{bn12_crt30_sav:.2f}%` (BN254) and `-{bls12_crt30_sav:.2f}%` (BLS12-381) net Groth16 R1CS constraints AFTER counting every carry & range-check bit**, cleanly outperforming `Vandermonde-23`!")
+    lines.append(f"   - **On $`\\mathbb{{F}}_{{p^6}}`$**: `Rank-11` (`{{-5..4, inf}}`) stays strictly inside the 2-limb packing envelope (`0` pre-reductions, `18.5`-bit $`D`$), achieving **both** optimal native rank (`18 -> 11`, `-38.89%`) **and** the global minimum net Groth16 R1CS (`-{bn6_g16_sav:.2f}%` on BN254, `-{bls6_g16_sav:.2f}%` on BLS12-381) and PlonK16 (`-{bn6_plk_sav:.2f}%` / `-{bls6_plk_sav:.2f}%`) constraint counts!")
+    lines.append(f"   - **On $`\\mathbb{{F}}_{{p^{{12}}}}`$**: `CRT-30` (`9` small linear nodes `{{-4..3, inf}}` + `7` cyclotomic/small quadratic moduli, `0` pre-reductions, single-word output quotients) and `Tower-33` (`Toom-6` over $`\\mathbb{{F}}_{{p^2}}`$ $`\\times`$ `Karatsuba-2`, `18.5`-bit $`D`$, `0` pre-reductions) eliminate 100% of pre-multiplication reductions and beat `Tower-54` by **`-{bn12_crt30_sav:.2f}%` (BN254) and `-{bls12_crt30_sav:.2f}%` (BLS12-381) net Groth16 R1CS constraints AFTER counting every carry & range-check bit**, cleanly outperforming `Vandermonde-23`!")
     lines.append("")
     return "\n".join(lines)
 
