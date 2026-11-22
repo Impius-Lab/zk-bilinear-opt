@@ -1,13 +1,14 @@
 # Upstream GitHub Pull Request & Issue Specifications
 
-Ready-to-paste upstream PR descriptions and engineering briefs backed by live `Consensys/gnark` branches (`https://github.com/Impius-Lab/gnark`) and reproducible certificates in `targets/`, `rust_crates/`, and `go_gadgets/`.
+Ready-to-paste upstream PR descriptions backed by live open `Consensys/gnark` PRs ([`Consensys/gnark#1950`](https://github.com/Consensys/gnark/pull/1950) & [`Consensys/gnark#1951`](https://github.com/Consensys/gnark/pull/1951)), R2-verified `starkware-libs/proving` (`Impius-Lab/proving` branch `perf/qm31-min-rank-and-verifier-ops` @ `149dcdf`) and `Plonky3/Plonky3` (`Impius-Lab/Plonky3` branch `perf/min-rank-extension-algebra` @ `43c843c`) branches, and reproducible certificates in `targets/`, `rust_crates/`, and `go_gadgets/`.
 
 ---
 
 ## 1A. `Consensys/gnark` PR 1 — Native 2-Chain `BLS12-377` Minimum-Rank R1CS Gadgets (`-48.89%` `E12.Mul`, `-32.84%` `PairingCheck`)
 
-- **Live Branch**: `perf/bls12377-bilinear-rank11-rank23` (base `Consensys/gnark` `master` `38a87d1`)
-- **Proposed PR Title**: `perf(fields_bls12377): use minimum-rank bilinear interpolation for R1CS E6/E12 arithmetic (-14.8% Pair, -32.8% PairingCheck)`
+- **Live Upstream PR**: [`Consensys/gnark#1950`](https://github.com/Consensys/gnark/pull/1950) (`https://github.com/Consensys/gnark/pull/1950`)
+- **Live Branch**: `perf/bls12377-bilinear-rank11-rank23` (`5b09aa5`, base `Consensys/gnark` `master` `38a87d1`)
+- **PR Title**: `perf(fields_bls12377): use minimum-rank bilinear interpolation for R1CS E6/E12 arithmetic (-14.8% Pair, -32.8% PairingCheck)`
 
 ### Ready-to-Paste Upstream PR Description
 
@@ -53,8 +54,9 @@ go test -v ./internal/stats -run "TestCircuitStatistics/.*bls12377"
 
 ## 1B. `Consensys/gnark` PR 2 — Non-Native Emulated `E12` / `mvCheck` Optimization & Small-Field CRT Soundness Fix (`-14.6%` `BN254` `Pair`, `-9.7%` `BLS12-381` `Pair`)
 
-- **Live Branch**: `perf/emulated-e12-bilinear-mvcheck` (base `Consensys/gnark` `master` `38a87d1`)
-- **Proposed PR Title**: `perf(std/math/emulated,algebra/emulated): tighten mvCheck quotient/CRT bounds and share E12 bilinear checks (-14.6% BN254 Pair, -9.7% BLS12-381 Pair)`
+- **Live Upstream PR**: [`Consensys/gnark#1951`](https://github.com/Consensys/gnark/pull/1951) (`https://github.com/Consensys/gnark/pull/1951`)
+- **Live Branch**: `perf/emulated-e12-bilinear-mvcheck` (`4a43edf`, base `Consensys/gnark` `master` `38a87d1`)
+- **PR Title**: `perf(std/math/emulated,algebra/emulated): tighten mvCheck quotient/CRT bounds and share E12 bilinear checks (-14.6% BN254 Pair, -9.7% BLS12-381 Pair)`
 
 ### Ready-to-Paste Upstream PR Description
 
@@ -111,46 +113,123 @@ go test ./internal/stats
 
 ---
 
-## 2. `starkware-libs/stwo` — Optimal 7-Mul `QM31` Recursive AIR & Verifier Gadget (`-22.22%`)
+## 2. `starkware-libs/proving` (`stwo`) — Scalar `CM31`/`QM31` Acceleration (`2.71x` Mul) & Multi-Backend AIR/Verifier `QM31` Mul Compression (`22 -> 9`, `-59.1%`)
 
-### Proposed Issue / PR Title
-`perf(qm31): reduce QM31 bilinear constraint rank from 9 to 7 (-22.22%) via unimodular u^4 - 4u^2 + 5 isomorphism`
+- **Live Branch**: `perf/qm31-min-rank-and-verifier-ops` (`149dcdf`, base `starkware-libs/proving` `main` `9bc8c8d`)
+- **Compare URL**: [`https://github.com/starkware-libs/proving/compare/main...Impius-Lab:proving:perf/qm31-min-rank-and-verifier-ops`](https://github.com/starkware-libs/proving/compare/main...Impius-Lab:proving:perf/qm31-min-rank-and-verifier-ops)
+- **Proposed PR Title**: `perf(stwo,airs): accelerate CM31/QM31 scalar ops (2.71x mul) and cut AIR/verifier QM31 muls 22 -> 9 (-59.1%)`
 
-### Technical Summary for Maintainers
-Currently, `QM31` (`CM31[u]/(u^2 - (2 + i))` over $`p = 2^{31} - 1`$) multiplication in recursive AIR constraints and non-SIMD verifier paths uses 2-level Karatsuba (`3 * 3 = 9` `M31` bilinear multiplications).
+### Ready-to-Paste Upstream PR Description
 
-Because $`u^2 = 2 + i \implies (u^2 - 2)^2 = i^2 = -1`$, `QM31` is canonically isomorphic to the simple monic quartic field $`\mathbb{M}_{31}[u]/(u^4 - 4u^2 + 5)`$ via the **division-free unimodular ($`\det = 1`$) integer change of basis**:
-```text
-(a0 + a1*i) + (b0 + b1*i)*u  <-->  (a0 - 2*a1) + (b0 - 2*b1)*u + a1*u^2 + b1*u^3
+#### Summary
+In `crates/stwo/src/core/fields/{cm31.rs,qm31.rs}` and `crates/airs` (`Qm31Ops` & `QM31AddMulOpcode`), scalar `QM31` (`CM31[u]/(u^2 - (2 + i))` over $`P = 2^{31} - 1`$) and symbolic `FeltExpr` `QM31` multiplication previously expanded naive 20-multiplication schoolbook products (`22` total multiplications per `QM31` product in generated AIR/verifier components once the two `* 2` non-residue scalings are counted).
+
+This PR delivers both scalar `stwo` prover/verifier field speedups (`#no_std`-clean) and multi-backend `[AIR-GENERATED]` constraint multiplication reductions across Rust SIMD, `stwo-circuits`, and `stwo_cairo_verifier`:
+
+1. **Scalar `CM31` & `QM31` (`crates/stwo/src/core/fields/{cm31.rs,qm31.rs}`, `#![no_std]` compatible)**:
+   - **`CM31::mul` (`1.47x`, `-32.0%`) & `CM31::square` (`4 -> 2` `M31` muls)**: 3-mul Gauss/Karatsuba multiplication and 2-mul `(a + b)(a - b), 2ab` squaring.
+   - **`QM31::mul` (`2.71x` 8-way throughput / `2.44x` 1-way latency) & `QM31::square` (`2.55x` / `2.25x`)**: Delayed-`u64` outer Karatsuba (`impl Mul for QM31`) and specialized 7-mul delayed-`u64` `QM31::square` performing **a single Mersenne reduction (`reduce_u64`) per output coordinate**, plus add-only `pub const fn mul_by_r(CM31) -> CM31` in `QM31::inverse`. Exhaustively proven overflow-free and strictly canonical ($`\in [0, P - 1]`$) across all $`[0, P - 1]^4`$ inputs (`s_im <= 0xfffffffa_00000008 < u64::MAX`, `fold_u64 <= 10,737,418,224 < 6P`, `reduce_u64(v) < P` for all `v in 0..=u64::MAX`).
+   - **`pub const fn QM31::mul_rank7`**: Exposes the exact Winograd / Alder–Strassen 7-multiplication kernel via the unimodular ($`\det = 1`$) simple-extension isomorphism $`\mathrm{QM31} \cong \mathbb{M}_{31}[u]/(u^4 - 4u^2 + 5)`$ interpolated on $`\{-2, -1, 0, 1, 2, 3, \infty\}`$.
+2. **Multi-Backend Symbolic `FeltExpr` `QM31` Multiplication (`crates/airs/src/convolution_utils/qm31_mul.rs`)**:
+   - **Architectural Cost Dichotomy (`Const * Var` Lowering)**: In `crates/air_code_gen` and `crates/circuits/src/ops.rs`, every non-unit `Const * Var` ($`c \notin \{0, 1\}`$) in `FeltExpr` lowers to a `PackedM31 * PackedM31` SIMD mul in `SimdDomainEvaluator`, a `qm31_const * QM31` mul in `stwo_cairo_verifier`, and a `Qm31Ops::Mul` circuit gate in `stwo-circuits`. Consequently, `qm31_mul_expr_in_air` (wired into `Qm31Ops` and `QM31AddMulOpcode`) uses **unimodular $`\{0, +1, -1\}`$ nested Karatsuba-9 with `AirBuilder::let_for_constraint` sharing**: `9` `Var * Var` muls + `0` non-unit `Const * Var` muls = **`9` total multiplications vs `22` (`-59.1%`, `-13` muls)** and `36` vs `38` total ops (`-5.3%`), preserving exact constraint degree `3` and identical `sample_evaluations.json` polynomials. Meanwhile, `qm31_mul_expr` and `qm31_mul_rank7_in_air` (`20 -> 7` `Var * Var` muls, `-65.0%`) are provided and tested for degree-0-folded backends.
+   - Regenerated all 5 downstream `[AIR-GENERATED]` components (`cairo-air`, `cairo_verifier`, `circuit_prover`, `circuit_verifier`, `stwo_cairo_verifier`) and synced `MULTIVERIFIER_PREPROCESSED_ROOT`, `test_data/multiverifier/proof.bin`, and canonical small circuit registries.
+
+#### Measured `stwo` Scalar CPU Benchmarks (`--release`, `core::hint::black_box`, Median of 5 Trials)
+
+| Operation (`crates/stwo`) | Before (`9bc8c8d`) | After (`149dcdf`) | $`\Delta`$ / Speedup | Notes |
+| :--- | :---: | :---: | :---: | :--- |
+| `CM31::mul` (8-way throughput) | `2.569 ns` | **`1.748 ns`** | **`-32.0%` (`1.47x`)** | `4 -> 3` `M31` muls |
+| `CM31::square` (8-way throughput) | `2.329 ns` | **`2.033 ns`** | **`-12.7%` (`1.15x`)** | `4 -> 2` `M31` muls |
+| `QM31::mul` (`impl Mul`, 8-way) | `13.004 ns` | **`4.797 ns`** | **`-63.1%` (`2.71x`)** | Delayed-`u64` outer Karatsuba (1 red/limb) |
+| `QM31::mul` (`impl Mul`, 1-way) | `19.970 ns` | **`8.196 ns`** | **`-59.0%` (`2.44x`)** | Dependent chain latency |
+| `QM31::mul_rank7` (`const fn`, 1-way) | `19.970 ns` | **`12.616 ns`** | **`-36.8%` (`1.58x`)** | `7` `M31` muls mod $`u^4 - 4u^2 + 5`$ |
+| `QM31::square` (8-way throughput) | `13.717 ns` | **`5.376 ns`** | **`-60.8%` (`2.55x`)** | Specialized `7`-mul delayed-`u64` |
+| `QM31::square` (1-way latency) | `22.127 ns` | **`9.824 ns`** | **`-55.6%` (`2.25x`)** | Dependent chain latency |
+| `QM31::inverse` | `103.504 ns` | **`101.218 ns`** | **`-2.2%`** | Add-only `mul_by_r` |
+
+#### Measured Multi-Backend `[AIR-GENERATED]` Multiplication Counts
+
+| Generated Component / Compiled JSON | Muls Before (`9bc8c8d`) | Muls After (`149dcdf`) | Total Mul $`\Delta`$ | Isolated `QM31` Product |
+| :--- | :---: | :---: | :---: | :---: |
+| `crates/cairo-air/src/components/qm_31_add_mul_opcode.rs` | `39` | **`26`** | **`-13` (`-33.3%`)** | **`22 -> 9` (`-59.1%`)** |
+| `crates/cairo_verifier/src/components/qm_31_add_mul_opcode.rs` | `39` | **`26`** | **`-13` (`-33.3%`)** | **`22 -> 9` (`-59.1%`)** |
+| `crates/circuit_prover/src/circuit_air/components/qm_31_ops.rs` | `42` | **`29`** | **`-13` (`-31.0%`)** | **`22 -> 9` (`-59.1%`)** |
+| `crates/circuit_verifier/src/components/qm_31_ops.rs` | `42` | **`29`** | **`-13` (`-31.0%`)** | **`22 -> 9` (`-59.1%`)** |
+| `stwo_cairo_verifier/crates/circuit_air/src/components/qm_31_ops.cairo` | `46` | **`33`** | **`-13` (`-28.3%`)** | **`22 -> 9` (`-59.1%`)** |
+| `outputs/compiled_casm_air/.../qm_31_add_mul_opcode.json` | `39` | **`26`** | **`-13` (`-33.3%`)** | **`22 -> 9` (`-59.1%`)** |
+| `outputs/compiled_circuit_air/.../qm_31_ops.json` | `42` | **`29`** | **`-13` (`-31.0%`)** | **`22 -> 9` (`-59.1%`)** |
+
+#### Verification Commands
+```bash
+cargo test -p stwo --no-default-features
+cargo +stable check --manifest-path ensure-verifier-no_std/Cargo.toml
+cargo +stable check -p cairo-air -p circuit-cairo-verifier -p circuit-verifier -p circuits -p airs -p air_code_gen
+cargo test -p airs -- --skip test_key_generation_python_utils
+cargo test --profile ci -p cairo-air -- qm_31_add_mul_opcode
+cargo test --profile ci -p circuit-prover -- qm_31_ops
+cargo test --profile ci -p circuit-cairo-verifier -p circuit-verifier -p circuit-params
+cargo clippy -p stwo -p airs -p cairo-air -p circuit-prover -p circuit-cairo-verifier -p circuit-verifier --all-targets --all-features -- -D warnings
+cargo fmt --all -- --check
 ```
-Interpolating on the symmetric projective nodes `{-2, -1, 0, 1, 2, 3, inf}` attains the **exact Winograd / Alder–Strassen lower bound of `7` `M31` multiplications (`-22.22%`)**:
-- **Degree-2 AIR / Recursive Verifier Impact**: Cuts degree-2 `M31` bilinear terms per `QM31` multiplication from `9` to `7` (`0` extra degree cost for constant linear combinations).
-- **BitVM2 / Bitcoin Script Impact**: Cuts expensive `M31` multiplication opcodes per `QM31` product from `9` to `7` while replacing interpolation divisions by $`120^{-1} \bmod p`$ (where $`2^{-3}`$ is a free Mersenne bit-rotation!).
-- **Zero `u64` / `i64` Overflow Guarantee**: Across all inputs in $`[0, 2^{31}-2]^4`$, peak intermediate magnitude in `U*a`, `V*b`, `m_l`, `W_z*m`, and `* INV_120` is **strictly $`\le 62`$ bits (`< 2^63`)**, verified exhaustively on basis pairs + adversarial sign-aligned vectors + `14,000` fuzz samples (`targets/qm31_stwo/`).
-
-### Files Touched in Proposed PR
-- `crates/prover/src/core/fields/qm31.rs` (optional verifier/AirEval helper `mul_bilinear_rank7`)
-- `crates/constraint-framework/` (`EvalAtRow` `QM31` degree-2 bilinear expression evaluator)
 
 ---
 
-## 3. `Plonky3/Plonky3` — Optimal $`2d - 1`$ `BinomialExtensionField` AIR Constraint Evaluators (`-22.22%` to `-44.44%`)
+## 3. `Plonky3/Plonky3` — Minimum-Rank $`(2D - 1)`$ `ExtensionAlgebra` Kernels & `Complex<Mersenne31>` Acceleration (`4.26x` `QM31`, `-56.25%` to `-76.56%` AIR Muls)
 
-### Proposed Issue / PR Title
-`feat(field,air): optimal (2D - 1)-mul bilinear evaluators for BabyBear^{4,5}, KoalaBear^{4,8}, and Goldilocks^{4,5}`
+- **Live Branch**: `perf/min-rank-extension-algebra` (`43c843c`, base `Plonky3/Plonky3` `main` `0d80373`)
+- **Compare URL**: [`https://github.com/Plonky3/Plonky3/compare/main...Impius-Lab:Plonky3:perf/min-rank-extension-algebra`](https://github.com/Plonky3/Plonky3/compare/main...Impius-Lab:Plonky3:perf/min-rank-extension-algebra)
+- **Proposed PR Title**: `perf(field,air,mersenne-31): minimum-rank (2D - 1) ExtensionAlgebra kernels and Complex<Mersenne31> acceleration`
 
-### Technical Summary for Maintainers
-In recursive STARK verification (`p3-uni-stark` / `SP1` recursion), `BinomialExtensionField<F, D>` expressions over `AB::Expr` treat multiplication by compile-time `F` constants as degree-0 scalar scaling (`0` extra trace columns), while `AB::Expr * AB::Expr` consumes degree budget / auxiliary columns.
+### Ready-to-Paste Upstream PR Description
 
-Replacing recursive Karatsuba (`9` muls for $`D=4`$, `15` for $`D=5`$, `27` for $`D=8`$) with small-node projective Lagrange interpolation achieves the **provably minimal Winograd / Alder–Strassen rank $`2D - 1`$** across every `Plonky3` extension:
+#### Summary
+In `p3-air`, extension-field arithmetic over `SymbolicExpression` and `ArithmeticExpression` previously lacked `ExtensionAlgebra` implementations, falling back to generic $`D^2`$ schoolbook/convolution expansions (`16` quadratic muls for $`D = 4`$, `25`–`26` for $`D = 5`$, `64` for $`D = 8`$). Meanwhile, in `p3-mersenne-31`, `Complex<Mersenne31>` extensions (`QM31` at $`D = 2`$ and `M31^6` at $`D = 3`$, $`W = 5i`$) performed generic per-product modular reductions and `* (-1)` multiplications.
 
-| `Plonky3` Extension | Polynomial | Current Karatsuba Muls | Certified Optimal Rank | Constraint Reduction | Accumulator Proof |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| `BinomialExtensionField<BabyBear, 4>` | $`X^4 - 11`$ | `9` | **`7`** | **`-22.22%`** | `62b < 2^63` (`i64`/`u64`) |
-| `BinomialExtensionField<BabyBear, 5>` | $`X^5 - 2`$ | `15` | **`9`** | **`-40.00%`** | `62b < 2^63` (`i64`/`u64`) |
-| `BinomialExtensionField<KoalaBear, 4>` | $`X^4 - 3`$ | `9` | **`7`** | **`-22.22%`** | `62b < 2^63` (`i64`/`u64`) |
-| `BinomialExtensionField<KoalaBear, 8>` | $`X^8 - 3`$ | `27` | **`15`** | **`-44.44%`** | `63b < 2^63` (2-term chunked `u64`) |
-| `BinomialExtensionField<Goldilocks, 4>` | $`X^4 - 7`$ | `9` | **`7`** | **`-22.22%`** | `128b < 2^128` (`u128`) |
-| `BinomialExtensionField<Goldilocks, 5>` | $`X^5 - 3`$ | `15` | **`9`** | **`-40.00%`** | `128b < 2^128` (`u128`) |
+This PR introduces two `#![no_std]` improvements across `p3-field`, `p3-air`, and `p3-mersenne-31`:
 
-Reference `#![no_std]` implementation + generic `SymbolicFieldExpr` evaluator is ready in `rust_crates/src/lib.rs` and `targets/plonky3_extensions/`.
+1. **`#![no_std]` Minimum-Rank $`(2D - 1)`$ Kernels (`p3-field`) & Shared-DAG `ExtensionAlgebra` Wiring (`p3-air`)**:
+   - Adds `p3_field::extension::min_rank` with compile-time Vandermonde-verified `i128` interpolation matrices (`T * V == denom * I` `const`-asserted, zero heap / zero floating-point):
+     * `binomial_mul_min_rank` & `binomial_square_min_rank` for $`D \in \{2, 3, 4, 5, 8\}`$ (`3/2`, `5/5`, `7/7`, `9/9`, `15/15` quadratic ops vs `4, 9, 16, 25, 64`), with clean fallback for unsupported $`D`$ or non-invertible small denominators.
+     * `cubic_trinomial_{mul,square}_min_rank` ($`X^3 - X - 1`$: `9 -> 5` muls, `6 -> 5` squares), `quintic_trinomial_{mul,square}_min_rank` ($`X^5 + X^2 - 1`$: `26 -> 9` muls, `17 -> 9` squares), and `qm31_{mul,square}_min_rank` ($`u^4 - 4u^2 + 5`$ unimodular isomorphism: `16 -> 7` muls, `8 -> 6` squares).
+   - Adds `Algebra::linear_combinations` with pointer-shared `Arc` overrides on `SymbolicExpression<F>`, `SymbolicExpressionExt<F, EF>`, `ArithmeticExpression<F>`, and `ArithmeticExpressionExt<F, EF>` — preserving shared `Arc` identity across multi-root DAGs (`fold_symbolic_expressions`, JSON wire `flatten`, and `CapturedArithmeticConstraints::lower`), lowering `F::NEG_ONE` weights to `Neg`/`Sub` (**`0` constant scalar leaf multiplications**), and preserving exact `degree_multiple`, `degree_multiple_with_transition`, and `poly_degree`.
+2. **`Complex<Mersenne31>` (`CM31`, `QM31`, `M31^6`) Delayed-`u64` Acceleration (`p3-field`, `p3-mersenne-31`)**:
+   - Adds `ComplexExtendable::{complex_mul, complex_square}` (eliminating `* (-1)` multiplications; 2-mul Gauss squaring) and `HasComplexBinomialExtension::{complex_ext_mul, complex_ext_square}` specializing $`D \in \{2, 3\}`$ via `mul_by_w`.
+   - Overrides both traits on `Mersenne31` with branchless `u64` single-reduction-per-limb `dot4`/`parallel8` (`QM31`) and `dot6`/`fast` (`M31^6`) kernels using `P ^ x == P - x` ($`P = 2^{31} - 1`$), proven overflow-free across all redundant-zero `value in [0, P]` inputs (`4P^2 <= u64::MAX`).
+
+#### Measured Criterion CPU Benchmarks (`cargo +stable bench -p p3-mersenne-31 --bench extension -- --quick`)
+
+| Benchmark (`p3-mersenne-31`) | Before (`0d80373`) | After (`43c843c`) | $`\Delta`$ / Speedup |
+| :--- | :---: | :---: | :---: |
+| `QM31` `mul-throughput/100` (per op) | `20.331 ns` | **`4.768 ns`** | **`-76.55%` (`4.26x`)** |
+| `QM31` `mul-latency/1000` (per op) | `26.047 ns` | **`8.238 ns`** | **`-68.37%` (`3.16x`)** |
+| `QM31` `square` | `13.396 ns` | **`5.476 ns`** | **`-59.12%` (`2.45x`)** |
+| `QM31` `inv` | `81.627 ns` | **`41.559 ns`** | **`-49.09%` (`1.96x`)** |
+| `PackedQM31/square/dependent_64` | `922.13 ns` | **`622.56 ns`** | **`-32.49%` (`1.48x`)** |
+| `M31^6` (`D=3`) `mul-throughput/100` (per op) | `43.222 ns` | **`14.957 ns`** | **`-65.40%` (`2.89x`)** |
+| `M31^6` (`D=3`) `mul-latency/1000` (per op) | `29.993 ns` | **`21.207 ns`** | **`-29.29%` (`1.41x`)** |
+| `M31^6` (`D=3`) `square` | `26.702 ns` | **`11.709 ns`** | **`-56.15%` (`2.28x`)** |
+| `M31^6` (`D=3`) `inv` | `116.52 ns` | **`61.828 ns`** | **`-46.94%` (`1.88x`)** |
+
+#### Measured `p3-air` Multi-Root Symbolic & Arithmetic DAG Constraint Counts
+
+| Extension (`p3-air` Multi-Root DAG) | `Sym` Mul Quadratic Muls | `Sym` Mul Add/Sub | `Sym` Sq Quadratic Muls | `Arith` Mul `(Mul, Sq, MixedDot)` | `Arith` Sq `(Mul, Sq, MixedDot)` |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| `Complex<Mersenne31>` / `Goldilocks` Binomial (`D=2`) | `4 -> 3` (**`-25.0%`**) | `2 -> 5` | `3 -> 2` (**`-33.3%`**) | `(3, 0, 4)` (`0` scalar muls on `M31`) | `(2, 0, 3..4)` |
+| `Mersenne31` Binomial (`D=3`) | `9 -> 5` (**`-44.4%`**) | `6 -> 23` | `9 -> 5` (**`-44.4%`**) | `(5, 0, 13)` | `(0, 5, 8)` |
+| `BabyBear` / `KoalaBear` Binomial (`D=4`) | `16 -> 7` (**`-56.25%`**) | `12 -> 46` | `10 -> 7` (**`-30.0%`**) | `(7, 0, 24)` | `(0, 7, 14)` |
+| `BabyBear` / `Goldilocks` Binomial (`D=5`) | `25 -> 9` (**`-64.0%`**) | `20 -> 79` | `15 -> 9` (**`-40.0%`**) | `(9, 0, 33)` | `(0, 9, 19)` |
+| `BabyBear` / `KoalaBear` Binomial (`D=8`) | `64 -> 15` (**`-76.56%`**) | `56 -> 220` | `36 -> 15` (**`-58.3%`**) | `(15, 0, 60)` | `(0, 15, 34)` |
+| `Goldilocks` `CubicTrinomial` (`D=3`, $`X^3 - X - 1`$) | `9 -> 5` (**`-44.4%`**) | `9 -> 21` | `6 -> 5` (**`-16.7%`**) | `(5, 0, 14)` | `(0, 5, 9)` |
+| `KoalaBear` `QuinticTrinomial` (`D=5`, $`X^5 + X^2 - 1`$) | `26 -> 9` (**`-65.4%`**) | `27 -> 80` | `17 -> 9` (**`-47.1%`**) | `(9, 0, 34)` | `(0, 9, 20)` |
+| `Mersenne31` `QM31` Tower (`D=4`, $`u^4 - 4u^2 + 5`$) | `16 -> 7` (**`-56.25%`**) | `18 -> 50` | `8 -> 6` (**`-25.0%`**) | `(7, 0, 27)` | `(6, 0, 10)` |
+
+#### Verification Commands
+```bash
+cargo +stable test -p p3-field -p p3-air -p p3-mersenne-31 -p p3-baby-bear -p p3-koala-bear -p p3-goldilocks -p p3-monty-31
+cargo +stable test -p p3-air --features testing
+cargo +stable test -p p3-uni-stark --features parallel
+cargo +stable check --no-default-features -p p3-field -p p3-air -p p3-mersenne-31
+cargo +stable clippy --no-deps -p p3-field -p p3-air -p p3-mersenne-31 --all-targets -- -D warnings
+RUSTDOCFLAGS="-D warnings -D rustdoc::broken_intra_doc_links" cargo +stable doc --no-deps --document-private-items -p p3-field -p p3-air -p p3-mersenne-31
+cargo +stable fmt --all -- --check
+```

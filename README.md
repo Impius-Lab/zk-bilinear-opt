@@ -45,15 +45,15 @@ Every schedule in this repository (`64` schedules across `18` extension targets)
 
 ---
 
-## 2. Measured Production `Consensys/gnark` Circuit Benchmarks (`frontend.Compile`)
+## 2. Measured Production Upstream Compiler & Prover Benchmarks
 
-To validate end-to-end SNARK compiler behavior beyond standalone cost models, we implemented and verified two production pull-request branches directly against `Consensys/gnark` (`master` base `38a87d1` on [`https://github.com/Impius-Lab/gnark`](https://github.com/Impius-Lab/gnark)), measuring exact `frontend.Compile` constraint counts under `r1cs.NewBuilder` (Groth16) and `scs.NewBuilder` (PlonK).
+To validate end-to-end SNARK/STARK compiler, prover, and verifier behavior beyond standalone cost models, we implemented, benchmarked, and adversarially verified upstream branches across **`Consensys/gnark`** (live open PRs [`Consensys/gnark#1950`](https://github.com/Consensys/gnark/pull/1950) and [`Consensys/gnark#1951`](https://github.com/Consensys/gnark/pull/1951)), **`Plonky3/Plonky3`** (`Impius-Lab/Plonky3` branch `perf/min-rank-extension-algebra`), and **`starkware-libs/proving` (`stwo`)** (`Impius-Lab/proving` branch `perf/qm31-min-rank-and-verifier-ops`).
 
-### 2.1 PR Branch 1 (`perf/bls12377-bilinear-rank11-rank23`): Native 2-Chain `BLS12-377` over `BW6-761`
+### 2.1 [`Consensys/gnark#1950`](https://github.com/Consensys/gnark/pull/1950) (`perf/bls12377-bilinear-rank11-rank23`): Native 2-Chain `BLS12-377` over `BW6-761`
 
-Compiled over `ecc.BW6_761.ScalarField()` (`std/algebra/native/fields_bls12377` & `sw_bls12377`). Replaces R1CS `Toom-3`/Karatsuba towers with pre-inverted rational folded Lagrange interpolation (`mulRank11` mod $`Y^6 + 5`$, `mulRank23` mod $`W^{12} + 5`$, sparse `mulBy01Rank10` & `mulBy01234Rank22`, `squareToom3`, and `square034Karatsuba`), while preserving `SCS` + `frontend.Committer` Schwartz–Zippel (`mulSZ`/`squareSZ`) bit-for-bit:
+Live open PR: [`https://github.com/Consensys/gnark/pull/1950`](https://github.com/Consensys/gnark/pull/1950) (branch `perf/bls12377-bilinear-rank11-rank23` @ `5b09aa5`, base `38a87d1`). Compiled over `ecc.BW6_761.ScalarField()` (`std/algebra/native/fields_bls12377` & `sw_bls12377`). Replaces R1CS `Toom-3`/Karatsuba towers with pre-inverted rational folded Lagrange interpolation (`mulRank11` mod $`Y^6 + 5`$, `mulRank23` mod $`W^{12} + 5`$, sparse `mulBy01Rank10` & `mulBy01234Rank22`, `squareToom3`, and `square034Karatsuba`), while preserving `SCS` + `frontend.Committer` Schwartz–Zippel (`mulSZ`/`squareSZ`) bit-for-bit:
 
-| `gnark` Circuit / Operation | R1CS (`master`) | R1CS (`perf` Branch) | R1CS $`\Delta`$ | SCS + Committer (`SZ`) | SCS (no Committer) |
+| `gnark` Circuit / Operation | R1CS (`master`) | R1CS (`#1950`) | R1CS $`\Delta`$ | SCS + Committer (`SZ`) | SCS (no Committer) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | `fields_bls12377.E6.Mul` | `15` | **`11`** | **`-26.67%`** (`-4`) | `73 -> 73` | `66 -> 66` |
 | `fields_bls12377.E6.Square` | `12` | **`10`** | **`-16.67%`** (`-2`) | `57 -> 57` | `43 -> 43` |
@@ -71,11 +71,11 @@ Compiled over `ecc.BW6_761.ScalarField()` (`std/algebra/native/fields_bls12377` 
 | `sw_bls12377.PairingCheck` (`2`-pair witness `G2`) | `10,109` | **`8,027`** | **`-20.60%`** (`-2,082`) | `24,208 -> 24,208` | `35,098 -> 33,502` (`-4.55%`) |
 | **`sw_bls12377.PairingCheck` (`2`-pair `FixedQ`)** | `6,339` | **`4,257`** | **`-32.84%`** (`-2,082`) | `15,368 -> 15,368` | `25,942 -> 24,002` (`-7.48%`) |
 
-### 2.2 PR Branch 2 (`perf/emulated-e12-bilinear-mvcheck`): Non-Native Emulated `BN254`, `BLS12-381` & `BW6-761`
+### 2.2 [`Consensys/gnark#1951`](https://github.com/Consensys/gnark/pull/1951) (`perf/emulated-e12-bilinear-mvcheck`): Non-Native Emulated `BN254`, `BLS12-381` & `BW6-761`
 
-Compiled over `ecc.BN254.ScalarField()` (`std/math/emulated` + `fields_bn254` + `fields_bls12381` + `sw_bn254` + `sw_bls12381`). Combines **(1)** canonical monomial deduplication & zero-factor pruning in `polyMvPrep` (`6` zero coordinates of `cubicNonResiduePower` automatically pruned in `PairingCheck`), **(2)** exact `*big.Int` quotient bit-width range enforcement (`packLimbsWithWidth(ret[:nbQuoLimbs], quoBits)`), signed CRT low-carry bounds (`mvLowCarries`), and `kNeg` sign-bit elision when $`\mathrm{negMax} = 0`$, and **(3)** shared-commitment deferred evaluators `MulPolyModTrinomial12` (`1,152 -> 96` committed limbs on `BN254` `E12.Mul`, `1,728 -> 144` on `BLS12-381`, dispatching `20`–`23`-mul Even/Odd Vandermonde on R1CS/small-field extensions and $`\mathbb{Z}`$-isomorphic $`2\times 3\times 2`$ towers on PlonK) and `EvalSystem`:
+Live open PR: [`https://github.com/Consensys/gnark/pull/1951`](https://github.com/Consensys/gnark/pull/1951) (branch `perf/emulated-e12-bilinear-mvcheck` @ `4a43edf`, base `38a87d1`). Compiled over `ecc.BN254.ScalarField()` (`std/math/emulated` + `fields_bn254` + `fields_bls12381` + `sw_bn254` + `sw_bls12381`). Combines **(1)** canonical monomial deduplication & zero-factor pruning in `polyMvPrep` (`6` zero coordinates of `cubicNonResiduePower` automatically pruned in `PairingCheck`), **(2)** exact `*big.Int` quotient bit-width range enforcement (`packLimbsWithWidth(ret[:nbQuoLimbs], quoBits)`), signed CRT low-carry bounds (`mvLowCarries`), and `kNeg` sign-bit elision when $`\mathrm{negMax} = 0`$, and **(3)** shared-commitment deferred evaluators `MulPolyModTrinomial12` (`1,152 -> 96` committed limbs on `BN254` `E12.Mul`, `1,728 -> 144` on `BLS12-381`, dispatching `20`–`23`-mul Even/Odd Vandermonde on R1CS/small-field extensions and $`\mathbb{Z}`$-isomorphic $`2\times 3\times 2`$ towers on PlonK) and `EvalSystem`:
 
-| `gnark` Emulated Circuit (`ecc.BN254.ScalarField()`) | R1CS (`master`) | R1CS (`perf` Branch) | R1CS $`\Delta`$ | PlonK / SCS (`master`) | PlonK / SCS (`perf` Branch) | PlonK / SCS $`\Delta`$ |
+| `gnark` Emulated Circuit (`ecc.BN254.ScalarField()`) | R1CS (`master`) | R1CS (`#1951`) | R1CS $`\Delta`$ | PlonK / SCS (`master`) | PlonK / SCS (`#1951`) | PlonK / SCS $`\Delta`$ |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | `fields_bn254.E12.Mul` | `4,463` | **`3,894`** | **`-12.75%`** (`-569`) | `17,985` | **`16,149`** | **`-10.21%`** (`-1,836`) |
 | `fields_bn254.E12.Square` | `3,886` | **`3,413`** | **`-12.17%`** (`-473`) | `15,795` | **`14,019`** | **`-11.24%`** (`-1,776`) |
@@ -96,7 +96,67 @@ Compiled over `ecc.BN254.ScalarField()` (`std/math/emulated` + `fields_bn254` + 
 | `internal/stats`: `scalar_mul_G2_bn254` | `449,267` | **`416,348`** | **`-7.33%`** (`-32,919`) | `1,552,336` | **`1,410,982`** | **`-9.11%`** (`-141,354`) |
 | `internal/stats`: `scalar_mul_P256` | `130,856` | **`118,536`** | **`-9.41%`** (`-12,320`) | `481,361` | **`428,120`** | **`-11.06%`** (`-53,241`) |
 
-> **Cryptographic Soundness Hardening Included**: During adversarial multi-agent review of `std/math/emulated/field_mul.go`, we uncovered and closed a malicious-prover excess-quotient-bit modulo-$`q`$ wrap-around vulnerability on small native fields ($`2t \ge F - 1`$, permitted by `NewField` since $`F \ge t + 3`$, e.g., $`t = 22`$ over 31-bit BabyBear $`q = 2013265921`$) where unconstrained high bits of a full-limb quotient witness $`k_0 < 2^t`$ allowed $`k_0 p_i - r_i = m_i q \equiv 0 \pmod{q}`$ (including degree-0 single-limb `checkZero` checks with zero carry limbs). Enforcing exact `quoBits = maxQuo.BitLen()` via `packLimbsWithWidth` and guarding uncapped CRT carry requirements eliminates the forgery while saving an additional `51,813` R1CS / `233,162` PlonK constraints on `BN254` pairing!
+> **Cryptographic Soundness Hardening Included (`Consensys/gnark#1951`)**: During adversarial multi-agent review of `std/math/emulated/field_mul.go`, we uncovered and closed a malicious-prover excess-quotient-bit modulo-$`q`$ wrap-around vulnerability on small native fields ($`2t \ge F - 1`$, permitted by `NewField` since $`F \ge t + 3`$, e.g., $`t = 22`$ over 31-bit BabyBear $`q = 2013265921`$) where unconstrained high bits of a full-limb quotient witness $`k_0 < 2^t`$ allowed $`k_0 p_i - r_i = m_i q \equiv 0 \pmod{q}`$ (including degree-0 single-limb `checkZero` checks with zero carry limbs). Enforcing exact `quoBits = maxQuo.BitLen()` via `packLimbsWithWidth` and guarding uncapped CRT carry requirements eliminates the forgery while saving an additional `51,813` R1CS / `233,162` PlonK constraints on `BN254` pairing!
+
+### 2.3 `Plonky3/Plonky3` (`Impius-Lab/Plonky3` branch `perf/min-rank-extension-algebra`)
+
+Implemented on [`Impius-Lab/Plonky3`](https://github.com/Impius-Lab/Plonky3) (`perf/min-rank-extension-algebra` @ `43c843c`, base `0d80373`). Adds **(1)** `#![no_std]` Winograd / Alder–Strassen $`(2D - 1)`$ minimum-rank multiplication and symmetric squaring kernels in `p3-field` (`T * V == denom * I` `const`-asserted in `i128` at compile time, zero heap/float), wired into `p3-air` via pointer-shared `Arc` `Algebra::linear_combinations` on `SymbolicExpression`, `SymbolicExpressionExt`, `ArithmeticExpression`, and `ArithmeticExpressionExt` (with `F::NEG_ONE` lowered to `Neg`/`Sub` for **`0` constant leaf multiplications**), and **(2)** branchless delayed-`u64` single-reduction-per-limb `Complex<Mersenne31>` (`CM31`, `QM31`, `M31^6`) kernels in `p3-mersenne-31`:
+
+#### A. Criterion CPU Prover Throughput & Latency (`cargo +stable bench -p p3-mersenne-31 --bench extension -- --quick`)
+
+| `p3-mersenne-31` Benchmark | Baseline (`0d80373`) | `perf` Branch (`43c843c`) | $`\Delta`$ / Speedup |
+| :--- | :---: | :---: | :---: |
+| **`QM31` `mul-throughput/100`** (per op) | `20.331 ns` | **`4.768 ns`** | **`-76.55%` (`4.26x`)** |
+| **`QM31` `mul-latency/1000`** (per op) | `26.047 ns` | **`8.238 ns`** | **`-68.37%` (`3.16x`)** |
+| **`QM31` `square`** | `13.396 ns` | **`5.476 ns`** | **`-59.12%` (`2.45x`)** |
+| **`QM31` `inv`** | `81.627 ns` | **`41.559 ns`** | **`-49.09%` (`1.96x`)** |
+| **`PackedQM31/square/dependent_64`** | `922.13 ns` | **`622.56 ns`** | **`-32.49%` (`1.48x`)** |
+| **`M31^6` (`D=3`) `mul-throughput/100`** (per op) | `43.222 ns` | **`14.957 ns`** | **`-65.40%` (`2.89x`)** |
+| **`M31^6` (`D=3`) `mul-latency/1000`** (per op) | `29.993 ns` | **`21.207 ns`** | **`-29.29%` (`1.41x`)** |
+| **`M31^6` (`D=3`) `square`** | `26.702 ns` | **`11.709 ns`** | **`-56.15%` (`2.28x`)** |
+| **`M31^6` (`D=3`) `inv`** | `116.52 ns` | **`61.828 ns`** | **`-46.94%` (`1.88x`)** |
+
+#### B. `p3-air` Multi-Root Symbolic & Lowered Arithmetic DAG Constraint Multiplications
+
+| `Plonky3` Extension (`p3-air` Multi-Root DAG) | `Sym` Mul Quadratic Muls | Mul $`\Delta`$ | `Sym` Square Quadratic Muls | Square $`\Delta`$ | `Arith` Mul `(Mul, Sq)` |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| `Complex<Mersenne31>` / `Goldilocks` Binomial (`D=2`) | `4 -> 3` | **`-25.00%`** | `3 -> 2` | **`-33.33%`** | `(3, 0)` |
+| `Mersenne31` Binomial & `Goldilocks` `CubicTrinomial` (`D=3`) | `9 -> 5` | **`-44.44%`** | `9 -> 5` / `6 -> 5` | **`-44.44%` / `-16.67%`** | `(5, 0)` |
+| **`BabyBear` / `KoalaBear` Binomial (`D=4`)** | **`16 -> 7`** | **`-56.25%`** | `10 -> 7` | **`-30.00%`** | `(7, 0)` |
+| **`Mersenne31` `QM31` Tower (`D=4`, $`u^4 - 4u^2 + 5`$)** | **`16 -> 7`** | **`-56.25%`** | `8 -> 6` | **`-25.00%`** | `(7, 0)` |
+| **`BabyBear` / `Goldilocks` Binomial (`D=5`)** | **`25 -> 9`** | **`-64.00%`** | `15 -> 9` | **`-40.00%`** | `(9, 0)` |
+| **`KoalaBear` `QuinticTrinomial` (`D=5`, $`X^5 + X^2 - 1`$)** | **`26 -> 9`** | **`-65.38%`** | `17 -> 9` | **`-47.06%`** | `(9, 0)` |
+| **`BabyBear` / `KoalaBear` Binomial (`D=8`)** | **`64 -> 15`** | **`-76.56%`** | `36 -> 15` | **`-58.33%`** | `(15, 0)` |
+
+### 2.4 `starkware-libs/proving` [`stwo`] (`Impius-Lab/proving` branch `perf/qm31-min-rank-and-verifier-ops`)
+
+Implemented on [`Impius-Lab/proving`](https://github.com/Impius-Lab/proving) (`perf/qm31-min-rank-and-verifier-ops` @ `149dcdf`, base `9bc8c8d`). Accelerates scalar `CM31` and `QM31` arithmetic in `crates/stwo` (`2.71x` `QM31::mul`, `2.55x` `QM31::square`, plus public `const fn QM31::mul_rank7`) and replaces 20-mul schoolbook `QM31` expansion in `crates/airs` (`Qm31Ops` & `QM31AddMulOpcode`) across all 5 `[AIR-GENERATED]` Rust SIMD, Rust circuit verifier, and Cairo verifier components:
+
+#### A. `stwo` Scalar CPU Throughput & Latency (`--release`, `core::hint::black_box`)
+
+| `stwo` Operation (`crates/stwo`) | Baseline (`9bc8c8d`) | `perf` Branch (`149dcdf`) | $`\Delta`$ / Speedup | Kernel Summary |
+| :--- | :---: | :---: | :---: | :--- |
+| **`CM31::mul`** (8-way throughput) | `2.569 ns` | **`1.748 ns`** | **`-32.0%` (`1.47x`)** | `4 -> 3` `M31` muls (Karatsuba) |
+| **`CM31::square`** (8-way throughput) | `2.329 ns` | **`2.033 ns`** | **`-12.7%` (`1.15x`)** | `4 -> 2` `M31` muls (`(a+b)(a-b), 2ab`) |
+| **`QM31::mul` (`impl Mul`, 8-way)** | `13.004 ns` | **`4.797 ns`** | **`-63.1%` (`2.71x`)** | Delayed-`u64` outer Karatsuba (1 red/limb) |
+| **`QM31::mul` (`impl Mul`, 1-way)** | `19.970 ns` | **`8.196 ns`** | **`-59.0%` (`2.44x`)** | Zero `u64` overflow across $`[0, P-1]^4`$ |
+| **`QM31::mul_rank7` (`const fn`, 1-way)** | `19.970 ns` | **`12.616 ns`** | **`-36.8%` (`1.58x`)** | Exact `7`-mul $`u^4 - 4u^2 + 5 = 0`$ kernel |
+| **`QM31::square` (8-way throughput)** | `13.717 ns` | **`5.376 ns`** | **`-60.8%` (`2.55x`)** | Specialized `7`-mul delayed-`u64` |
+| **`QM31::square` (1-way latency)** | `22.127 ns` | **`9.824 ns`** | **`-55.6%` (`2.25x`)** | Strict canonicality $`\in [0, P-1]`$ |
+| **`QM31::inverse`** | `103.504 ns` | **`101.218 ns`** | **`-2.2%`** | Add-only `pub const fn mul_by_r` |
+
+#### B. `[AIR-GENERATED]` Multi-Backend Prover & Verifier Multiplication Reductions (`22 -> 9`, `-59.1%`)
+
+| Generated Component / Compiled AIR Target (`proving`) | Muls Before (`9bc8c8d`) | Muls After (`149dcdf`) | Net $`\Delta`$ | Isolated `QM31` Product Muls |
+| :--- | :---: | :---: | :---: | :---: |
+| **Isolated `QM31` Product (`qm31_mul_expr_in_air`)** | `22` (`20` `Var*Var` + `2` `*2`) | **`9`** (`9` `Var*Var` + `0` `Const*Var`) | **`-13` (`-59.1%`)** | **`22 -> 9` (`-59.1%`)** |
+| `crates/cairo-air/src/components/qm_31_add_mul_opcode.rs` (SIMD prover) | `39` | **`26`** | **`-13` (`-33.3%`)** | `22 -> 9` (`-59.1%`) |
+| `crates/cairo_verifier/src/components/qm_31_add_mul_opcode.rs` (circuit) | `39` | **`26`** | **`-13` (`-33.3%`)** | `22 -> 9` (`-59.1%`) |
+| `crates/circuit_prover/src/circuit_air/components/qm_31_ops.rs` (SIMD prover) | `42` | **`29`** | **`-13` (`-31.0%`)** | `22 -> 9` (`-59.1%`) |
+| `crates/circuit_verifier/src/components/qm_31_ops.rs` (circuit verifier) | `42` | **`29`** | **`-13` (`-31.0%`)** | `22 -> 9` (`-59.1%`) |
+| `stwo_cairo_verifier/crates/circuit_air/src/components/qm_31_ops.cairo` (Cairo) | `46` | **`33`** | **`-13` (`-28.3%`)** | `22 -> 9` (`-59.1%`) |
+
+> **Backend Cost Dichotomy (`{0, +1, -1}` Karatsuba-9 vs `Rank-7`)**: In R1CS, PlonK, and `Plonky3`'s `p3-air`, scaling by a base-field constant $`c \in \mathbb{F}_p`$ has polynomial degree `0` (`0` multiplicative constraints), so Winograd / Alder–Strassen **`Rank-7`** (`7` `Var * Var` muls) is globally optimal (`16 -> 7`, `-56.25%`). Conversely, in StarkWare `proving`'s `air_code_gen` and `crates/circuits/src/ops.rs`, every non-unit `Const * Var` ($`c \notin \{0, 1\}`$) in `FeltExpr` lowers to an explicit `PackedM31 * PackedM31` SIMD mul in `SimdDomainEvaluator`, a `qm31_const * QM31` mul in `stwo_cairo_verifier`, and a `Qm31Ops::Mul` circuit gate in `stwo-circuits`! Under that cost model, `Rank-7` cuts `Var * Var` muls `20 -> 7` (`-65.0%`) but introduces `33` non-unit `Const * Var` muls (`22 -> 40` total muls), whereas **unimodular $`\{0, +1, -1\}`$ nested Karatsuba-9** (`qm31_mul_expr_in_air` with `AirBuilder::let_for_constraint` sharing) uses `9` `Var * Var` + `0` `Const * Var` = **`9` total multiplications (`-59.1%` vs `22`)** and `36` vs `38` total ops (`-5.3%`) across all three backends — while `qm31_mul_expr` and `qm31_mul_rank7_in_air` remain available for degree-0-folded backends.
 
 ---
 
