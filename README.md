@@ -4,8 +4,10 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)](./pyproject.toml)
 [![Go 1.23+](https://img.shields.io/badge/go-1.23%2B-00ADD8.svg)](./go_gadgets/go.mod)
 [![no_std Rust](https://img.shields.io/badge/rust-no__std-DEA584.svg)](./rust_crates/Cargo.toml)
+[![Cairo 2.21+](https://img.shields.io/badge/cairo-2.21%2B-FF4F00.svg)](./cairo_gadgets/Scarb.toml)
+[![Lean 4 v4.36.0](https://img.shields.io/badge/lean4-zero--sorry-5B21B6.svg)](./lean4_certs/lakefile.toml)
 
-`zk-bilinear-opt` is an exact finite-field bilinear rank certifier, non-native limb-carry Pareto optimizer, and deterministic `#![no_std]` Rust / Go / R1CS code generator for Zero-Knowledge STARK and SNARK extension towers (**StarkWare `stwo`**, **`Plonky3` / `SP1`**, and **`Consensys/gnark`**).
+`zk-bilinear-opt` is an exact finite-field bilinear rank certifier, non-native limb-carry Pareto optimizer, zero-`sorry` **Lean 4** formal proof suite ([`lean4_certs/`](./lean4_certs/README.md)), and deterministic `#![no_std]` Rust / Go / Cairo / BitVM2 code generator for Zero-Knowledge STARK and SNARK extension towers (**StarkWare `stwo` & Cairo**, **`Plonky3` / `SP1`**, **`Consensys/gnark`**, **Zcash `Halo2` / `Pasta` / `BLS12-381`**, and **BitVM2 Tapscript**) — accompanied by an interactive prover-economics storefront ([`docs/index.html`](./docs/index.html)).
 
 ---
 
@@ -158,6 +160,14 @@ Live open PRs: [`https://github.com/starkware-libs/proving/pull/9`](https://gith
 
 > **Backend Cost Dichotomy (`{0, +1, -1}` Karatsuba-9 vs `Rank-7`)**: In R1CS, PlonK, and `Plonky3`'s `p3-air`, scaling by a base-field constant $`c \in \mathbb{F}_p`$ has polynomial degree `0` (`0` multiplicative constraints), so Winograd / Alder–Strassen **`Rank-7`** (`7` `Var * Var` muls) is globally optimal (`16 -> 7`, `-56.25%`). Conversely, in StarkWare `proving`'s `air_code_gen` and `crates/circuits/src/ops.rs`, every non-unit `Const * Var` ($`c \notin \{0, 1\}`$) in `FeltExpr` lowers to an explicit `PackedM31 * PackedM31` SIMD mul in `SimdDomainEvaluator`, a `qm31_const * QM31` mul in `stwo_cairo_verifier`, and a `Qm31Ops::Mul` circuit gate in `stwo-circuits`! Under that cost model, `Rank-7` cuts `Var * Var` muls `20 -> 7` (`-65.0%`) but introduces `33` non-unit `Const * Var` muls (`22 -> 40` total muls), whereas **unimodular $`\{0, +1, -1\}`$ nested Karatsuba-9** (`qm31_mul_expr_in_air` with `AirBuilder::let_for_constraint` sharing) uses `9` `Var * Var` + `0` `Const * Var` = **`9` total multiplications (`-59.1%` vs `22`)** and `36` vs `38` total ops (`-5.3%`) across all three backends — while `qm31_mul_expr` and `qm31_mul_rank7_in_air` remain available for degree-0-folded backends.
 
+### 2.5 Cairo Verifier (`cairo_gadgets/`), BitVM2 Tapscript (`bitvm2_qm31.py`), Zcash `Halo2` (`halo2_gadgets.rs`) & Zero-`sorry` Lean 4 Proofs (`lean4_certs/`)
+
+- **Cairo Verifier Package ([`cairo_gadgets/`](./cairo_gadgets/README.md) — `zk_qm31_opt`, Scarb `2.21.0`)**: Implements canonical `u64`-backed Mersenne-31 single-fold arithmetic and compares `Schoolbook-16`, unimodular **`qm31_mul_karatsuba9`** / **`qm31_square_karatsuba6`** (`0` non-unit `Const * Var` muls, cutting 64-iter Cairo VM steps **`70,019 -> 51,641` (`-26.25%`)** and **`70,067 -> 39,738` (`-43.29%`)**), and **`qm31_mul_rank7`** (`7` `M31` variable-variable multiplications via $`\mathrm{QM31} \cong \mathbb{M}_{31}[v]/(v^4 - 4v^2 + 5)`$).
+- **BitVM2 Tapscript `QM31` Simulator ([`zk_bilinear/bitvm2_qm31.py`](./zk_bilinear/bitvm2_qm31.py) & [`tests/test_bitvm2_qm31.py`](./tests/test_bitvm2_qm31.py))**: Models `BIP-342` 4-byte `CScriptNum`-safe (`|x| <= 2^31 - 1`) `OP_M31_ADD`, `OP_M31_SUB`, `OP_M31_SCALE_SMALL` (`{2, 3, 4, 6, 12}`), and witness-hinted `4x8`-bit `OP_M31_MUL`, cutting `OP_M31_MUL` **`16 -> 9 -> 7`** (**`-22.22%`** vs `Karatsuba-9`, **`-56.25%`** vs `Schoolbook-16`), witness stack items **`352 -> 198 -> 158`** (`-20.20%` vs `Karatsuba-9`), and Script opcodes **`17,880 -> 10,224 -> 9,447`** (`-7.60%` vs `Karatsuba-9`).
+- **Zcash `Halo2` / `BLS12-381` & `Pasta` `#![no_std]` Module ([`rust_crates/src/halo2_gadgets.rs`](./rust_crates/src/halo2_gadgets.rs))**: Compile-time Vandermonde-verified generic `PrimeFieldOps` kernels (`Fp2` Rank-3, `Fp6` Rank-11, `Fp12` Rank-23, sparse Miller-loop `mul_by_014` **Rank-18 / Rank-19 / Rank-21**) plus exact `U1024` `Halo2LookupCostModel` (`FlexGate` + `RangeChip` over 255-bit `Pallas`/`Vesta`): **`CRT-30`** cuts non-native `BLS12-381` `Fp12` PlonKish cells by **`-24.49%` to `-29.85%`** (`0` pre-reductions vs `22` on naive `Rank-23`), and exact `quoBits` cuts `Pasta` wrong-field CRT cells by **`-9.94%` to `-13.05%`**.
+- **Zero-`sorry` Core Lean 4 Formal Proof Suite ([`lean4_certs/`](./lean4_certs/README.md) — `ZkBilinearCerts`, `lean4:v4.36.0`)**: Pure Core Lean 4 (`0` external dependencies, clean scratch `lake build` in **`< 6s`**, `33` `#print axioms`-verified theorems with `0` `sorry` and `0` custom `axiom`s) proving universal `Int` & `mod (2^31 - 1)` equivalence of `Karatsuba-9`, `Rank-7`, and `Rank-6` squaring ([`Qm31Algebraic.lean`](./lean4_certs/ZkBilinearCerts/Qm31Algebraic.lean)), `u64` `dot4` / outer-Karatsuba non-overflow (`< 2^64`) and bitwise two-step Mersenne fold canonicality ([`M31Overflow.lean`](./lean4_certs/ZkBilinearCerts/M31Overflow.lean)), and non-native CRT quotient-bit soundness + BabyBear `b = 22` unmasked forgery certificates ([`CrtSoundness.lean`](./lean4_certs/ZkBilinearCerts/CrtSoundness.lean)).
+- **Zcash Community Grants Proposal & B2B Storefront**: Complete fast-track ZCG specification in [`monetization/grants/zcash_zcg_grant.md`](./monetization/grants/zcash_zcg_grant.md) and self-contained interactive Prover Cloud & L1 Verifier ROI Calculator in [`docs/index.html`](./docs/index.html).
+
 ---
 
 ## 3. Mathematical Foundations
@@ -192,24 +202,31 @@ In standalone non-native emulated `Fp` towers over a 254-bit SNARK scalar field,
 
 ## 4. Quickstart & Verification
 
-All Python tools use the zero-external-dependency Python 3.12 stdlib package `zk_bilinear`:
+All five local verification suites run deterministically offline without external network calls:
 
 ```powershell
-# 1. Full algebraic & artifact audit (64 schedules, 3,706 Z + Fp basis pairs, 9,000 audit fuzz trials)
+# 1. Python algebraic & artifact audit + 23 unittest suites (109,000+ fuzz samples, BitVM2 & mutations)
 .\.venv\Scripts\python.exe -m zk_bilinear.cli audit
-
-# 2. Verify all 64 schedules (basis-pair identities + irreducibility + overflow bounds)
-.\.venv\Scripts\python.exe -m zk_bilinear.cli verify
-
-# 3. Deterministically regenerate all JSON certificates, Rust/Go kernels, and benchmark report
-.\.venv\Scripts\python.exe -m zk_bilinear.cli generate-all
-
-# 4. Run the full Python test suite (17 test suites, 109,000 fuzz samples + mutation selftests)
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 
-# 5. Run the native Go gadget test suite (QM31, Plonky3, BN254, BLS12-381 & [6]uint64 CIOS BLS12-377)
-Set-Location go_gadgets
-& "C:\Program Files\Go\bin\go.exe" test -count=1 -v ./...
+# 2. Cairo QM31 verifier gadget suite (`zk_qm31_opt`: Schoolbook-16, Karatsuba-9/6 & Rank-7)
+Push-Location cairo_gadgets
+scarb --offline test
+Pop-Location
+
+# 3. Pure Core Lean 4 formal soundness & bilinear optimality proofs (`0` sorry, `0` custom axioms)
+Push-Location lean4_certs
+lake build
+Pop-Location
+
+# 4. #![no_std] Rust & Zcash Halo2 / BLS12-381 / Pasta gadget tests + strict Clippy
+cargo +stable test --manifest-path rust_crates/Cargo.toml
+cargo +stable clippy --manifest-path rust_crates/Cargo.toml --all-targets -- -D warnings
+
+# 5. Native Go gadget test suite (QM31, Plonky3, BN254, BLS12-381 & [6]uint64 CIOS BLS12-377)
+Push-Location go_gadgets
+go test -count=1 -v ./...
+Pop-Location
 ```
 
 ---
@@ -223,16 +240,21 @@ zk-bilinear-opt/
 │   ├── tensor_cert.py      # Basis-complete Z + Fp d^2 algebraic verifier + u64/u128 overflow checker
 │   ├── cost_models.py      # Native R1CS/PlonK/AIR + gnark 2-limb carry-packed non-native R1CS/PlonK16 models
 │   ├── pareto_search.py    # Vandermonde, Cyclotomic-CRT & Binomial-Tower synthesis (64 certified schedules)
+│   ├── bitvm2_qm31.py      # BitVM2 BIP-342 Tapscript M31/QM31 verifier simulator (Schoolbook-16, K-9, Rank-7)
 │   ├── codegen.py          # Deterministic #![no_std] Rust, Go math/big, [6]uint64 CIOS & R1CS JSON emitters
 │   └── cli.py              # CLI (`audit`, `verify`, `generate-all`, `report`)
+├── cairo_gadgets/          # Standalone Scarb Cairo package `zk_qm31_opt` (`src/lib.cairo`, 12/12 tests)
+├── lean4_certs/            # Zero-sorry Core Lean 4 proofs (`Qm31Algebraic`, `M31Overflow`, `CrtSoundness`)
 ├── targets/
 │   ├── qm31_stwo/          # Module A: StarkWare stwo QM31 (9 -> 7 muls, -22.22%, <2^63 u64-safe)
 │   ├── plonky3_extensions/ # Module B: BabyBear^{4,5}, KoalaBear^{4,8}, Goldilocks^{2,4,5} JSON + Rust
 │   └── pairing_towers/     # Module C: BN254, BLS12-381 & BLS12-377 Fp2/Fp6/Fp12 Pareto curves + certs
-├── rust_crates/            # Reference #![no_std] Rust crate (`Cargo.toml` + `src/lib.rs` + `src/generated.rs`)
+├── rust_crates/            # #![no_std] Rust crate (`src/lib.rs`, `src/generated.rs`, Zcash `src/halo2_gadgets.rs`)
 ├── go_gadgets/             # Native Go module (`math/big` gadgets + zero-alloc [6]uint64 CIOS `bls12377_fp.go`)
-├── tests/                  # 17 unittest suites: Z/Fp basis proofs, 109,000 fuzz checks & mutation selftests
-└── monetization/           # Reproducible benchmarks, grant proposals (AI4Math & ZK ESP), PR briefs & B2B offer
+├── tests/                  # 23 unittest suites: Z/Fp basis proofs, BitVM2 traces, 109k+ fuzz & mutation tests
+├── docs/
+│   └── index.html          # Self-contained B2B storefront & interactive Prover Cloud / L1 Verifier ROI calculator
+└── monetization/           # Benchmarks, grants (`zcash_zcg_grant.md`, AI4Math, ZK ESP), PR briefs & B2B offer
 ```
 
 ---
