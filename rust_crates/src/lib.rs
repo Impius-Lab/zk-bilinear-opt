@@ -8,7 +8,9 @@
 
 #![no_std]
 
+#[allow(clippy::erasing_op)]
 pub mod generated;
+pub mod halo2_gadgets;
 pub use generated::*;
 
 pub const M31_P: u32 = (1u32 << 31) - 1;
@@ -74,7 +76,8 @@ mod tests {
     use super::*;
 
     fn ref_binomial_u32<const D: usize>(a: &[u32; D], b: &[u32; D], w: u64, p: u64) -> [u32; D] {
-        let mut prod = [0u64; 2 * D];
+        assert!(D <= 8);
+        let mut prod = [0u64; 16];
         for i in 0..D {
             for j in 0..D {
                 prod[i + j] = (prod[i + j] + (a[i] as u64) * (b[j] as u64)) % p;
@@ -139,7 +142,8 @@ mod tests {
     }
 
     fn ref_binomial_u64<const D: usize>(a: &[u64; D], b: &[u64; D], w: u128, p: u128) -> [u64; D] {
-        let mut prod = [0u128; 2 * D];
+        assert!(D <= 8);
+        let mut prod = [0u128; 16];
         for i in 0..D {
             for j in 0..D {
                 let term = ((a[i] as u128) * (b[j] as u128)) % p;
