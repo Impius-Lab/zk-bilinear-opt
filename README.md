@@ -254,7 +254,7 @@ In standalone non-native emulated `Fp` towers over a 254-bit SNARK scalar field,
 All six local verification suites run deterministically offline without external network calls:
 
 ```powershell
-# 1. Python algebraic & artifact audit + 24 unittest suites (109,000+ fuzz, Binius/AES, BitVM2 & mutations)
+# 1. Python algebraic & artifact audit + 29 unittest checks (109,000+ fuzz, Binius/AES, BitVM2 & mutations)
 .\.venv\Scripts\python.exe -m zk_bilinear.cli audit
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 
@@ -304,7 +304,7 @@ zk-bilinear-opt/
 │   └── pairing_towers/     # Module C: BN254, BLS12-381 & BLS12-377 Fp2/Fp6/Fp12 Pareto curves + certs
 ├── rust_crates/            # #![no_std] Rust crate (`generated.rs`, `binary_tower.rs`, Zcash `halo2_gadgets.rs`)
 ├── go_gadgets/             # Native Go module (`math/big` gadgets + zero-alloc [6]uint64 CIOS `bls12377_fp.go`)
-├── tests/                  # 24 unittest suites: Z/Fp/GF(2) basis proofs, BitVM2 traces, 109k+ fuzz & mutations
+├── tests/                  # 29 unittest checks: Z/Fp/GF(2) basis proofs, BitVM2 traces, 109k+ fuzz & mutations
 ├── docs/
 │   └── index.html          # Self-contained B2B storefront, 9-preset ROI calculator & Whop/USDC intake modal
 ├── wrangler.jsonc          # Cloudflare Workers Static Assets edge config (`impius-lab-zk` -> `./docs`)

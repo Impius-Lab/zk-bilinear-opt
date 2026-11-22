@@ -77,6 +77,6 @@ Our discovery-and-verification stack enforces four machine-checked guardrails th
 ## 5. Evaluation Metrics & Public Reproducibility
 
 Every deliverable is deterministically reproducible offline on commodity hardware with zero proprietary dependencies:
-- **`zk-bilinear-opt` Multi-Language Verification Suite**: `python -m zk_bilinear.cli audit` (`64` prime schedules, `3,706` $`\mathbb{Z}`$+$`\mathbb{F}_p`$ basis pairs), `unittest` (`24` suites incl. `Binius`/`AES` binary towers & `BitVM2`, `109,000+` fuzz checks, live RED mutations), `lake build` (`107` zero-`sorry` Lean 4 theorems in `~7.2s–8.0s`), `scarb --offline test` (`12/12` Cairo tests), `cargo test` (`#![no_std]` + `forbid(unsafe_code)`), and `go test ./...`.
+- **`zk-bilinear-opt` Multi-Language Verification Suite**: `python -m zk_bilinear.cli audit` (`64` prime schedules, `3,706` $`\mathbb{Z}`$+$`\mathbb{F}_p`$ basis pairs), `unittest` (`29` checks across `6` suites incl. `Binius`/`AES` binary towers & `BitVM2`, `109,000+` fuzz checks, live RED mutations), `lake build` (`107` zero-`sorry` Lean 4 theorems in `~7.2s–8.0s`), `scarb --offline test` (`12/12` Cairo tests), `cargo test` (`#![no_std]` + `forbid(unsafe_code)`), and `go test ./...`.
 - **Six Live Open Upstream PRs + `arkworks-rs/algebra` Branch**: Full upstream test, `no_std`, `clippy -D warnings`, `rustfmt`, `air_code_gen`, and Criterion / R1CS / PlonK gates verified (`exit 0`).
 - **`omega-2` Pure-Math Suite**: `96` deterministic certificate scripts + AST vacuous-assertion & unlistened-audit scanner.
