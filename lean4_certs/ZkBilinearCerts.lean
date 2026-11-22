@@ -7,4 +7,6 @@
 import ZkBilinearCerts.Qm31Algebraic
 import ZkBilinearCerts.M31Overflow
 import ZkBilinearCerts.CrtSoundness
+import ZkBilinearCerts.Bls12_377Soundness
+import ZkBilinearCerts.PastaBls12_381Crt
 import ZkBilinearCerts.VerifyAxioms
