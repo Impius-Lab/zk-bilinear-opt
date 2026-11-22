@@ -115,8 +115,7 @@ go test ./internal/stats
 
 ## 2. `starkware-libs/proving` (`stwo`) — Scalar `CM31`/`QM31` Acceleration (`2.71x` Mul) & Multi-Backend AIR/Verifier `QM31` Mul Compression (`22 -> 9`, `-59.1%`)
 
-- **Live Branch**: `perf/qm31-min-rank-and-verifier-ops` (`149dcdf`, base `starkware-libs/proving` `main` `9bc8c8d`)
-- **Compare URL**: [`https://github.com/starkware-libs/proving/compare/main...Impius-Lab:proving:perf/qm31-min-rank-and-verifier-ops`](https://github.com/starkware-libs/proving/compare/main...Impius-Lab:proving:perf/qm31-min-rank-and-verifier-ops)
+- **Live Open PR**: [`https://github.com/starkware-libs/proving/pull/9`](https://github.com/starkware-libs/proving/pull/9) (branch `perf/qm31-min-rank-and-verifier-ops` @ `149dcdf`, base `9bc8c8d`; plus companion SIMD `dealloc` UB fix [`https://github.com/starkware-libs/proving/pull/10`](https://github.com/starkware-libs/proving/pull/10) @ `89e13e9`)
 - **Proposed PR Title**: `perf(stwo,airs): accelerate CM31/QM31 scalar ops (2.71x mul) and cut AIR/verifier QM31 muls 22 -> 9 (-59.1%)`
 
 ### Ready-to-Paste Upstream PR Description
@@ -176,8 +175,7 @@ cargo fmt --all -- --check
 
 ## 3. `Plonky3/Plonky3` — Minimum-Rank $`(2D - 1)`$ `ExtensionAlgebra` Kernels & `Complex<Mersenne31>` Acceleration (`4.26x` `QM31`, `-56.25%` to `-76.56%` AIR Muls)
 
-- **Live Branch**: `perf/min-rank-extension-algebra` (`43c843c`, base `Plonky3/Plonky3` `main` `0d80373`)
-- **Compare URL**: [`https://github.com/Plonky3/Plonky3/compare/main...Impius-Lab:Plonky3:perf/min-rank-extension-algebra`](https://github.com/Plonky3/Plonky3/compare/main...Impius-Lab:Plonky3:perf/min-rank-extension-algebra)
+- **Live Open PR**: [`https://github.com/Plonky3/Plonky3/pull/2600`](https://github.com/Plonky3/Plonky3/pull/2600) (branch `perf/min-rank-extension-algebra` @ `43c843c`, base `0d80373`)
 - **Proposed PR Title**: `perf(field,air,mersenne-31): minimum-rank (2D - 1) ExtensionAlgebra kernels and Complex<Mersenne31> acceleration`
 
 ### Ready-to-Paste Upstream PR Description

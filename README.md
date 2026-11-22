@@ -47,7 +47,7 @@ Every schedule in this repository (`64` schedules across `18` extension targets)
 
 ## 2. Measured Production Upstream Compiler & Prover Benchmarks
 
-To validate end-to-end SNARK/STARK compiler, prover, and verifier behavior beyond standalone cost models, we implemented, benchmarked, and adversarially verified upstream branches across **`Consensys/gnark`** (live open PRs [`Consensys/gnark#1950`](https://github.com/Consensys/gnark/pull/1950) and [`Consensys/gnark#1951`](https://github.com/Consensys/gnark/pull/1951)), **`Plonky3/Plonky3`** (`Impius-Lab/Plonky3` branch `perf/min-rank-extension-algebra`), and **`starkware-libs/proving` (`stwo`)** (`Impius-Lab/proving` branch `perf/qm31-min-rank-and-verifier-ops`).
+To validate end-to-end SNARK/STARK compiler, prover, and verifier behavior beyond standalone cost models, we implemented, benchmarked, and adversarially verified **five live open upstream Pull Requests** across **`Consensys/gnark`** ([`Consensys/gnark#1950`](https://github.com/Consensys/gnark/pull/1950) and [`Consensys/gnark#1951`](https://github.com/Consensys/gnark/pull/1951)), **`Plonky3/Plonky3`** ([`Plonky3/Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600)), and **`starkware-libs/proving` (`stwo`)** ([`starkware-libs/proving#9`](https://github.com/starkware-libs/proving/pull/9) and [`starkware-libs/proving#10`](https://github.com/starkware-libs/proving/pull/10)).
 
 ### 2.1 [`Consensys/gnark#1950`](https://github.com/Consensys/gnark/pull/1950) (`perf/bls12377-bilinear-rank11-rank23`): Native 2-Chain `BLS12-377` over `BW6-761`
 
@@ -98,9 +98,9 @@ Live open PR: [`https://github.com/Consensys/gnark/pull/1951`](https://github.co
 
 > **Cryptographic Soundness Hardening Included (`Consensys/gnark#1951`)**: During adversarial multi-agent review of `std/math/emulated/field_mul.go`, we uncovered and closed a malicious-prover excess-quotient-bit modulo-$`q`$ wrap-around vulnerability on small native fields ($`2t \ge F - 1`$, permitted by `NewField` since $`F \ge t + 3`$, e.g., $`t = 22`$ over 31-bit BabyBear $`q = 2013265921`$) where unconstrained high bits of a full-limb quotient witness $`k_0 < 2^t`$ allowed $`k_0 p_i - r_i = m_i q \equiv 0 \pmod{q}`$ (including degree-0 single-limb `checkZero` checks with zero carry limbs). Enforcing exact `quoBits = maxQuo.BitLen()` via `packLimbsWithWidth` and guarding uncapped CRT carry requirements eliminates the forgery while saving an additional `51,813` R1CS / `233,162` PlonK constraints on `BN254` pairing!
 
-### 2.3 `Plonky3/Plonky3` (`Impius-Lab/Plonky3` branch `perf/min-rank-extension-algebra`)
+### 2.3 [`Plonky3/Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600) (`perf/min-rank-extension-algebra`): Minimum-Rank `ExtensionAlgebra` & `Complex<Mersenne31>`
 
-Implemented on [`Impius-Lab/Plonky3`](https://github.com/Impius-Lab/Plonky3) (`perf/min-rank-extension-algebra` @ `43c843c`, base `0d80373`). Adds **(1)** `#![no_std]` Winograd / Alder–Strassen $`(2D - 1)`$ minimum-rank multiplication and symmetric squaring kernels in `p3-field` (`T * V == denom * I` `const`-asserted in `i128` at compile time, zero heap/float), wired into `p3-air` via pointer-shared `Arc` `Algebra::linear_combinations` on `SymbolicExpression`, `SymbolicExpressionExt`, `ArithmeticExpression`, and `ArithmeticExpressionExt` (with `F::NEG_ONE` lowered to `Neg`/`Sub` for **`0` constant leaf multiplications**), and **(2)** branchless delayed-`u64` single-reduction-per-limb `Complex<Mersenne31>` (`CM31`, `QM31`, `M31^6`) kernels in `p3-mersenne-31`:
+Live open PR: [`https://github.com/Plonky3/Plonky3/pull/2600`](https://github.com/Plonky3/Plonky3/pull/2600) (branch `perf/min-rank-extension-algebra` @ `43c843c`, base `0d80373`). Adds **(1)** `#![no_std]` Winograd / Alder–Strassen $`(2D - 1)`$ minimum-rank multiplication and symmetric squaring kernels in `p3-field` (`T * V == denom * I` `const`-asserted in `i128` at compile time, zero heap/float), wired into `p3-air` via pointer-shared `Arc` `Algebra::linear_combinations` on `SymbolicExpression`, `SymbolicExpressionExt`, `ArithmeticExpression`, and `ArithmeticExpressionExt` (with `F::NEG_ONE` lowered to `Neg`/`Sub` for **`0` constant leaf multiplications**), and **(2)** branchless delayed-`u64` single-reduction-per-limb `Complex<Mersenne31>` (`CM31`, `QM31`, `M31^6`) kernels in `p3-mersenne-31`:
 
 #### A. Criterion CPU Prover Throughput & Latency (`cargo +stable bench -p p3-mersenne-31 --bench extension -- --quick`)
 
@@ -128,9 +128,9 @@ Implemented on [`Impius-Lab/Plonky3`](https://github.com/Impius-Lab/Plonky3) (`p
 | **`KoalaBear` `QuinticTrinomial` (`D=5`, $`X^5 + X^2 - 1`$)** | **`26 -> 9`** | **`-65.38%`** | `17 -> 9` | **`-47.06%`** | `(9, 0)` |
 | **`BabyBear` / `KoalaBear` Binomial (`D=8`)** | **`64 -> 15`** | **`-76.56%`** | `36 -> 15` | **`-58.33%`** | `(15, 0)` |
 
-### 2.4 `starkware-libs/proving` [`stwo`] (`Impius-Lab/proving` branch `perf/qm31-min-rank-and-verifier-ops`)
+### 2.4 [`starkware-libs/proving#9`](https://github.com/starkware-libs/proving/pull/9) & [`#10`](https://github.com/starkware-libs/proving/pull/10) (`stwo`): `CM31`/`QM31` & Multi-Backend AIR Compression
 
-Implemented on [`Impius-Lab/proving`](https://github.com/Impius-Lab/proving) (`perf/qm31-min-rank-and-verifier-ops` @ `149dcdf`, base `9bc8c8d`). Accelerates scalar `CM31` and `QM31` arithmetic in `crates/stwo` (`2.71x` `QM31::mul`, `2.55x` `QM31::square`, plus public `const fn QM31::mul_rank7`) and replaces 20-mul schoolbook `QM31` expansion in `crates/airs` (`Qm31Ops` & `QM31AddMulOpcode`) across all 5 `[AIR-GENERATED]` Rust SIMD, Rust circuit verifier, and Cairo verifier components:
+Live open PRs: [`https://github.com/starkware-libs/proving/pull/9`](https://github.com/starkware-libs/proving/pull/9) (`perf/qm31-min-rank-and-verifier-ops` @ `149dcdf`, base `9bc8c8d`) and [`https://github.com/starkware-libs/proving/pull/10`](https://github.com/starkware-libs/proving/pull/10) (`fix/simd-base-column-into-cpu-vec-ub` @ `89e13e9`, fixing a `GlobalAlloc::dealloc` `align = 64 -> 4` UB / Windows `0xc0000374` crash in `BaseColumn::into_cpu_vec`). Accelerates scalar `CM31` and `QM31` arithmetic in `crates/stwo` (`2.71x` `QM31::mul`, `2.55x` `QM31::square`, plus public `const fn QM31::mul_rank7`) and replaces 20-mul schoolbook `QM31` expansion in `crates/airs` (`Qm31Ops` & `QM31AddMulOpcode`) across all 5 `[AIR-GENERATED]` Rust SIMD, Rust circuit verifier, and Cairo verifier components:
 
 #### A. `stwo` Scalar CPU Throughput & Latency (`--release`, `core::hint::black_box`)
 

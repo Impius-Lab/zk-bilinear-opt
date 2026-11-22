@@ -46,13 +46,13 @@ Unlike speculative grant proposals, we have already built, certified, and open-s
 
 | Upstream Branch & Target | Upstream Baseline | Measured (`perf` Branch) | Verified Speedup / Savings |
 | :--- | :---: | :---: | :---: |
-| **`Plonky3` (`43c843c`)**: `p3-mersenne-31` Criterion `QM31` `mul-throughput` / `latency` | `20.331 ns` / `26.047 ns` | **`4.768 ns` / `8.238 ns`** | **`4.26x` (`-76.55%`) / `3.16x` (`-68.37%`)** |
-| **`Plonky3` (`43c843c`)**: Criterion `QM31` `square` / `inv` & `PackedQM31` `square` | `13.396` / `81.627` / `922.13 ns` | **`5.476` / `41.559` / `622.56 ns`** | **`2.45x` / `1.96x` / `1.48x`** |
-| **`Plonky3` (`43c843c`)**: Criterion `M31^6` `mul-throughput` / `square` / `inv` | `43.222` / `26.702` / `116.52 ns` | **`14.957` / `11.709` / `61.828 ns`** | **`2.89x` / `2.28x` / `1.88x`** |
-| **`Plonky3` (`43c843c`)**: `p3-air` DAG Quadratic Muls (`D=4` & `QM31` / `D=5` / `D=8`) | `16` / `25`–`26` / `64` | **`7` / `9` / `15`** | **`-56.25%` / `-64.0%`–`-65.4%` / `-76.56%`** |
-| **StarkWare `proving` (`149dcdf`)**: `stwo` `CM31::mul` & `QM31::mul` (8-way / 1-way) | `2.569 ns` & `13.004` / `19.970 ns` | **`1.748 ns` & `4.797` / `8.196 ns`** | **`1.47x` & `2.71x` / `2.44x`** |
-| **StarkWare `proving` (`149dcdf`)**: `stwo` `QM31::square` (8-way / 1-way) | `13.717 ns` / `22.127 ns` | **`5.376 ns` / `9.824 ns`** | **`2.55x` (`-60.8%`) / `2.25x` (`-55.6%`)** |
-| **StarkWare `proving` (`149dcdf`)**: `[AIR-GENERATED]` `QM31` Muls (SIMD, Cairo & Circuits) | `22` (`39` / `42` / `46` per gate) | **`9`** (**`26` / `29` / `33`** per gate) | **`-59.1%`** (`-13` muls across all 5 files) |
+| **[`Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600)**: `p3-mersenne-31` Criterion `QM31` `mul-throughput` / `latency` | `20.331 ns` / `26.047 ns` | **`4.768 ns` / `8.238 ns`** | **`4.26x` (`-76.55%`) / `3.16x` (`-68.37%`)** |
+| **[`Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600)**: Criterion `QM31` `square` / `inv` & `PackedQM31` `square` | `13.396` / `81.627` / `922.13 ns` | **`5.476` / `41.559` / `622.56 ns`** | **`2.45x` / `1.96x` / `1.48x`** |
+| **[`Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600)**: Criterion `M31^6` `mul-throughput` / `square` / `inv` | `43.222` / `26.702` / `116.52 ns` | **`14.957` / `11.709` / `61.828 ns`** | **`2.89x` / `2.28x` / `1.88x`** |
+| **[`Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600)**: `p3-air` DAG Quadratic Muls (`D=4` & `QM31` / `D=5` / `D=8`) | `16` / `25`–`26` / `64` | **`7` / `9` / `15`** | **`-56.25%` / `-64.0%`–`-65.4%` / `-76.56%`** |
+| **[`proving#9`](https://github.com/starkware-libs/proving/pull/9)**: `stwo` `CM31::mul` & `QM31::mul` (8-way / 1-way) | `2.569 ns` & `13.004` / `19.970 ns` | **`1.748 ns` & `4.797` / `8.196 ns`** | **`1.47x` & `2.71x` / `2.44x`** |
+| **[`proving#9`](https://github.com/starkware-libs/proving/pull/9)**: `stwo` `QM31::square` (8-way / 1-way) | `13.717 ns` / `22.127 ns` | **`5.376 ns` / `9.824 ns`** | **`2.55x` (`-60.8%`) / `2.25x` (`-55.6%`)** |
+| **[`proving#9`](https://github.com/starkware-libs/proving/pull/9)**: `[AIR-GENERATED]` `QM31` Muls (SIMD, Cairo & Circuits) | `22` (`39` / `42` / `46` per gate) | **`9`** (**`26` / `29` / `33`** per gate) | **`-59.1%`** (`-13` muls across all 5 files) |
 
 ### C. Standalone Native STARK / Recursive AIR & Emulated Limb-Carry Pareto Certificates (`zk-bilinear-opt`)
 
@@ -70,7 +70,7 @@ Unlike speculative grant proposals, we have already built, certified, and open-s
 ## 3. Grant Scope, Milestones & Deliverables (16 Weeks, \$60,000)
 
 ### Milestone 1 — Upstream `Plonky3` & StarkWare `proving` (`stwo`) PR Shepherding, SIMD Packed Kernels & BitVM2 Gadgets (Weeks 1–5 · \$20,000)
-- Shepherd our completed `Plonky3/Plonky3` (`perf/min-rank-extension-algebra` @ `43c843c`) and `starkware-libs/proving` (`perf/qm31-min-rank-and-verifier-ops` @ `149dcdf`) branches through upstream maintainer review.
+- Shepherd our three live open STARK PRs ([`Plonky3/Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600), [`starkware-libs/proving#9`](https://github.com/starkware-libs/proving/pull/9), and SIMD memory-safety UB fix [`starkware-libs/proving#10`](https://github.com/starkware-libs/proving/pull/10)) through upstream maintainer review.
 - Extend vectorized SIMD `AVX2`/`AVX-512`/`NEON` packed-field multiplication/squaring kernels (`PackedQM31` & `MontyField31` binomial towers) and ship Bitcoin script / BitVM2 `QM31` `Rank-7` gadgets (`-22.22%` tapscript `M31` muls).
 - **Acceptance Gate**: Upstream PRs reviewed on `Plonky3/Plonky3` and `starkware-libs/proving` + end-to-end recursive FRI / BitVM2 script benchmark suite.
 

@@ -22,9 +22,9 @@ Our algebraic synthesis engine computes **exact finite-field bilinear decomposit
 | **`gnark` `sw_bls12377.PairingCheck` (`2`-pair `FixedQ`)** | `6,339` R1CS | **`mulRank11` + `mulBy01234Rank22`** | **`-32.84%`** (`4,257` R1CS, [`gnark#1950`](https://github.com/Consensys/gnark/pull/1950)) |
 | **`gnark` `sw_bn254.Pair` (`1`-pair witness / fixed `G2`)** | `836,825` / `720,474` R1CS | **`MulPolyModTrinomial12` + `quoBits`** | **`-14.55%` / `-15.17%` R1CS** ([`gnark#1951`](https://github.com/Consensys/gnark/pull/1951)) |
 | **`gnark` `sw_bls12381.Pair` (`1`-pair witness / fixed `G2`)** | `1,323,407` / `1,178,947` R1CS | **`MulPolyModTrinomial12` + `quoBits`** | **`-9.71%` / `-9.99%` R1CS** (`-478,847` PlonK) |
-| **StarkWare `proving` (`stwo`) `QM31` (CPU & AIR/Verifier)** | `13.00 ns` / `22` AIR muls | **Delayed-`u64` + Unimodular K-9** | **`2.71x` CPU mul / `-59.1%` (`22 -> 9`) AIR muls** |
-| **`Plonky3` `Complex<Mersenne31>` (`QM31` / `M31^6` CPU)** | `20.33 ns` / `43.22 ns` | **Delayed-`u64` `dot4` / `dot6`** | **`4.26x` `QM31` / `2.89x` `M31^6` Criterion** |
-| **`Plonky3` / `SP1` `p3-air` (`D=4` / `D=5` / `D=8` DAG)** | `16` / `25`–`26` / `64` muls | **Shared-`Arc` `Rank-(2D-1)`** | **`-56.25%` / `-64.0%`–`-65.4%` / `-76.56%`** |
+| **StarkWare `proving` (`stwo`) `QM31` (CPU & AIR/Verifier)** | `13.00 ns` / `22` AIR muls | **Delayed-`u64` + Unimodular K-9** | **`2.71x` CPU / `-59.1%` AIR** ([`proving#9`](https://github.com/starkware-libs/proving/pull/9)) |
+| **`Plonky3` `Complex<Mersenne31>` (`QM31` / `M31^6` CPU)** | `20.33 ns` / `43.22 ns` | **Delayed-`u64` `dot4` / `dot6`** | **`4.26x` `QM31` / `2.89x` `M31^6`** ([`Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600)) |
+| **`Plonky3` / `SP1` `p3-air` (`D=4` / `D=5` / `D=8` DAG)** | `16` / `25`–`26` / `64` muls | **Shared-`Arc` `Rank-(2D-1)`** | **`-56.25%` / `-64.0%`–`-65.4%` / `-76.56%`** ([`Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600)) |
 | **Standalone Emulated `BN254` & `BLS12-381` `Fp12`** | `54` muls (`44.6k` / `68.0k`) | **`CRT-30`** (`0` pre-reductions) | **`-29.41%` / `-32.27%` net Groth16 R1CS** |
 
 **Concrete Cloud & On-Chain ROI**:
