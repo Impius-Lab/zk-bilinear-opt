@@ -777,17 +777,19 @@
     }
 
     .tier-list li {
-      display: flex;
-      gap: 9px;
-      align-items: flex-start;
+      position: relative;
+      padding-left: 20px;
+      overflow-wrap: break-word;
     }
 
     .tier-list li::before {
       content: "✓";
+      position: absolute;
+      left: 0;
+      top: 0;
       color: var(--accent-emerald);
       font-family: var(--font-mono);
       font-weight: 700;
-      flex-shrink: 0;
     }
 
     .tier-actions {
