@@ -5,9 +5,9 @@
 [![Go 1.23+](https://img.shields.io/badge/go-1.23%2B-00ADD8.svg)](./go_gadgets/go.mod)
 [![no_std Rust](https://img.shields.io/badge/rust-no__std-DEA584.svg)](./rust_crates/Cargo.toml)
 [![Cairo 2.21+](https://img.shields.io/badge/cairo-2.21%2B-FF4F00.svg)](./cairo_gadgets/Scarb.toml)
-[![Lean 4 v4.36.0](https://img.shields.io/badge/lean4-zero--sorry-5B21B6.svg)](./lean4_certs/lakefile.toml)
+[![Lean 4 v4.36.0](https://img.shields.io/badge/lean4-107%20thms%20%7C%20zero--sorry-5B21B6.svg)](./lean4_certs/lakefile.toml)
 
-`zk-bilinear-opt` is an exact finite-field bilinear rank certifier, non-native limb-carry Pareto optimizer, zero-`sorry` **Lean 4** formal proof suite ([`lean4_certs/`](./lean4_certs/README.md)), and deterministic `#![no_std]` Rust / Go / Cairo / BitVM2 code generator for Zero-Knowledge STARK and SNARK extension towers (**StarkWare `stwo` & Cairo**, **`Plonky3` / `SP1`**, **`Consensys/gnark`**, **Aleo `snarkVM` (`BLS12-377`)**, **Zcash `Halo2` / `Pasta` / `BLS12-381`**, and **BitVM2 Tapscript**) — accompanied by our live Cloudflare Workers Static Assets B2B storefront ([`https://impius-lab-zk.weight-space-engineering.workers.dev`](https://impius-lab-zk.weight-space-engineering.workers.dev)).
+`zk-bilinear-opt` is an exact finite-field & binary-tower bilinear rank certifier, non-native limb-carry Pareto optimizer, **`107`-theorem zero-`sorry` Core Lean 4** formal proof suite ([`lean4_certs/`](./lean4_certs/README.md)), and deterministic `#![no_std]` Rust / Go / Cairo / BitVM2 code generator for Zero-Knowledge STARK and SNARK extension towers (**StarkWare `stwo` & Cairo**, **`Plonky3` / `SP1`**, **`Binius` $`\mathrm{GF}(2^{2^k})`$ & `AES` $`\mathrm{GF}(2^8)`$**, **`Consensys/gnark`**, **Aleo `snarkVM` (`BLS12-377`)**, **`arkworks-rs/algebra`**, **Zcash `Halo2` / `Pasta` / `BLS12-381`**, and **BitVM2 Tapscript**) — accompanied by our live Cloudflare Workers Static Assets B2B storefront ([`https://impius-lab-zk.weight-space-engineering.workers.dev`](https://impius-lab-zk.weight-space-engineering.workers.dev)).
 
 ---
 
@@ -45,11 +45,26 @@ Every schedule in this repository (`64` schedules across `18` extension targets)
 | **`BLS12-377` `Fp6`** | $`6 \times 64`$-bit | `Tower-18` (`22,930` R1CS) | **`Rank-11`** (`{-5..4, inf}`) | `18 -> 11` (`-38.89%`) | `0` | **`16,839` (`-26.56%`)** | **`3,465` (`-27.36%`)** |
 | **`BLS12-377` `Fp12`** | $`6 \times 64`$-bit | `Tower-54` (`66,534` R1CS) | **`CRT-30`** (`9` lin + `7` quad) | `54 -> 30` (`-44.44%`) | `0` | **`45,601` (`-31.46%`)** | **`10,394` (`-28.18%`)** |
 
+### C. Characteristic-2 Binary Towers (`Binius` $`\mathrm{GF}(2^{2^k})`$ & `AES` $`\mathrm{GF}(2^8)`$)
+
+*(Exact $`\mathbb{F}_2`$ basis-pair certified schedules in [`zk_bilinear/binary_towers.py`](./zk_bilinear/binary_towers.py) and `#![no_std]`, `#![forbid(unsafe_code)]` [`rust_crates/src/binary_tower.rs`](./rust_crates/src/binary_tower.rs); Frobenius squaring and $`X_{k-1}`$-scaling consume `0` `AND` gates across all levels.)*
+
+| Binary Tower / Field Target | Degree $`d`$ | Schoolbook `AND`s | Wiedemann Karatsuba (`3^k` `AND`s) | Extension-Interpolated Chudnovsky / Toom | `AND`-Gate Reduction | Verification Coverage |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **`Binius` $`\mathcal{T}_1 = \mathrm{GF}(2^2)`$** | `2` | `4` | **`3`** (`4` DAG `XOR`s) | Optimal (`3`) | **`-25.00%`** | `4/4` $`\mathbb{F}_2`$ basis pairs |
+| **`Binius` $`\mathcal{T}_2 = \mathrm{GF}(2^4)`$** | `4` | `16` | **`9`** (`21` DAG `XOR`s) | `9` | **`-43.75%`** | `16/16` $`\mathbb{F}_2`$ basis pairs |
+| **`Binius` $`\mathcal{T}_3 = \mathrm{GF}(2^8)`$** | `8` | `64` | `27` (`-57.81%`) | **`Rank-24`** (`Chudnovsky-GF(4)`) | **`-62.50%`** (`-11.11%` vs `27`) | `64/64` basis + `65,536` byte pairs |
+| **`Binius` $`\mathcal{T}_4 = \mathrm{GF}(2^{16})`$** | `16` | `256` | `81` (`-68.36%`) | **`Rank-60`** (`Chudnovsky-GF(4)`) / `Rank-63` (`Toom-GF(16)`) | **`-76.56%`** (`-25.93%` vs `81`) | `256/256` $`\mathbb{F}_2`$ basis pairs |
+| **`Binius` $`\mathcal{T}_5 = \mathrm{GF}(2^{32})`$** | `32` | `1,024` | `243` (`-76.27%`) | **`180`** (`60 * 3` hybrid) | **`-82.42%`** | Primitivity + field axioms |
+| **`Binius` $`\mathcal{T}_6 = \mathrm{GF}(2^{64})`$** | `64` | `4,096` | `729` (`-82.20%`) | **`540`** (`60 * 3^2` hybrid) | **`-86.82%`** | Primitivity + field axioms |
+| **`Binius` $`\mathcal{T}_7 = \mathrm{GF}(2^{128})`$** | `128` | `16,384` | **`2,187`** (`-86.65%`) | **`1,620`** (`60 * 3^3` hybrid) | **`-90.11%`** (`-25.93%` vs `2,187`) | Full $`2^{128}-1`$ Fermat order + axioms |
+| **`AES` $`\mathbb{F}_2[x]/(x^8 + x^4 + x^3 + x + 1)`$** | `8` | `64` | `27` (`-57.81%`, $`\det = 1`$ iso) | **`Rank-24`** (`AES_Chudnovsky_Rank24`) | **`-62.50%`** | `64/64` basis + `65,536` byte pairs |
+
 ---
 
 ## 2. Measured Production Upstream Compiler & Prover Benchmarks
 
-To validate end-to-end SNARK/STARK compiler, prover, and verifier behavior beyond standalone cost models, we implemented, benchmarked, and adversarially verified **six live open upstream Pull Requests** across **`Consensys/gnark`** ([`Consensys/gnark#1950`](https://github.com/Consensys/gnark/pull/1950) and [`Consensys/gnark#1951`](https://github.com/Consensys/gnark/pull/1951)), **`Plonky3/Plonky3`** ([`Plonky3/Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600)), **`starkware-libs/proving` (`stwo`)** ([`starkware-libs/proving#9`](https://github.com/starkware-libs/proving/pull/9) and [`starkware-libs/proving#10`](https://github.com/starkware-libs/proving/pull/10)), and **`aleo-labs-protocol/snarkVM`** ([`aleo-labs-protocol/snarkVM#3908`](https://github.com/aleo-labs-protocol/snarkVM/pull/3908)).
+To validate end-to-end SNARK/STARK compiler, prover, and verifier behavior beyond standalone cost models, we implemented, benchmarked, and adversarially verified **six live open upstream Pull Requests** across **`Consensys/gnark`** ([`Consensys/gnark#1950`](https://github.com/Consensys/gnark/pull/1950) and [`Consensys/gnark#1951`](https://github.com/Consensys/gnark/pull/1951)), **`Plonky3/Plonky3`** ([`Plonky3/Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600)), **`starkware-libs/proving` (`stwo`)** ([`starkware-libs/proving#9`](https://github.com/starkware-libs/proving/pull/9) and [`starkware-libs/proving#10`](https://github.com/starkware-libs/proving/pull/10)), and **`aleo-labs-protocol/snarkVM`** ([`aleo-labs-protocol/snarkVM#3908`](https://github.com/aleo-labs-protocol/snarkVM/pull/3908)), alongside our benchmarked **`arkworks-rs/algebra`** branch ([`Impius-Lab/algebra`](https://github.com/Impius-Lab/algebra)).
 
 ### 2.1 [`Consensys/gnark#1950`](https://github.com/Consensys/gnark/pull/1950) (`perf/bls12377-bilinear-rank11-rank23`): Native 2-Chain `BLS12-377` over `BW6-761`
 
@@ -160,13 +175,14 @@ Live open PRs: [`https://github.com/starkware-libs/proving/pull/9`](https://gith
 
 > **Backend Cost Dichotomy (`{0, +1, -1}` Karatsuba-9 vs `Rank-7`)**: In R1CS, PlonK, and `Plonky3`'s `p3-air`, scaling by a base-field constant $`c \in \mathbb{F}_p`$ has polynomial degree `0` (`0` multiplicative constraints), so Winograd / Alder–Strassen **`Rank-7`** (`7` `Var * Var` muls) is globally optimal (`16 -> 7`, `-56.25%`). Conversely, in StarkWare `proving`'s `air_code_gen` and `crates/circuits/src/ops.rs`, every non-unit `Const * Var` ($`c \notin \{0, 1\}`$) in `FeltExpr` lowers to an explicit `PackedM31 * PackedM31` SIMD mul in `SimdDomainEvaluator`, a `qm31_const * QM31` mul in `stwo_cairo_verifier`, and a `Qm31Ops::Mul` circuit gate in `stwo-circuits`! Under that cost model, `Rank-7` cuts `Var * Var` muls `20 -> 7` (`-65.0%`) but introduces `33` non-unit `Const * Var` muls (`22 -> 40` total muls), whereas **unimodular $`\{0, +1, -1\}`$ nested Karatsuba-9** (`qm31_mul_expr_in_air` with `AirBuilder::let_for_constraint` sharing) uses `9` `Var * Var` + `0` `Const * Var` = **`9` total multiplications (`-59.1%` vs `22`)** and `36` vs `38` total ops (`-5.3%`) across all three backends — while `qm31_mul_expr` and `qm31_mul_rank7_in_air` remain available for degree-0-folded backends.
 
-### 2.5 Cairo Verifier (`cairo_gadgets/`), BitVM2 Tapscript (`bitvm2_qm31.py`), Zcash `Halo2` (`halo2_gadgets.rs`) & Zero-`sorry` Lean 4 Proofs (`lean4_certs/`)
+### 2.5 Cairo Verifier (`cairo_gadgets/`), BitVM2 Tapscript (`bitvm2_qm31.py`), `Binius` Binary Towers (`binary_tower.rs`), Zcash `Halo2` (`halo2_gadgets.rs`) & `107` Zero-`sorry` Lean 4 Proofs (`lean4_certs/`)
 
 - **Cairo Verifier Package ([`cairo_gadgets/`](./cairo_gadgets/README.md) — `zk_qm31_opt`, Scarb `2.21.0`)**: Implements canonical `u64`-backed Mersenne-31 single-fold arithmetic and compares `Schoolbook-16`, unimodular **`qm31_mul_karatsuba9`** / **`qm31_square_karatsuba6`** (`0` non-unit `Const * Var` muls, cutting 64-iter Cairo VM steps **`70,019 -> 51,641` (`-26.25%`)** and **`70,067 -> 39,738` (`-43.29%`)**), and **`qm31_mul_rank7`** (`7` `M31` variable-variable multiplications via $`\mathrm{QM31} \cong \mathbb{M}_{31}[v]/(v^4 - 4v^2 + 5)`$).
 - **BitVM2 Tapscript `QM31` Simulator ([`zk_bilinear/bitvm2_qm31.py`](./zk_bilinear/bitvm2_qm31.py) & [`tests/test_bitvm2_qm31.py`](./tests/test_bitvm2_qm31.py))**: Models `BIP-342` 4-byte `CScriptNum`-safe (`|x| <= 2^31 - 1`) `OP_M31_ADD`, `OP_M31_SUB`, `OP_M31_SCALE_SMALL` (`{2, 3, 4, 6, 12}`), and witness-hinted `4x8`-bit `OP_M31_MUL`, cutting `OP_M31_MUL` **`16 -> 9 -> 7`** (**`-22.22%`** vs `Karatsuba-9`, **`-56.25%`** vs `Schoolbook-16`), witness stack items **`352 -> 198 -> 158`** (`-20.20%` vs `Karatsuba-9`), and Script opcodes **`17,880 -> 10,224 -> 9,447`** (`-7.60%` vs `Karatsuba-9`).
+- **Characteristic-2 Binary Towers ([`zk_bilinear/binary_towers.py`](./zk_bilinear/binary_towers.py) & [`rust_crates/src/binary_tower.rs`](./rust_crates/src/binary_tower.rs))**: `#![no_std]`, `#![forbid(unsafe_code)]` Wiedemann (`Binius`) `gf2_2..gf2_128` towers (`3^k` `AND`s, `0`-`AND` Frobenius squaring, Itoh–Tsujii inversion), `GF(4)`/`GF(16)` Chudnovsky-CRT schedules (`Rank-24` on $`\mathcal{T}_3`$, `Rank-60` on $`\mathcal{T}_4`$, `1,620` `AND`s on $`\mathcal{T}_7 = \mathrm{GF}(2^{128})`$), and invertible $`\det = 1 \pmod 2`$ `AES` $`\mathrm{GF}(2^8)`$ isomorphism (`Rank-24`, `-62.50%` vs `64` schoolbook), exhaustively verified across all `65,536` AES byte pairs and `256` $`\mathrm{GF}(2^{16})`$ basis pairs.
 - **Zcash `Halo2` / `BLS12-381` & `Pasta` `#![no_std]` Module ([`rust_crates/src/halo2_gadgets.rs`](./rust_crates/src/halo2_gadgets.rs))**: Compile-time Vandermonde-verified generic `PrimeFieldOps` kernels (`Fp2` Rank-3, `Fp6` Rank-11, `Fp12` Rank-23, sparse Miller-loop `mul_by_014` **Rank-18 / Rank-19 / Rank-21**) plus exact `U1024` `Halo2LookupCostModel` (`FlexGate` + `RangeChip` over 255-bit `Pallas`/`Vesta`): **`CRT-30`** cuts non-native `BLS12-381` `Fp12` PlonKish cells by **`-24.49%` to `-29.85%`** (`0` pre-reductions vs `22` on naive `Rank-23`), and exact `quoBits` cuts `Pasta` wrong-field CRT cells by **`-9.94%` to `-13.05%`**.
-- **Zero-`sorry` Core Lean 4 Formal Proof Suite ([`lean4_certs/`](./lean4_certs/README.md) — `ZkBilinearCerts`, `lean4:v4.36.0`)**: Pure Core Lean 4 (`0` external dependencies, clean scratch `lake build` in **`< 6s`**, `33` `#print axioms`-verified theorems with `0` `sorry` and `0` custom `axiom`s) proving universal `Int` & `mod (2^31 - 1)` equivalence of `Karatsuba-9`, `Rank-7`, and `Rank-6` squaring ([`Qm31Algebraic.lean`](./lean4_certs/ZkBilinearCerts/Qm31Algebraic.lean)), `u64` `dot4` / outer-Karatsuba non-overflow (`< 2^64`) and bitwise two-step Mersenne fold canonicality ([`M31Overflow.lean`](./lean4_certs/ZkBilinearCerts/M31Overflow.lean)), and non-native CRT quotient-bit soundness + BabyBear `b = 22` unmasked forgery certificates ([`CrtSoundness.lean`](./lean4_certs/ZkBilinearCerts/CrtSoundness.lean)).
-- **Ecosystem Grant Proposals & Cloudflare Workers B2B Storefront**: Complete submission-ready specifications for **Zcash Community Grants** ([`monetization/grants/zcash_zcg_grant.md`](./monetization/grants/zcash_zcg_grant.md) — [`ZCG #590`](https://github.com/ZcashCommunityGrants/zcashcommunitygrants/issues/590)) and **Aleo Network Foundation Blueprint Grants** ([`monetization/grants/aleo_developer_grant.md`](./monetization/grants/aleo_developer_grant.md)), paired with our zero-dependency interactive Prover Cloud & L1 Verifier ROI Storefront ([`docs/index.html`](./docs/index.html)) configured for direct edge deployment via Cloudflare Workers Static Assets ([`wrangler.jsonc`](./wrangler.jsonc)).
+- **Zero-`sorry` Core Lean 4 Formal Proof Suite ([`lean4_certs/`](./lean4_certs/README.md) — `ZkBilinearCerts` `v0.2`, `lean4:v4.36.0`)**: Pure Core Lean 4 (`0` external Mathlib dependencies, clean scratch `lake build` in **`~7.2s–8.0s`**, **`107` `#print axioms`-verified theorems** = `22` zero-axiom constructive kernel terms + `85` standard `{propext, Classical.choice, Quot.sound}`, `0` `sorry`, `0` custom `axiom`s) spanning all 5 formal modules: [`Qm31Algebraic.lean`](./lean4_certs/ZkBilinearCerts/Qm31Algebraic.lean) (`21` theorems), [`M31Overflow.lean`](./lean4_certs/ZkBilinearCerts/M31Overflow.lean) (`16` theorems), [`CrtSoundness.lean`](./lean4_certs/ZkBilinearCerts/CrtSoundness.lean) (`9` theorems), [`Bls12_377Soundness.lean`](./lean4_certs/ZkBilinearCerts/Bls12_377Soundness.lean) (`38` theorems: 768-bit lazy Montgomery $`136 q^2 < q \cdot 2^{384}`$, $`W^{12} + 5`$ involution isomorphism, Karabina squaring & universal 3-branch decompression, Aleo `Fr` `CRT-30` carry non-wrap), and [`PastaBls12_381Crt.lean`](./lean4_certs/ZkBilinearCerts/PastaBls12_381Crt.lean) (`23` theorems: unimodular `BLS12-381` `Fp6`/`Fp12` trinomial isomorphisms and general odd-modulus CRT uniqueness for `Pasta` & `BLS12-381`).
+- **Ecosystem Grant Proposals & Cloudflare Workers B2B Storefront**: Complete submission-ready specifications for **Zcash Community Grants** ([`monetization/grants/zcash_zcg_grant.md`](./monetization/grants/zcash_zcg_grant.md) — [`ZCG #590`](https://github.com/ZcashCommunityGrants/zcashcommunitygrants/issues/590)), **Aleo Network Foundation Blueprint Grants** ([`monetization/grants/aleo_developer_grant.md`](./monetization/grants/aleo_developer_grant.md)), and **AI for Math** ([`monetization/grants/ai_for_math_proposal.md`](./monetization/grants/ai_for_math_proposal.md)), paired with our 9-preset interactive Prover Cloud & L1 Verifier ROI Storefront ([`docs/index.html`](./docs/index.html)) configured for direct edge deployment via Cloudflare Workers Static Assets ([`wrangler.jsonc`](./wrangler.jsonc)).
 
 ### 2.6 [`aleo-labs-protocol/snarkVM#3908`](https://github.com/aleo-labs-protocol/snarkVM/pull/3908) (`perf/bls12-377-tower-opt`): `BLS12-377` 768-Bit Lazy Reduction & Karabina `cyclotomic_exp`
 
@@ -184,6 +200,23 @@ Live open PR: [`https://github.com/aleo-labs-protocol/snarkVM/pull/3908`](https:
 | **`bls12_377: pairing_final_exponentiation`** | `508.02 us` | **`340.83 us`** | **`-32.91%` (`1.49x`)** |
 | **`bls12_377: pairing_full`** | `881.49 us` | **`643.82 us`** | **`-26.96%` (`1.37x`, `-237.67 us`)** |
 
+### 2.7 `arkworks-rs/algebra` (`perf/karabina-batch-cyclotomic-and-bls377`): Karabina Batch `cyclotomic_exp` & 60-Step Bernstein–Yang `MontConfig::inverse`
+
+Benchmarked branch: [`Impius-Lab/algebra` (`perf/karabina-batch-cyclotomic-and-bls377`)](https://github.com/Impius-Lab/algebra) (`ca2ef1c`, base `722284b`; `#![no_std]`-clean, `0` `unsafe`, `0` heap allocations, `576/576` unit & doc tests passing across `ark-ff`, `ark-ec`, `ark-bls12-377`, `ark-bls12-381`, `ark-bn254`, and `ark-bw6-761`). Implements **(1)** Karabina (2013) compressed cyclotomic squaring (`2` `Fp4` squarings/bit vs `3`) + streaming NAF + chunked 16-slot fixed-stack Montgomery batch decompression (`flush_karabina_batch`, handling all 3 decompression branches including explicit polynomial-time $`z_2 = 0, z_3 \ne 0`$ genus-0 cyclotomic witnesses and `17+`-set-bit clear-bit-0 exponents), **(2)** 60-step Bernstein–Yang `divsteps` `MontConfig::inverse` (`<= 14` outer batches on 384-bit primes vs `~760` EEA iterations, exact across both spare-bit and full `64*N`-bit primes), and **(3)** `ell_on_one` initial `f == 1` line placement in `Bls12` & `Bn` Miller loops + 3-mul `Fp6::mul_by_1`:
+
+| `arkworks-rs/algebra` Curve | Criterion Benchmark (`--release`) | Upstream `master` (`722284b`) | `perf` Branch (`ca2ef1c`) | $`\Delta`$ / Speedup |
+| :--- | :--- | :---: | :---: | :---: |
+| **`ark-bls12-381`** | `Cyclotomic Exp (Seed X)` | `116.82 us` | **`98.329 us`** | **`-15.83%`** |
+| **`ark-bls12-381`** | **`Final Exponentiation`** | `663.42 us` | **`545.40 us`** | **`-17.79%` (`1.22x`)** |
+| **`ark-bls12-381`** | **`Multi Pairing (1 pair)`** | `1.2142 ms` | **`1.0428 ms`** | **`-14.12%` (`1.16x`)** |
+| **`ark-bls12-381`** | `Miller Loop` | `356.40 us` | **`348.79 us`** | **`-2.14%`** |
+| **`ark-bls12-377`** | `Cyclotomic Exp (Seed X)` | `131.82 us` | **`112.49 us`** | **`-14.66%`** |
+| **`ark-bls12-377`** | **`Final Exponentiation`** | `749.37 us` | **`638.69 us`** | **`-14.77%` (`1.17x`)** |
+| **`ark-bls12-377`** | **`Multi Pairing (1 pair)`** | `1.3336 ms` | **`1.1641 ms`** | **`-12.71%` (`1.15x`)** |
+| **`ark-bn254`** | `Cyclotomic Exp (Seed X)` | `123.08 us` | **`118.20 us`** | **`-3.96%`** |
+| **`ark-bn254`** | **`Multi Pairing (1 pair)`** | `778.16 us` | **`740.04 us`** | **`-4.90%`** |
+| **`ark-bn254`** | `Cyclotomic Exp (ScalarField)` | `475.87 us` | **`460.06 us`** | **`-3.32%`** |
+
 ---
 
 ## 3. Mathematical Foundations
@@ -194,7 +227,7 @@ On a CPU, additions and multiplications both consume ALU cycles, making Karatsub
 Our engine synthesizes exact integer-rational bilinear decompositions:
 
 ```math
-a \cdot b = \frac{1}{D} W_{\mathbb{Z}} \Big((U a) \odot (V b)\Big) \pmod{p}, \qquad U, V \in \mathbb{Z}^{r \times d},\; W_{\mathbb{Z}} \in \mathbb{Z}^{d \times r},\; \gcd(D, p) = 1,
+a \cdot b = \frac{1}{D} W_{\mathbb{Z}} \Big((U a) \odot (V b)\Big) \pmod{p}, \qquad U, V \in \mathbb{Z}^{r \times d}, \quad W_{\mathbb{Z}} \in \mathbb{Z}^{d \times r}, \quad \gcd(D, p) = 1,
 ```
 
 co-optimizing bilinear rank $`r`$, input row product slack $`\Vert U_\ell\Vert_1 \Vert V_\ell\Vert_1`$, and output denominator/numerator weight $`\Vert W_{\mathbb{Z}, k}\Vert_1 + D`$.
@@ -218,10 +251,10 @@ In standalone non-native emulated `Fp` towers over a 254-bit SNARK scalar field,
 
 ## 4. Quickstart & Verification
 
-All five local verification suites run deterministically offline without external network calls:
+All six local verification suites run deterministically offline without external network calls:
 
 ```powershell
-# 1. Python algebraic & artifact audit + 23 unittest suites (109,000+ fuzz samples, BitVM2 & mutations)
+# 1. Python algebraic & artifact audit + 24 unittest suites (109,000+ fuzz, Binius/AES, BitVM2 & mutations)
 .\.venv\Scripts\python.exe -m zk_bilinear.cli audit
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 
@@ -230,12 +263,12 @@ Push-Location cairo_gadgets
 scarb --offline test
 Pop-Location
 
-# 3. Pure Core Lean 4 formal soundness & bilinear optimality proofs (`0` sorry, `0` custom axioms)
+# 3. Pure Core Lean 4 formal soundness & bilinear optimality proofs (`107` theorems, `0` sorry, `0` custom axioms)
 Push-Location lean4_certs
 lake build
 Pop-Location
 
-# 4. #![no_std] Rust & Zcash Halo2 / BLS12-381 / Pasta gadget tests + strict Clippy
+# 4. #![no_std] Rust, Binius/AES binary towers & Zcash Halo2 / BLS12-381 / Pasta gadget tests + strict Clippy
 cargo +stable test --manifest-path rust_crates/Cargo.toml
 cargo +stable clippy --manifest-path rust_crates/Cargo.toml --all-targets -- -D warnings
 
@@ -256,6 +289,7 @@ npx --yes wrangler@latest deploy --dry-run
 zk-bilinear-opt/
 ├── zk_bilinear/
 │   ├── fields.py           # Exact primes, Rabin irreducibility, reference towers & unimodular isomorphisms
+│   ├── binary_towers.py    # Wiedemann Binius GF(2^{2^k}), Chudnovsky-GF(4) & AES GF(2^8) synthesis
 │   ├── tensor_cert.py      # Basis-complete Z + Fp d^2 algebraic verifier + u64/u128 overflow checker
 │   ├── cost_models.py      # Native R1CS/PlonK/AIR + gnark 2-limb carry-packed non-native R1CS/PlonK16 models
 │   ├── pareto_search.py    # Vandermonde, Cyclotomic-CRT & Binomial-Tower synthesis (64 certified schedules)
@@ -263,16 +297,16 @@ zk-bilinear-opt/
 │   ├── codegen.py          # Deterministic #![no_std] Rust, Go math/big, [6]uint64 CIOS & R1CS JSON emitters
 │   └── cli.py              # CLI (`audit`, `verify`, `generate-all`, `report`)
 ├── cairo_gadgets/          # Standalone Scarb Cairo package `zk_qm31_opt` (`src/lib.cairo`, 12/12 tests)
-├── lean4_certs/            # Zero-sorry Core Lean 4 proofs (`Qm31Algebraic`, `M31Overflow`, `CrtSoundness`)
+├── lean4_certs/            # 107 zero-sorry Core Lean 4 proofs (`Qm31`, `M31Overflow`, `Crt`, `Bls12_377`, `PastaBls12_381`)
 ├── targets/
 │   ├── qm31_stwo/          # Module A: StarkWare stwo QM31 (9 -> 7 muls, -22.22%, <2^63 u64-safe)
 │   ├── plonky3_extensions/ # Module B: BabyBear^{4,5}, KoalaBear^{4,8}, Goldilocks^{2,4,5} JSON + Rust
 │   └── pairing_towers/     # Module C: BN254, BLS12-381 & BLS12-377 Fp2/Fp6/Fp12 Pareto curves + certs
-├── rust_crates/            # #![no_std] Rust crate (`src/lib.rs`, `src/generated.rs`, Zcash `src/halo2_gadgets.rs`)
+├── rust_crates/            # #![no_std] Rust crate (`generated.rs`, `binary_tower.rs`, Zcash `halo2_gadgets.rs`)
 ├── go_gadgets/             # Native Go module (`math/big` gadgets + zero-alloc [6]uint64 CIOS `bls12377_fp.go`)
-├── tests/                  # 23 unittest suites: Z/Fp basis proofs, BitVM2 traces, 109k+ fuzz & mutation tests
+├── tests/                  # 24 unittest suites: Z/Fp/GF(2) basis proofs, BitVM2 traces, 109k+ fuzz & mutations
 ├── docs/
-│   └── index.html          # Self-contained B2B storefront, Whop/USDC intake modal & ROI calculator
+│   └── index.html          # Self-contained B2B storefront, 9-preset ROI calculator & Whop/USDC intake modal
 ├── wrangler.jsonc          # Cloudflare Workers Static Assets edge config (`impius-lab-zk` -> `./docs`)
 └── monetization/           # Benchmarks, grants (`zcash_zcg_grant.md`, `aleo_developer_grant.md`, AI4Math, ZK ESP) & B2B offer
 ```
