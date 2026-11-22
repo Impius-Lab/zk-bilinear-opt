@@ -62,9 +62,9 @@ Background: >
   Creator of zk-bilinear-opt (https://github.com/Impius-Lab/zk-bilinear-opt), certifying 64
   finite-field and non-native limb-carry schedules across 3,706 exact integer/prime-field
   basis pairs and 109,000+ differential fuzz tests, including a working #![no_std] Zcash
-  BLS12-381 & Pasta prototype (rust_crates/src/halo2_gadgets.rs). Author of five live open
-  upstream PRs across Consensys/gnark (#1950, #1951), Plonky3/Plonky3 (#2600), and
-  StarkWare proving/stwo (#9, #10), including the discovery and fix of a malicious-prover
+  BLS12-381 & Pasta prototype (rust_crates/src/halo2_gadgets.rs). Author of six live open
+  upstream PRs across Consensys/gnark (#1950, #1951), Plonky3/Plonky3 (#2600),
+  StarkWare proving/stwo (#9, #10), and aleo-labs-protocol/snarkVM (#3908), including the discovery and fix of a malicious-prover
   non-native CRT quotient wrap-around vulnerability (Consensys/gnark#1951).
 Responsibilities: >
   End-to-end #![no_std] Rust gadget engineering (halo2-bilinear-opt), PlonKish lookup/FlexGate
@@ -99,7 +99,7 @@ We have **already built and verified** the `#![no_std]` mathematical core and Pl
 1. **Pareto-Optimal Non-Native & Native Pairing Schedules**:
    - **Native `Fp` & CPU/Scalar Contexts (`zkcrypto/bls12_381` & Deferred Evaluators)**: Division-free unimodular ($`\det = \pm 1`$) basis isomorphisms $`u = v^3 - 1 \implies v^6 - 2v^3 + 2 = 0`$ and $`u = w^6 - 1 \implies w^{12} - 2w^6 + 2 = 0`$ unlock exact **`Fp6` Rank-11** (`18 -> 11`, `-38.89%`), **`Fp12` Rank-23** (`54 -> 23`, `-57.41%`), normalized untwisted-`G1` **`mul_by_014` Rank-18** (`54 -> 18`, `-66.67%`), unit-prepared **`mul_by_014_unit` Rank-19** (`19` muls), and projective **`mul_by_014` Rank-21** (`54 -> 21`, `-61.11%`).
    - **Non-Native Halo2 Limb Contexts (`5x88`-bit & `6x64`-bit over `Pasta`)**: Our cyclotomic/linear **`CRT-30`** schedule (`9` small linear nodes `{-4..3, inf}` + `7` cyclotomic quadratic factors) caps input slack at $`45`$ bits (strictly below both the $`72`$-bit `5x88` `Pasta` carry limit and $`56`$-bit `6x64` 2-limb limit, requiring **zero pre-multiplication reductions**) and caps $`\Vert W_{\mathbb{Z}}\Vert_1 + D`$ at $`52`$ bits (single-limb output constants), cutting total Halo2 PlonKish cells by **`-24.49%` to `-29.85%`** across `lookup_bits` $`\in \{8, 12, 16\}`$.
-2. **Exact `quoBits` & `crtLowCarries` Range-Check Tightening**: Porting our [`Consensys/gnark#1951`](https://github.com/Consensys/gnark/pull/1951) exact integer quotient-width (`packLimbsWithWidth`) and CRT low-carry theorem into Halo2 `RangeChip` cuts `Pallas`-in-`Vesta` and `Vesta`-in-`Pallas` wrong-field multiplication cells by **`-9.94%` to `-13.05%`** while statically forbidding modulo-$`q`$ wrap-around.
+2. **Exact `quoBits` & `crtLowCarries` Range-Check Tightening**: Porting our [`Consensys/gnark#1951`](https://github.com/Consensys/gnark/pull/1951) exact integer quotient-width (`packLimbsWithWidth`) and CRT low-carry theorem into Halo2 `RangeChip` cuts `Pallas`-in-`Vesta` and `Vesta`-in-`Pallas` wrong-field multiplication cells by **`-9.94%` to `-13.05%`** while statically forbidding modulo $`q`$ wrap-around.
 3. **Zero-`sorry` Lean 4 Proofs & Zebra/Tachyon Benchmarks**: Every algebraic identity (`Fp6` Rank-11, `Fp12` Rank-23, `CRT-30`) and every `Pasta` / `BLS12-381` CRT carry inequality will ship with a self-contained, zero-`sorry` **Lean 4** soundness proof and end-to-end Halo2 IPA prover benchmarks modeled on Zcash's `Orchard` / `Tachyon` recursion workloads.
 
 ### Solution Format (`project_details_format`)
@@ -113,8 +113,8 @@ We have **already built and verified** the `#![no_std]` mathematical core and Pl
 
 ### Technical Approach (`project_details_technical`)
 
-#### A. Track Record: Five Live Open Upstream PRs & Verified Benchmarks
-Unlike speculative proposals, our synthesis methodology is already proven in production compilers and provers across five live open upstream Pull Requests:
+#### A. Track Record: Six Live Open Upstream PRs & Verified Benchmarks
+Unlike speculative proposals, our synthesis methodology is already proven in production compilers and provers across six live open upstream Pull Requests:
 
 | Live Upstream PR | Target Stack & Component | Baseline | Measured (Ours) | Verified Improvement & Security Impact |
 | :--- | :--- | :---: | :---: | :--- |
@@ -123,6 +123,7 @@ Unlike speculative proposals, our synthesis methodology is already proven in pro
 | [`Consensys/gnark#1951`](https://github.com/Consensys/gnark/pull/1951) | Non-native `BLS12-381` `Pair` (`1`-pair witness `G2`) + CRT Soundness | `1,323,407` R1CS / `4,881,141` PlonK | **`1,194,960` / `4,402,294`** | **`-9.71%` R1CS / `-9.81%` (`-478,847`) PlonK** + closed BabyBear `2t >= F-1` CRT forgery |
 | [`Plonky3/Plonky3#2600`](https://github.com/Plonky3/Plonky3/pull/2600) | `p3-mersenne-31` `QM31` CPU & `p3-air` `ExtensionAlgebra` (`D=4..8`) | `20.331 ns` / `16..64` AIR muls | **`4.768 ns` / `7..15` AIR muls** | **`4.26x` CPU throughput** & **`-56.25%` to `-76.56%`** AIR muls |
 | [`starkware-libs/proving#9`](https://github.com/starkware-libs/proving/pull/9) & [`#10`](https://github.com/starkware-libs/proving/pull/10) | StarkWare `stwo` `QM31` CPU, `[AIR-GENERATED]` verifiers & SIMD UB fix | `13.004 ns` / `22` AIR muls | **`4.797 ns` / `9` AIR muls** | **`2.71x` CPU**, **`-59.1%` AIR/Cairo verifier muls**, & `BaseColumn` `align=64->4` UB fix |
+| [`aleo-labs-protocol/snarkVM#3908`](https://github.com/aleo-labs-protocol/snarkVM/pull/3908) | Native `BLS12-377` 768-bit lazy tower & Karabina `cyclotomic_exp` | `881.49 us` / `508.02 us` | **`643.82 us` / `340.83 us`** | **`-26.96%` (`1.37x`) full pairing** & **`-32.91%` (`1.49x`) `final_exp`** |
 
 #### B. Completed Zcash Prototype (`rust_crates/src/halo2_gadgets.rs`)
 We have already implemented and verified our `#![no_std]` Zcash `BLS12-381` + `Pasta` kernel and cost-estimator prototype in `rust_crates/src/halo2_gadgets.rs` (tested across all $`d^2`$ canonical basis pairs on both a fast irreducible field and Zcash's exact 255-bit `[u64; 4]` `Pallas` base field $`p_P`$):
@@ -137,11 +138,11 @@ We have already implemented and verified our `#![no_std]` Zcash `BLS12-381` + `P
    For any integer limb relation $`\mathrm{LHS} = r + s \cdot k \cdot p`$ over a `Pasta` scalar field ($`F_{\mathrm{bits}} = 255`$, $`q \ge 2^{254}`$) with $`t`$-bit limbs ($`t \in \{88, 64\}`$):
 
 ```math
-\max\mathrm{Quo} = \max\!\left(\left\lfloor \frac{\mathrm{posMax}}{p} \right\rfloor,\; \left\lceil \frac{\mathrm{negMax}}{p} \right\rceil\right), \qquad \mathrm{quoBits} = \mathrm{bitLen}(\max\mathrm{Quo}),
+\max\mathrm{Quo} = \max\left(\left\lfloor \frac{\mathrm{posMax}}{p} \right\rfloor, \left\lceil \frac{\mathrm{negMax}}{p} \right\rceil\right), \qquad \mathrm{quoBits} = \mathrm{bitLen}(\max\mathrm{Quo}),
 ```
 
 ```math
-n_{\mathrm{low}} = \left\lceil \frac{\max(0,\; w_{\mathrm{bits}} - (F_{\mathrm{bits}} - 1))}{t} \right\rceil, \qquad t + b_{\mathrm{carry}} + 1 \le F_{\mathrm{bits}} - 1.
+n_{\mathrm{low}} = \left\lceil \frac{\max(0, w_{\mathrm{bits}} - (F_{\mathrm{bits}} - 1))}{t} \right\rceil, \qquad t + b_{\mathrm{carry}} + 1 \le F_{\mathrm{bits}} - 1.
 ```
 
 3. **Measured PlonKish Cell Counts (`Halo2LookupCostModel`: `FlexGate` + `RangeChip` over 255-bit `Pasta`)**:
@@ -175,15 +176,15 @@ n_{\mathrm{low}} = \left\lceil \frac{\max(0,\; w_{\mathrm{bits}} - (F_{\mathrm{b
   - *Justification (`budget_compensation_justification`)*: 8 weeks full-time cryptographic engineering & formal verification by Principal Investigator Houssem Aguentil (`320 hours` at `USD 93.75/hour`), split evenly across two concrete, test-gated milestones (`USD 15,000` + `USD 15,000`) paid strictly upon verified public delivery.
 - **Total Budget (`budget_total`)**: `USD 30,000`
 - **Previous Funding from ZCG (`budget_previous_funding`)**: `No`
-- **Other Funding Sources (`budget_other_sources`)**: `No` *(This Zcash-specific `halo2` / `pasta_curves` / `bls12_381` / `Tachyon` crate and Lean 4 CRT proof scope receives zero overlapping funding.)*
+- **Other Funding Sources (`budget_other_sources`)**: `No` *(This Zcash-specific `halo2` / `pasta_curves` / `bls12_381` / `Tachyon` crate and Lean 4 CRT proof scope receives zero overlapping funding; separate non-overlapping ecosystem submissions are pending with Starknet Seed Grants, Aleo SCALE Grants, and EF ESP Office Hours.)*
 
 ---
 
 ## 5. Risk Assessment & Success Metrics
 
 ### Implementation Risks (`risk_implementation`)
-1. **Lookup Table Row Overhead on Small Circuits**: A $`16`$-bit fixed range table requires $`2^{16} = 65{,}536`$ rows, which is suboptimal for small Halo2 circuits ($`k \le 14`$, such as single-action Orchard circuits with $`k = 11`$).
-   - *Mitigation*: Already solved in our `Halo2LookupCostModel` design — every gadget is parameterized over `lookup_bits` $`\in \{8, 10, 12, 16\}`$ and limb widths $`\{88, 64\}`$, allowing small-$`k`$ `Orchard`/`Tachyon` circuits ($`k = 11..13`$) to select $`8`$-bit or $`10`$-bit lookup tables while large bridge/aggregation circuits ($`k \ge 17`$) use $`16`$-bit tables.
+1. **Lookup Table Row Overhead on Small Circuits**: A $`16`$-bit fixed range table requires $`2^{16} = 65,536`$ rows, which is suboptimal for small Halo2 circuits ($`k \le 14`$, such as single-action Orchard circuits with $`k = 11`$).
+   - *Mitigation*: Already solved in our `Halo2LookupCostModel` design — every gadget is parameterized over `lookup_bits` $`\in \{8, 10, 12, 16\}`$ and limb widths $`\{88, 64\}`$, allowing `small-k` `Orchard`/`Tachyon` circuits ($`k = 11..13`$) to select $`8`$-bit or $`10`$-bit lookup tables while large bridge/aggregation circuits ($`k \ge 17`$) use $`16`$-bit tables.
 2. **Constant-Time vs Variable-Time Witness Generation**: Scalar Rust code in `zkcrypto/bls12_381` must remain constant-time (`subtle`) when handling secret scalars, whereas public pairing inputs and in-circuit PlonKish constraints have fixed circuit topology.
    - *Mitigation*: All Halo2 circuit layouts are 100% data-independent (fixed selectors/wiring), and out-of-circuit witness generators avoid secret-dependent branching (`#![forbid(unsafe_code)]`, constant-time `subtle` primitives).
 
@@ -248,3 +249,5 @@ None on Zcash mainnet consensus: `halo2-bilinear-opt` ships as an opt-in, modula
 - **Live Upstream PR 3 (`Plonky3/Plonky3#2600` — `4.26x` `QM31` & `-56.25%..-76.56%` `p3-air` `ExtensionAlgebra`)**: [`https://github.com/Plonky3/Plonky3/pull/2600`](https://github.com/Plonky3/Plonky3/pull/2600)
 - **Live Upstream PR 4 (`starkware-libs/proving#9` — `2.71x` `stwo` `QM31` & `-59.1%` AIR/Cairo Verifier Muls)**: [`https://github.com/starkware-libs/proving/pull/9`](https://github.com/starkware-libs/proving/pull/9)
 - **Live Upstream PR 5 (`starkware-libs/proving#10` — `stwo` SIMD `BaseColumn` Memory-Safety UB Fix)**: [`https://github.com/starkware-libs/proving/pull/10`](https://github.com/starkware-libs/proving/pull/10)
+- **Live Upstream PR 6 (`aleo-labs-protocol/snarkVM#3908` — `BLS12-377` `-26.96%` Pairing & `-32.91%` `FinalExp`)**: [`https://github.com/aleo-labs-protocol/snarkVM/pull/3908`](https://github.com/aleo-labs-protocol/snarkVM/pull/3908)
+- **Interactive Prover & Verifier Benchmark Dashboard**: [`https://impius-lab-zk.weight-space-engineering.workers.dev`](https://impius-lab-zk.weight-space-engineering.workers.dev)
