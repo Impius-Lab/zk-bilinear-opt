@@ -10,6 +10,7 @@
 
 #[allow(clippy::erasing_op)]
 pub mod generated;
+pub mod binary_tower;
 pub mod halo2_gadgets;
 pub use generated::*;
 
