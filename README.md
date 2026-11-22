@@ -7,7 +7,7 @@
 [![Cairo 2.21+](https://img.shields.io/badge/cairo-2.21%2B-FF4F00.svg)](./cairo_gadgets/Scarb.toml)
 [![Lean 4 v4.36.0](https://img.shields.io/badge/lean4-zero--sorry-5B21B6.svg)](./lean4_certs/lakefile.toml)
 
-`zk-bilinear-opt` is an exact finite-field bilinear rank certifier, non-native limb-carry Pareto optimizer, zero-`sorry` **Lean 4** formal proof suite ([`lean4_certs/`](./lean4_certs/README.md)), and deterministic `#![no_std]` Rust / Go / Cairo / BitVM2 code generator for Zero-Knowledge STARK and SNARK extension towers (**StarkWare `stwo` & Cairo**, **`Plonky3` / `SP1`**, **`Consensys/gnark`**, **Zcash `Halo2` / `Pasta` / `BLS12-381`**, and **BitVM2 Tapscript**) — accompanied by an interactive prover-economics storefront ([`docs/index.html`](./docs/index.html)).
+`zk-bilinear-opt` is an exact finite-field bilinear rank certifier, non-native limb-carry Pareto optimizer, zero-`sorry` **Lean 4** formal proof suite ([`lean4_certs/`](./lean4_certs/README.md)), and deterministic `#![no_std]` Rust / Go / Cairo / BitVM2 code generator for Zero-Knowledge STARK and SNARK extension towers (**StarkWare `stwo` & Cairo**, **`Plonky3` / `SP1`**, **`Consensys/gnark`**, **Aleo `snarkVM` (`BLS12-377`)**, **Zcash `Halo2` / `Pasta` / `BLS12-381`**, and **BitVM2 Tapscript**) — accompanied by a Cloudflare Workers Static Assets B2B storefront ([`docs/index.html`](./docs/index.html) & [`wrangler.jsonc`](./wrangler.jsonc)).
 
 ---
 
@@ -166,7 +166,23 @@ Live open PRs: [`https://github.com/starkware-libs/proving/pull/9`](https://gith
 - **BitVM2 Tapscript `QM31` Simulator ([`zk_bilinear/bitvm2_qm31.py`](./zk_bilinear/bitvm2_qm31.py) & [`tests/test_bitvm2_qm31.py`](./tests/test_bitvm2_qm31.py))**: Models `BIP-342` 4-byte `CScriptNum`-safe (`|x| <= 2^31 - 1`) `OP_M31_ADD`, `OP_M31_SUB`, `OP_M31_SCALE_SMALL` (`{2, 3, 4, 6, 12}`), and witness-hinted `4x8`-bit `OP_M31_MUL`, cutting `OP_M31_MUL` **`16 -> 9 -> 7`** (**`-22.22%`** vs `Karatsuba-9`, **`-56.25%`** vs `Schoolbook-16`), witness stack items **`352 -> 198 -> 158`** (`-20.20%` vs `Karatsuba-9`), and Script opcodes **`17,880 -> 10,224 -> 9,447`** (`-7.60%` vs `Karatsuba-9`).
 - **Zcash `Halo2` / `BLS12-381` & `Pasta` `#![no_std]` Module ([`rust_crates/src/halo2_gadgets.rs`](./rust_crates/src/halo2_gadgets.rs))**: Compile-time Vandermonde-verified generic `PrimeFieldOps` kernels (`Fp2` Rank-3, `Fp6` Rank-11, `Fp12` Rank-23, sparse Miller-loop `mul_by_014` **Rank-18 / Rank-19 / Rank-21**) plus exact `U1024` `Halo2LookupCostModel` (`FlexGate` + `RangeChip` over 255-bit `Pallas`/`Vesta`): **`CRT-30`** cuts non-native `BLS12-381` `Fp12` PlonKish cells by **`-24.49%` to `-29.85%`** (`0` pre-reductions vs `22` on naive `Rank-23`), and exact `quoBits` cuts `Pasta` wrong-field CRT cells by **`-9.94%` to `-13.05%`**.
 - **Zero-`sorry` Core Lean 4 Formal Proof Suite ([`lean4_certs/`](./lean4_certs/README.md) — `ZkBilinearCerts`, `lean4:v4.36.0`)**: Pure Core Lean 4 (`0` external dependencies, clean scratch `lake build` in **`< 6s`**, `33` `#print axioms`-verified theorems with `0` `sorry` and `0` custom `axiom`s) proving universal `Int` & `mod (2^31 - 1)` equivalence of `Karatsuba-9`, `Rank-7`, and `Rank-6` squaring ([`Qm31Algebraic.lean`](./lean4_certs/ZkBilinearCerts/Qm31Algebraic.lean)), `u64` `dot4` / outer-Karatsuba non-overflow (`< 2^64`) and bitwise two-step Mersenne fold canonicality ([`M31Overflow.lean`](./lean4_certs/ZkBilinearCerts/M31Overflow.lean)), and non-native CRT quotient-bit soundness + BabyBear `b = 22` unmasked forgery certificates ([`CrtSoundness.lean`](./lean4_certs/ZkBilinearCerts/CrtSoundness.lean)).
-- **Zcash Community Grants Proposal & B2B Storefront**: Complete fast-track ZCG specification in [`monetization/grants/zcash_zcg_grant.md`](./monetization/grants/zcash_zcg_grant.md) and self-contained interactive Prover Cloud & L1 Verifier ROI Calculator in [`docs/index.html`](./docs/index.html).
+- **Ecosystem Grant Proposals & Cloudflare Workers B2B Storefront**: Complete submission-ready specifications for **Zcash Community Grants** ([`monetization/grants/zcash_zcg_grant.md`](./monetization/grants/zcash_zcg_grant.md) — [`ZCG #590`](https://github.com/ZcashCommunityGrants/zcashcommunitygrants/issues/590)) and **Aleo Network Foundation Blueprint Grants** ([`monetization/grants/aleo_developer_grant.md`](./monetization/grants/aleo_developer_grant.md)), paired with our zero-dependency interactive Prover Cloud & L1 Verifier ROI Storefront ([`docs/index.html`](./docs/index.html)) configured for direct edge deployment via Cloudflare Workers Static Assets ([`wrangler.jsonc`](./wrangler.jsonc)).
+
+### 2.6 `ProvableHQ/snarkVM` (`perf/bls12-377-tower-opt`): `BLS12-377` 768-Bit Lazy Reduction & Karabina `cyclotomic_exp`
+
+Fork branch: [`Impius-Lab/snarkVM` (`perf/bls12-377-tower-opt`)](https://github.com/Impius-Lab/snarkVM/tree/perf/bls12-377-tower-opt) (`#![forbid(unsafe_code)]` preserved, `0` new dependencies, `86/86` `snarkvm-curves` & `7/7` `snarkvm-fields` suites passing). Combines **(1)** compile-time-certified 768-bit (`[u64; 12]`) lazy Montgomery reduction (`Fp384::modulus_sq_mul(k)` `const`-asserted against $`k \le 151 < R / q = 152.328663`$, bounding `Fq12::mul` strictly to $`(0, 136 q^2] \subset (0, q \cdot R)`$ and cutting `6x6` blocks **`108 -> 66` (`-38.89%`)** and sparse line `mul_by_034`/`mul_by_014` **`78 -> 51` (`-34.62%`)**), **(2)** `f == 1` initial-bit `ell_from_one` specialization in `Bls12::miller_loop`, and **(3)** **Karabina (2013) compressed cyclotomic squaring** (`2` `Fp4` squarings per bit instead of `3`) with simultaneous stack-allocated Montgomery batch decompression (`1` `Fp2::inverse()` across all `6` non-trivial set bits of `X = 0x8508c00000000001`):
+
+| `snarkvm-curves` Criterion Benchmark (`--release`) | Upstream `main` (`b6e4725e`) | `perf/bls12-377-tower-opt` | $`\Delta`$ / Speedup |
+| :--- | :---: | :---: | :---: |
+| `bls12_377: fq_square` | `29.290 ns` | **`26.123 ns`** | **`-10.81%` (`1.12x`)** |
+| `bls12_377: fq2_mul_assign` | `114.73 ns` | **`88.310 ns`** | **`-23.03%` (`1.30x`)** |
+| `bls12_377: fq2_square` | `77.452 ns` | **`71.424 ns`** | **`-7.78%` (`1.08x`)** |
+| `bls12_377: fq12_mul_assign` | `2.8855 us` | **`2.1688 us`** | **`-24.84%` (`1.33x`)** |
+| `bls12_377: fq12_square` | `1.9839 us` | **`1.6705 us`** | **`-15.80%` (`1.19x`)** |
+| `bls12_377: fq12_inverse` | `6.4696 us` | **`5.3708 us`** | **`-16.98%` (`1.20x`)** |
+| `bls12_377: pairing_miller_loop` | `274.88 us` | **`211.36 us`** | **`-23.11%` (`1.30x`)** |
+| **`bls12_377: pairing_final_exponentiation`** | `508.02 us` | **`340.83 us`** | **`-32.91%` (`1.49x`)** |
+| **`bls12_377: pairing_full`** | `881.49 us` | **`643.82 us`** | **`-26.96%` (`1.37x`, `-237.67 us`)** |
 
 ---
 
@@ -227,6 +243,9 @@ cargo +stable clippy --manifest-path rust_crates/Cargo.toml --all-targets -- -D 
 Push-Location go_gadgets
 go test -count=1 -v ./...
 Pop-Location
+
+# 6. Cloudflare Workers Static Assets B2B storefront dry-run bundle validation
+npx --yes wrangler@latest deploy --dry-run
 ```
 
 ---
@@ -253,8 +272,9 @@ zk-bilinear-opt/
 ├── go_gadgets/             # Native Go module (`math/big` gadgets + zero-alloc [6]uint64 CIOS `bls12377_fp.go`)
 ├── tests/                  # 23 unittest suites: Z/Fp basis proofs, BitVM2 traces, 109k+ fuzz & mutation tests
 ├── docs/
-│   └── index.html          # Self-contained B2B storefront & interactive Prover Cloud / L1 Verifier ROI calculator
-└── monetization/           # Benchmarks, grants (`zcash_zcg_grant.md`, AI4Math, ZK ESP), PR briefs & B2B offer
+│   └── index.html          # Self-contained B2B storefront, Whop/USDC intake modal & ROI calculator
+├── wrangler.jsonc          # Cloudflare Workers Static Assets edge config (`impius-lab-zk` -> `./docs`)
+└── monetization/           # Benchmarks, grants (`zcash_zcg_grant.md`, `aleo_developer_grant.md`, AI4Math, ZK ESP) & B2B offer
 ```
 
 ---
